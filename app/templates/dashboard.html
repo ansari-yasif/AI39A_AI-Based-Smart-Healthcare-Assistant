@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI39A Smart Healthcare Dashboard</title>
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins', sans-serif;
+    }
+
+    body{
+      background:#f4f7fb;
+      display:flex;
+      min-height:100vh;
+      color:#111827;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar{
+      width:260px;
+      background:#0f172a;
+      color:white;
+      padding:25px 20px;
+      position:fixed;
+      height:100%;
+    }
+
+    .logo{
+      font-size:24px;
+      font-weight:700;
+      margin-bottom:40px;
+      color:#38bdf8;
+    }
+
+    .menu{
+      list-style:none;
+    }
+
+    .menu li{
+      margin-bottom:12px;
+    }
+
+    .menu a{
+      text-decoration:none;
+      color:#cbd5e1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 15px;
+      border-radius:12px;
+      transition:0.3s;
+      font-size:15px;
+    }
+
+    .menu a:hover,
+    .menu .active{
+      background:#2563eb;
+      color:white;
+    }
+
+    /* MAIN CONTENT */
+
+    .main{
+      margin-left:260px;
+      width:calc(100% - 260px);
+      padding:30px;
+    }
+
+    /* TOPBAR */
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:30px;
+    }
+
+    .welcome h2{
+      font-size:28px;
+      margin-bottom:5px;
+    }
+
+    .welcome p{
+      color:#64748b;
+    }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:20px;
+    }
+
+    .search-box{
+      background:white;
+      padding:10px 15px;
+      border-radius:12px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .search-box input{
+      border:none;
+      outline:none;
+      font-size:14px;
+    }
+
+    .profile{
+      width:45px;
+      height:45px;
+      background:#2563eb;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:600;
+    }
+
+    /* CARDS */
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:20px;
+      margin-bottom:30px;
+    }
+
+    .card{
+      background:white;
+      padding:25px;
+      border-radius:20px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.05);
+      transition:0.3s;
+    }
+
+    .card:hover{
+      transform:translateY(-5px);
+    }
+
+    .card i{
+      font-size:28px;
+      margin-bottom:15px;
+      color:#2563eb;
+    }
+
+    .card h3{
+      font-size:16px;
+      color:#64748b;
+      margin-bottom:10px;
+    }
+
+    .card h1{
+      font-size:28px;
+    }
+
+    /* DASHBOARD GRID */
+
+    .dashboard-grid{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:20px;
+      margin-bottom:30px;
+    }
+
+    .panel{
+      background:white;
+      padding:25px;
+      border-radius:20px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel h2{
+      margin-bottom:20px;
+      font-size:22px;
+    }
+
+    /* AI ASSISTANT */
+
+    .ai-box{
+      background:linear-gradient(135deg,#2563eb,#14b8a6);
+      color:white;
+      padding:25px;
+      border-radius:20px;
+    }
+
+    .ai-box h3{
+      margin-bottom:10px;
+      font-size:24px;
+    }
+
+    .ai-box p{
+      margin-bottom:20px;
+      opacity:0.9;
+    }
+
+    .ai-input{
+      display:flex;
+      gap:10px;
+    }
+
+    .ai-input input{
+      flex:1;
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      outline:none;
+    }
+
+    .ai-input button{
+      background:white;
+      color:#2563eb;
+      border:none;
+      padding:12px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    /* CHART */
+
+    .chart{
+      height:250px;
+      background:#e2e8f0;
+      border-radius:15px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#475569;
+      font-weight:600;
+    }
+
+    /* TABLE */
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    table th,
+    table td{
+      padding:14px;
+      text-align:left;
+      border-bottom:1px solid #e2e8f0;
+    }
+
+    table th{
+      color:#64748b;
+      font-size:14px;
+    }
+
+    /* ALERTS */
+
+    .alert{
+      background:#fee2e2;
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:12px;
+      color:#b91c1c;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    /* RESPONSIVE */
+
+    @media(max-width:950px){
+
+      .dashboard-grid{
+        grid-template-columns:1fr;
+      }
+
+      .sidebar{
+        width:90px;
+      }
+
+      .sidebar .logo{
+        font-size:18px;
+      }
+
+      .sidebar span{
+        display:none;
+      }
+
+      .main{
+        margin-left:90px;
+        width:calc(100% - 90px);
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+
+  <div class="sidebar">
+
+    <div class="logo">
+      AI39A
+    </div>
+
+    <ul class="menu">
+
+      <li><a href="#" class="active"><i class="fa-solid fa-house"></i> <span>Dashboard</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-heart-pulse"></i> <span>BMI & Calories</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-utensils"></i> <span>Meal Tracker</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-bed"></i> <span>Sleep Tracker</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-weight-scale"></i> <span>Weight Progress</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-robot"></i> <span>AI Assistant</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-notes-medical"></i> <span>Medical Scanner</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-pills"></i> <span>Medicine Checker</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-file-waveform"></i> <span>Reports</span></a></li>
+
+      <li><a href="#"><i class="fa-solid fa-triangle-exclamation"></i> <span>Emergency</span></a></li>
+
+    </ul>
+
+  </div>
+
+  <!-- MAIN -->
+
+  <div class="main">
+
+    <!-- TOPBAR -->
+
+    <div class="topbar">
+
+      <div class="welcome">
+        <h2>Good Evening 👋</h2>
+        <p>Welcome back to AI39A Smart Healthcare Assistant</p>
+      </div>
+
+      <div class="top-actions">
+
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search...">
+        </div>
+
+        <i class="fa-regular fa-bell fa-lg"></i>
+
+        <div class="profile">
+          S
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- CARDS -->
+
+    <div class="cards">
+
+      <div class="card">
+        <i class="fa-solid fa-fire"></i>
+        <h3>Calories Today</h3>
+        <h1>1840</h1>
+      </div>
+
+      <div class="card">
+        <i class="fa-solid fa-bed"></i>
+        <h3>Sleep Hours</h3>
+        <h1>7.5h</h1>
+      </div>
+
+      <div class="card">
+        <i class="fa-solid fa-weight-scale"></i>
+        <h3>Weight Progress</h3>
+        <h1>-1.5kg</h1>
+      </div>
+
+      <div class="card">
+        <i class="fa-solid fa-heart-circle-check"></i>
+        <h3>Health Score</h3>
+        <h1>89%</h1>
+      </div>
+
+    </div>
+
+    <!-- DASHBOARD GRID -->
+
+    <div class="dashboard-grid">
+
+      <!-- AI PANEL -->
+
+      <div class="panel">
+
+        <div class="ai-box">
+
+          <h3>AI Health Assistant</h3>
+
+          <p>
+            Ask anything about your health, meals, sleep, fitness,
+            medicine or reports.
+          </p>
+
+          <div class="ai-input">
+
+            <input type="text" placeholder="Ask AI something...">
+
+            <button>
+              Ask AI
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ALERTS -->
+
+      <div class="panel">
+
+        <h2>Alerts</h2>
+
+        <div class="alert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Low water intake detected
+        </div>
+
+        <div class="alert">
+          <i class="fa-solid fa-heart-pulse"></i>
+          Sleep schedule irregular
+        </div>
+
+        <div class="alert">
+          <i class="fa-solid fa-pills"></i>
+          Medicine reminder at 9 PM
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- CHART + TABLE -->
+
+    <div class="dashboard-grid">
+
+      <!-- CHART -->
+
+      <div class="panel">
+
+        <h2>Weekly Health Analytics</h2>
+
+        <div class="chart">
+          Chart Area
+        </div>
+
+      </div>
+
+      <!-- TABLE -->
+
+      <div class="panel">
+
+        <h2>Today's Meals</h2>
+
+        <table>
+
+          <tr>
+            <th>Meal</th>
+            <th>Calories</th>
+          </tr>
+
+          <tr>
+            <td>Breakfast</td>
+            <td>450</td>
+          </tr>
+
+          <tr>
+            <td>Lunch</td>
+            <td>700</td>
+          </tr>
+
+          <tr>
+            <td>Dinner</td>
+            <td>600</td>
+          </tr>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
