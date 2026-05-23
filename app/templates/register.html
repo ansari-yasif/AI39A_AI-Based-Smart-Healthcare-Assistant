@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Vitapulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="register-body">
+
+    <div class="split-container">
+        <div class="left-side">
+            <div class="brand-logo">
+                <i class="fa-solid fa-heart-pulse"></i> VitaPulse
+            </div>
+
+            <span class="premium-tag">✦ PREMIUM HEALTH PLATFORM</span>
+
+            <h1 class="main-heading">Transform Your <br><span class="gradient-text">Health Journey</span></h1>
+
+            <p class="description">
+                Join over 500,000 members achieving peak wellness with AI-driven fitness plans, real-time biometrics,
+                and expert nutrition guidance.
+            </p>
+
+            <ul class="features-list">
+                <li><i class="fa-regular fa-circle-check"></i> Personalised AI fitness coach</li>
+                <li><i class="fa-regular fa-circle-check"></i> 500,000+ active wellness members</li>
+                <li><i class="fa-regular fa-circle-check"></i> 300+ expert nutrition programmes</li>
+            </ul>
+
+            <div class="pulse-divider">
+                <svg viewBox="0 0 800 100" class="pulse-svg">
+                    <path
+                        d="M 0 50 L 120 50 L 135 25 L 150 75 L 165 15 L 180 85 L 195 50 L 350 50 L 365 30 L 380 70 L 395 50 L 800 50"
+                        fill="none" stroke="url(#pulse-gradient)" stroke-width="2" />
+                    <defs>
+                        <linearGradient id="pulse-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#22c55e" />
+                            <stop offset="50%" stop-color="#10b981" />
+                            <stop offset="100%" stop-color="#f59e0b" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="feature-cards">
+                <div class="feat-card">
+                    <div class="feat-icon-box green-icon"><i class="fa-solid fa-person-running"></i></div>
+                    <h4>Track Fitness</h4>
+                    <p>AI-powered workout logs & PRs</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon-box orange-icon"><i class="fa-solid fa-leaf"></i></div>
+                    <h4>Nutrition Plans</h4>
+                    <p>Personalised meal & macro insights</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon-box purple-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                    <h4>Wellness Monitor</h4>
+                    <p>Real-time biometric dashboards</p>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box red-stat">
+                    <span class="stat-label"><i class="fa-solid fa-heart"></i> Heart Rate</span>
+                    <span class="stat-value">72 <small>BPM</small></span>
+                    <div class="stat-bar">
+                        <div class="bar-fill" style="width: 35%;"></div>
+                    </div>
+                </div>
+                <div class="stat-box orange-stat">
+                    <span class="stat-label"><i class="fa-solid fa-fire"></i> Calories</span>
+                    <span class="stat-value">2,340 <small>kcal</small></span>
+                    <div class="stat-bar">
+                        <div class="bar-fill" style="width: 65%;"></div>
+                    </div>
+                </div>
+                <div class="stat-box green-stat">
+                    <span class="stat-label"><i class="fa-solid fa-shoe-prints"></i> Steps</span>
+                    <span class="stat-value">8,420 <small>today</small></span>
+                    <div class="stat-bar">
+                        <div class="bar-fill" style="width: 80%;"></div>
+                    </div>
+                </div>
+                <div class="stat-box purple-stat">
+                    <span class="stat-label"><i class="fa-solid fa-moon"></i> Sleep</span>
+                    <span class="stat-value">7.5 <small>hrs</small></span>
+                    <div class="stat-bar">
+                        <div class="bar-fill" style="width: 75%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-side">
+            <a href="/" class="back-btn register-back"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+
+            <div class="register-form-container">
+                <span class="free-plan-tag">FREE FOREVER PLAN</span>
+                <h2>Join VitaPulse</h2>
+                <p class="subtitle">Start Your Journey to Better Health Today</p>
+
+                <form action="#" id="registerForm">
+                    <div class="form-row">
+                        
+                        <div class="form-group">
+                            <label for="last-name">Username</label>
+                            <div class="input-wrapper">
+                                <i class="fa-regular fa-user input-icon"></i>
+                                <input type="text" id="username" placeholder="Username" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-email">EMAIL ADDRESS</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="regEmail" placeholder="alex@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-password">PASSWORD</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="regPassword" placeholder="Create a strong password" required>
+                            <i class="fa-regular fa-eye toggle-password" id="togglePasswordReg"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">CONFIRM PASSWORD</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="confirm-password" placeholder="Repeat your password" required>
+                            <i class="fa-regular fa-eye toggle-password" id="toggleConfirmPassword"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-options register-terms">
+                        <label class="remember-me">
+                            <input type="checkbox" required> I agree to VitaPulse's <a href="#">Terms of Service</a> and
+                            <a href="#">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="login-btn submit-register-btn">
+                        <i class="fa-solid fa-bolt"></i> Create Account <i
+                            class="fa-solid fa-chevron-right arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="divider">or continue with</div>
+
+                <div class="social-login-row">
+                    <a href="/" class="social-btn">
+                        <i class="fa-brands fa-google"></i> Google
+                    </a>
+                </div>
+
+                <p class="signup-text">Already have an account? <a href="login" class="orange-link">Sign In</a></p>
+
+                <div class="security-badges">
+                    <span><i class="fa-solid fa-circle ssl-dot"></i> SSL Secured</span>
+                    <span><i class="fa-solid fa-circle members-dot"></i> 500K+ Members</span>
+                    <span><i class="fa-solid fa-circle hipaa-dot"></i> HIPAA Ready</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
