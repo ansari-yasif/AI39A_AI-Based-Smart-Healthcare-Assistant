@@ -1,0 +1,14 @@
+{# partials/alerts.html — flash toast messages #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-wrap" id="flashWrap">
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">
+    <i data-lucide="{% if cat=='success' %}check-circle-2{% elif cat=='error' %}x-circle{% elif cat=='warning' %}alert-triangle{% else %}info{% endif %}" class="flash-icon"></i>
+    <span>{{ msg }}</span>
+    <button onclick="this.parentElement.remove()" class="flash-close"><i data-lucide="x"></i></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

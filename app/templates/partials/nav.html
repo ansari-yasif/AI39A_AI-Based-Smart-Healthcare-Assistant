@@ -1,0 +1,22 @@
+{# partials/nav.html — dashboard topnav #}
+<header class="topnav">
+  <div class="topnav-l">
+    <button class="menu-btn" id="sbOpen"><i data-lucide="menu"></i></button>
+    <div class="breadcrumb">
+      <span class="bc-app">VitaPulse</span>
+      <i data-lucide="chevron-right" class="bc-sep"></i>
+      <span class="bc-page">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+  </div>
+  <div class="topnav-r">
+    <span class="topnav-date" id="topDate"></span>
+    <button class="icon-btn"><i data-lucide="bell"></i></button>
+    <div class="topnav-user">
+      <div class="topnav-av">
+        {% if session.get('avatar') %}<img src="{{ session.avatar }}" alt="av"/>
+        {% else %}<i data-lucide="user"></i>{% endif %}
+      </div>
+      <span class="topnav-name">{{ session.get('full_name','').split()[0] }}</span>
+    </div>
+  </div>
+</header>
