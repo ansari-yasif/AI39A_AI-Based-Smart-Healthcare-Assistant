@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}500 — VitaPulse{% endblock %}
+{% block body %}
+<div class="err-page"><div class="err-blob"></div><div class="err-inner"><div class="err-icon" style="color:#EF4444"><i data-lucide="server-crash"></i></div><h1 class="err-code" style="color:#EF4444">500</h1><h2>Server Error</h2><p>Something went wrong on our end. Please try again.</p><a href="{{ url_for('index') }}" class="vp-btn">Go Home</a></div></div>
+{% endblock %}
