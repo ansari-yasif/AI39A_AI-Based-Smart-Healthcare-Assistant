@@ -21,7 +21,7 @@
       <li><a href="#bmi"      class="lnav-link">BMI Calculator</a></li>
       <li><a href="#wellness" class="lnav-link">Wellness</a></li>
       <li><a href="#about"    class="lnav-link">About</a></li>
-      <li><a href="#contact"  class="lnav-link">Contact</a></li>
+      <li><a href="#contact-section" class="lnav-link">Contact</a></li>
     </ul>
 
     <!-- Right: search + auth -->
@@ -32,11 +32,11 @@
         <input type="text" placeholder="Search..." class="search-input"/>
       </div>
 
-      <!-- Login — gradient outline button -->
-      <a href="{{ url_for('auth.login') }}" class="btn-login">
+      {# Login — gradient outline button (commented out) #}
+      {# <a href="{{ url_for('auth.login') }}" class="btn-login">
         <i data-lucide="user"></i>
         <span>Login</span>
-      </a>
+      </a> #}
 
       <!-- Register — gradient fill button -->
       <a href="{{ url_for('auth.register') }}" class="btn-register">Register</a>
@@ -52,9 +52,9 @@
     <a href="#bmi"      class="mob-link">BMI Calculator</a>
     <a href="#wellness" class="mob-link">Wellness</a>
     <a href="#about"    class="mob-link">About</a>
-    <a href="#contact"  class="mob-link">Contact</a>
+    <a href="#contact-section" class="mob-link">Contact</a>
     <div class="mob-auth">
-      <a href="{{ url_for('auth.login') }}"    class="btn-login w-full">Login</a>
+      {# <a href="{{ url_for('auth.login') }}"    class="btn-login w-full">Login</a> #}
       <a href="{{ url_for('auth.register') }}" class="btn-register w-full">Register</a>
     </div>
   </div>
@@ -75,7 +75,7 @@
   <div class="hero-text" id="heroText">
     <h1 class="hero-h1">
       Your Journey to<br/>
-      <span class="grad-text">Wellness</span>
+      <span class="grad-text-green">Wellness</span>
     </h1>
     <p class="hero-sub">Transform your health with AI-powered insights and personalized care</p>
   </div>
@@ -196,7 +196,10 @@
     <div class="cta-sparkle-wrap">
       <i data-lucide="sparkles" class="cta-sparkle"></i>
     </div>
-    <h2 class="cta-h2">Ready to Transform Your Life?</h2>
+    <h2 class="cta-h2">
+      Ready to Transform Your<br/>
+      <span class="grad-text-green">Life?</span>
+    </h2>
     <p class="cta-sub">Get your personalized health and fitness plan in just a few minutes</p>
     <a href="{{ url_for('auth.register') }}" class="cta-btn">
       <span>Get Started Now</span>
@@ -224,7 +227,7 @@
       <div class="team-icon-wrap">
         <i data-lucide="users" class="team-icon"></i>
       </div>
-      <h2 class="team-h2">Meet the <span class="grad-text">Team</span></h2>
+      <h2 class="team-h2">Meet the <span class="grad-text-green">Team</span></h2>
       <p class="team-sub">Passionate individuals building the future of health and wellness</p>
     </div>
 
@@ -274,8 +277,60 @@
 </section>
 
 
+<!-- ═══════════════════ CONTACT SECTION (professional background + fixed message icon) ═══════════════════ -->
+<section class="contact-simple" id="contact-section">
+  <!-- Same animated blurs as Team section -->
+  <div class="contact-blur-1"></div>
+  <div class="contact-blur-2"></div>
+  <!-- Grid overlay (identical to Team section) -->
+  <div class="contact-grid-overlay"></div>
+
+  <div class="contact-container-simple">
+    <div class="contact-header-simple">
+      <!-- Icon wrapper same as team section -->
+      <div class="team-icon-wrap">
+        <i data-lucide="mail" class="team-icon"></i>
+      </div>
+      <h2 class="team-h2">Get in <span class="grad-text-green">Touch</span></h2>
+      <p class="team-sub">We'd love to hear from you. Send us a message.</p>
+    </div>
+
+    <!-- Centered form card -->
+    <div class="contact-card">
+      <form action="#" method="POST" class="contact-form-simple" id="contactFormSimple">
+        <div class="form-group-simple">
+          <label>Full Name</label>
+          <div class="input-icon-group">
+            <i data-lucide="user" class="input-icon"></i>
+            <input type="text" name="full_name" placeholder="Enter your full name" required/>
+          </div>
+        </div>
+        <div class="form-group-simple">
+          <label>Email Address</label>
+          <div class="input-icon-group">
+            <i data-lucide="mail" class="input-icon"></i>
+            <input type="email" name="email" placeholder="your.email@example.com" required/>
+          </div>
+        </div>
+        <div class="form-group-simple">
+          <label>Message</label>
+          <div class="input-icon-group">
+            <i data-lucide="message-circle" class="input-icon"></i>
+            <textarea name="message" rows="5" placeholder="Tell us what's on your mind..." required></textarea>
+          </div>
+        </div>
+        <button type="submit" class="contact-submit-simple">
+          <span>Send Message</span>
+          <i data-lucide="send"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+
 <!-- ═══════════════════ FOOTER ═════════════════════════════════ -->
-<footer class="lfoot" id="contact">
+<footer class="lfoot">
   <div class="lfoot-grid">
     <!-- Brand -->
     <div class="lf-brand">

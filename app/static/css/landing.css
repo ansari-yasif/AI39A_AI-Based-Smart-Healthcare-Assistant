@@ -585,3 +585,226 @@
 @media(max-width:1100px){
   .lnav-search { display:none; }
 }
+
+
+/* ========== CENTERED CONTACT SECTION ========== */
+.contact-simple {
+  position: relative;
+  padding: 80px 5%;
+  background: linear-gradient(135deg, rgba(15,22,41,1) 0%, rgba(10,14,26,1) 100%);
+  overflow: hidden;
+}
+
+.contact-blur-1, .contact-blur-2 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.3;
+  z-index: 0;
+  pointer-events: none;
+}
+.contact-blur-1 {
+  top: -100px;
+  left: -100px;
+  background: radial-gradient(circle, #10b981, transparent);
+}
+.contact-blur-2 {
+  bottom: -100px;
+  right: -100px;
+  background: radial-gradient(circle, #f97316, transparent);
+}
+
+.contact-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.contact-container-simple {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.contact-header-simple {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+/* Icon wrapper (same as team section) */
+.team-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-lg);
+  margin: 0 auto 1.25rem;
+  background: linear-gradient(135deg, rgba(0,200,151,.2), rgba(74,158,255,.2));
+  border: 1px solid rgba(0,200,151,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.team-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--teal);
+}
+.team-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  margin-bottom: .75rem;
+}
+.team-sub {
+  color: var(--text-2);
+  font-size: 1rem;
+}
+
+/* Form card */
+.contact-card {
+  background: rgba(10, 15, 25, 0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 2rem;
+  padding: 2rem;
+  border: 1px solid rgba(16,185,129,0.2);
+  transition: all 0.3s;
+}
+.contact-card:hover {
+  border-color: rgba(16,185,129,0.5);
+  box-shadow: 0 0 30px rgba(16,185,129,0.1);
+}
+
+.form-group-simple {
+  margin-bottom: 1.5rem;
+}
+.form-group-simple label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #ddd;
+}
+
+/* Input with icon */
+.input-icon-group {
+  position: relative;
+}
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #10b981;
+  pointer-events: none;
+  z-index: 1;
+}
+/* FIX: textarea icon aligned to top (not centered) */
+.input-icon-group textarea ~ .input-icon {
+  top: 1.2rem;
+  transform: none;
+}
+.input-icon-group input,
+.input-icon-group textarea {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 1rem;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+.input-icon-group textarea {
+  padding-top: 14px;
+  resize: vertical;
+}
+.input-icon-group input:focus,
+.input-icon-group textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+}
+
+/* Submit button */
+.contact-submit-simple {
+  background: linear-gradient(135deg, #10b981, #059669);
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s;
+}
+.contact-submit-simple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(16,185,129,0.3);
+}
+.contact-submit-simple i {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contact-card {
+    padding: 1.5rem;
+  }
+  .team-h2 {
+    font-size: 1.8rem;
+  }
+}
+
+/* ========== GREEN GRADIENT TEXT (for "Wellness", "Your Life", "Team", "Touch") ========== */
+.grad-text-green {
+  background: linear-gradient(135deg, #10b981, #00d295);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Success / error toast notification (for contact form submission) */
+.contact-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #0f1f1a;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(16,185,129,0.4);
+  border-radius: 2rem;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #10b981;
+  font-weight: 500;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.contact-toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+.contact-toast.error {
+  border-color: rgba(239,68,68,0.6);
+  color: #ef4444;
+}
+.toast-icon {
+  width: 20px;
+  height: 20px;
+}
+
