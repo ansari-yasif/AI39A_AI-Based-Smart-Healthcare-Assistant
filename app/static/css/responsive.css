@@ -1,0 +1,102 @@
+/* responsive.css — Mobile/tablet breakpoints | VitaPulse */
+
+/* ── Tablet ≤ 1024px ────────────────────────────────────────── */
+@media (max-width:1024px) {
+  /* Landing hero */
+  .hero { padding-top:100px; }
+  .hero-h1 { font-size:3.5rem; }
+
+  /* Category cards */
+  .cats-grid { grid-template-columns:1fr; }
+  .cat-card  { min-height:380px; }
+
+  /* Footer */
+  .lfoot-grid { grid-template-columns:1fr 1fr; gap:2rem; }
+
+  /* Dashboard charts */
+  .charts-row { grid-template-columns:1fr; }
+
+  /* Register two-panel */
+  .reg-layout { grid-template-columns:1fr; gap:2rem; }
+  .reg-left   { display:none; }
+}
+
+/* ── Mobile ≤ 768px ─────────────────────────────────────────── */
+@media (max-width:768px) {
+
+  /* ── Landing nav ─────────────────────── */
+  .lnav-links  { display:none; }
+  .lnav-search { display:none; }
+  .btn-login, .btn-register { display:none; }
+  .hamburger { display:block; }
+
+  /* ── Hero ────────────────────────────── */
+  .hero { padding:90px 1.25rem 3rem; text-align:center; }
+  .hero-h1 { font-size:2.8rem; }
+  .hero-sub { font-size:.92rem; }
+  .hero-cta { flex-direction:column; align-items:center; }
+  .c-card   { min-width:260px; height:300px; }
+
+  /* ── Category cards ──────────────────── */
+  .cats { padding:3rem 1.25rem; }
+  .cat-body { padding:1.5rem; }
+  .cat-title { font-size:1.6rem; }
+
+  /* ── Team ────────────────────────────── */
+  .team { padding:4rem 1.25rem; }
+  .team-cards { grid-template-columns:1fr 1fr; }
+
+  /* ── Footer ──────────────────────────── */
+  .lfoot { padding:3rem 1.25rem 1.25rem; }
+  .lfoot-grid { grid-template-columns:1fr; gap:1.75rem; }
+  .lfoot-bottom { flex-direction:column; text-align:center; gap:.5rem; }
+
+  /* ── Sidebar ─────────────────────────── */
+  .sidebar { transform:translateX(-100%); width:280px; }
+  .sidebar.open { transform:translateX(0); box-shadow:8px 0 40px rgba(0,0,0,.7); }
+  .sb-close { display:flex; }
+  .main-area { margin-left:0; }
+  .menu-btn  { display:flex; }
+
+  /* ── Topnav ──────────────────────────── */
+  .topnav-date, .topnav-name { display:none; }
+
+  /* ── Feature grids ───────────────────── */
+  .feat-grid { grid-template-columns:1fr; }
+  .form-2col { grid-template-columns:1fr; }
+  .metrics-row { grid-template-columns:1fr 1fr; }
+  .stats-strip { grid-template-columns:1fr 1fr; }
+
+  /* ── Dashboard welcome ───────────────── */
+  .dash-welcome { flex-direction:column; }
+  .dash-quote   { max-width:100%; }
+
+  /* ── Auth pages ──────────────────────── */
+  .auth-page    { justify-content:center; padding:1.25rem; }
+  .auth-content { align-items:center; }
+  .auth-title-wrap { align-self:center; text-align:center; }
+  .auth-card    { max-width:100%; }
+  .reg-layout   { grid-template-columns:1fr; }
+  .reg-left     { display:none; }
+
+  /* ── Chat ────────────────────────────── */
+  .ai-page .chat-box { height:calc(100vh - 140px); }
+  .cb-bubble { max-width:85%; }
+
+  /* Page padding */
+  .page-content { padding:1.25rem; }
+}
+
+/* ── Small mobile ≤ 480px ───────────────────────────────────── */
+@media (max-width:480px) {
+  .hero-h1 { font-size:2.2rem; }
+  .metrics-row { grid-template-columns:1fr; }
+  .stats-strip { grid-template-columns:1fr; }
+  .qa-btns     { flex-direction:column; }
+  .team-cards  { grid-template-columns:1fr; }
+  .social-grid { grid-template-columns:1fr; }
+  .c-card      { min-width:220px; height:260px; }
+  .reg-features { grid-template-columns:1fr; }
+  .chatbot-win { width:300px; }
+  .lfoot-links { flex-direction:column; gap:.4rem; }
+}

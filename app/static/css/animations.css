@@ -1,0 +1,122 @@
+/* animations.css — All VitaPulse keyframes | Exact Figma motion */
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes blobFloat {
+  0%,100% { transform:translate(0,0)   scale(1); }
+  33%     { transform:translate(20px,-18px) scale(1.04); }
+  66%     { transform:translate(-14px,12px) scale(.97); }
+}
+
+@keyframes heroFloat {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-6px); }
+}
+
+@keyframes chatbotPulse {
+  0%,100% { box-shadow:0 4px 20px rgba(0,200,151,.45); }
+  50%     { box-shadow:0 4px 32px rgba(0,200,151,.75); }
+}
+
+@keyframes slideInRight {
+  from { opacity:0; transform:translateX(20px); }
+  to   { opacity:1; transform:none; }
+}
+
+@keyframes slideInUp {
+  from { opacity:0; transform:translateY(24px); }
+  to   { opacity:1; transform:none; }
+}
+
+@keyframes fadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+
+@keyframes scaleIn {
+  from { opacity:0; transform:scale(.92); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+@keyframes spin {
+  to { transform:rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%     { opacity:.45; }
+}
+
+@keyframes particleFloat {
+  0%   { transform:translateY(0) translateX(0); opacity:0; }
+  10%  { opacity:1; }
+  90%  { opacity:.6; }
+  100% { transform:translateY(-120px) translateX(30px); opacity:0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position:-200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ringDraw {
+  from { stroke-dashoffset:213.6; }
+  to   { stroke-dashoffset:var(--target-offset,0); }
+}
+
+@keyframes ecgMove {
+  0%   { stroke-dashoffset:2000; }
+  100% { stroke-dashoffset:0; }
+}
+
+@keyframes typing {
+  0%,100% { opacity:.3; }
+  50%     { opacity:1; }
+}
+
+@keyframes borderGlow {
+  0%,100% { border-color:rgba(0,200,151,.3); }
+  50%     { border-color:rgba(0,200,151,.7); }
+}
+
+/* ── Utility animation classes ──────────────────────────────── */
+.anim-fade-up   { animation:slideInUp  .4s ease both; }
+.anim-fade-in   { animation:fadeIn     .35s ease both; }
+.anim-scale-in  { animation:scaleIn    .3s ease both; }
+
+/* Scroll-triggered — added via JS IntersectionObserver */
+[data-anim] { opacity:0; transform:translateY(18px); }
+[data-anim].visible {
+  opacity:1; transform:none;
+  transition:opacity .45s ease, transform .45s ease;
+}
+
+/* Staggered children */
+[data-anim][data-delay="100"] { transition-delay:.1s; }
+[data-anim][data-delay="200"] { transition-delay:.2s; }
+[data-anim][data-delay="300"] { transition-delay:.3s; }
+[data-anim][data-delay="400"] { transition-delay:.4s; }
+[data-anim][data-delay="500"] { transition-delay:.5s; }
+
+/* Typing dots for chatbot */
+.typing-dots { display:flex; gap:.3rem; align-items:center; padding:.2rem 0; }
+.typing-dots span {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--muted); animation:typing .9s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay:.2s; }
+.typing-dots span:nth-child(3) { animation-delay:.4s; }
+
+/* Skeleton shimmer for loading states */
+.skeleton {
+  background:linear-gradient(90deg,var(--bg-3) 25%,var(--glass-hover) 50%,var(--bg-3) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s infinite;
+  border-radius:var(--r-sm);
+}
+
+/* Spinner */
+.spinner {
+  width:22px; height:22px; border:2.5px solid var(--border);
+  border-top-color:var(--teal); border-radius:50%;
+  animation:spin .7s linear infinite;
+}
