@@ -1,1 +1,39 @@
-venv
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+
+# IDE Files
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database (only if local database file)
+*.db
+*.sqlite3
+
+# Build Files
+build/
+dist/
+
+# Testing
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/

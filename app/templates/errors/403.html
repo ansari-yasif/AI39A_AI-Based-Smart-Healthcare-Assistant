@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}403 — VitaPulse{% endblock %}
+{% block body %}
+<div class="err-page"><div class="err-blob"></div><div class="err-inner"><div class="err-icon"><i data-lucide="shield-off"></i></div><h1 class="err-code">403</h1><h2>Access Denied</h2><p>You don't have permission to view this page.</p><a href="{{ url_for('dashboard.index') }}" class="vp-btn">Back to Dashboard</a></div></div>
+{% endblock %}
