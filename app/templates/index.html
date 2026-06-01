@@ -32,11 +32,11 @@
         <input type="text" placeholder="Search..." class="search-input"/>
       </div>
 
-      {# Login — gradient outline button (commented out) #}
-      {# <a href="{{ url_for('auth.login') }}" class="btn-login">
+      <!-- Login — gradient outline button (UNCOMMENTED) -->
+      <a href="{{ url_for('auth.login') }}" class="btn-login">
         <i data-lucide="user"></i>
         <span>Login</span>
-      </a> #}
+      </a>
 
       <!-- Register — gradient fill button -->
       <a href="{{ url_for('auth.register') }}" class="btn-register">Register</a>
@@ -54,7 +54,8 @@
     <a href="#about"    class="mob-link">About</a>
     <a href="#contact-section" class="mob-link">Contact</a>
     <div class="mob-auth">
-      {# <a href="{{ url_for('auth.login') }}"    class="btn-login w-full">Login</a> #}
+      <!-- Login button (UNCOMMENTED) -->
+      <a href="{{ url_for('auth.login') }}" class="btn-login w-full">Login</a>
       <a href="{{ url_for('auth.register') }}" class="btn-register w-full">Register</a>
     </div>
   </div>

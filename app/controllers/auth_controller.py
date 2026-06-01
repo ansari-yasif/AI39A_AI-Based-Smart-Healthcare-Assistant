@@ -95,6 +95,82 @@ class AuthController(BaseController):
 
         cls.flash_ok('Account created successfully! Please log in with your credentials.')
         return cls.redirect_to('auth.login')
+    
+        # ── Google OAuth ──────────────────────────────────────────
+    @classmethod
+    def google_login(cls):
+        """Redirect user to Google's OAuth 2.0 server."""
+        from authlib.integrations.flask_client import OAuth
+        from flask import current_app, redirect, url_for
+
+        oauth = OAuth(current_app)
+        oauth.register(
+            name='google',
+            client_id=current_app.config.get('GOOGLE_CLIENT_ID'),
+            client_secret=current_app.config.get('GOOGLE_CLIENT_SECRET'),
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile'},
+        )
+        redirect_uri = url_for('auth.google_callback', _external=True)
+        return oauth.google.authorize_redirect(redirect_uri)
+
+    @classmethod
+    def google_callback(cls):
+        """Handle Google OAuth callback: create/link user and log in."""
+        from authlib.integrations.flask_client import OAuth
+        from flask import current_app, request, session, redirect, url_for
+        from app.models.user import UserModel
+        from app.auth import login_user
+        import traceback
+
+        try:
+            oauth = OAuth(current_app)
+            oauth.register(
+                name='google',
+                client_id=current_app.config.get('GOOGLE_CLIENT_ID'),
+                client_secret=current_app.config.get('GOOGLE_CLIENT_SECRET'),
+                server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+                client_kwargs={'scope': 'openid email profile'},
+            )
+            token = oauth.google.authorize_access_token()
+            user_info = oauth.google.parse_id_token(token)
+
+            email = user_info.get('email', '').lower()
+            full_name = user_info.get('name', '')
+            avatar = user_info.get('picture', '')
+
+            if not email:
+                cls.flash_err('Google login failed: no email provided.')
+                return redirect(url_for('auth.login'))
+
+            # Check if user exists by email
+            user = UserModel.find_by_email(email)
+
+            if user:
+                # Existing user – log them in
+                login_user(user)
+                cls.flash_ok(f'Welcome back, {user["full_name"].split()[0]}!')
+                return redirect(url_for('dashboard.index'))
+            else:
+                # Create new user with Google data
+                import secrets
+                temp_password = secrets.token_urlsafe(16)
+                uid = UserModel.create(full_name, email, temp_password)
+                if uid:
+                    user = UserModel.find_by_id(uid)
+                    # Optionally save avatar URL (if you have an avatar column)
+                    # UserModel.update_avatar(uid, avatar)
+                    login_user(user)
+                    cls.flash_ok('Account created with Google! Welcome to VitaPulse 🎉')
+                    return redirect(url_for('dashboard.index'))
+                else:
+                    cls.flash_err('Could not create account. Please try again.')
+                    return redirect(url_for('auth.register'))
+
+        except Exception as e:
+            current_app.logger.error(f'Google OAuth error: {str(e)}\n{traceback.format_exc()}')
+            cls.flash_err('Google authentication failed. Please try again.')
+            return redirect(url_for('auth.login'))
 
     # ── Logout ───────────────────────────────────────────────
     @classmethod

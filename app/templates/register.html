@@ -2,6 +2,12 @@
 {% block title %}Register — VitaPulse{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}"/>
+<style>
+  /* Make logos rounded (both left panel and card) */
+  .reg-logo, .auth-card-logo {
+    border-radius: 16px;
+  }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -11,7 +17,7 @@
 
 <div class="auth-page reg-page">
 
-  <!-- Left: feature showcase (unchanged) -->
+  <!-- Left: feature showcase -->
   <div class="reg-left">
     <div class="reg-left-inner">
       <div class="reg-brand">
@@ -75,7 +81,7 @@
         </div>
 
         <form method="POST" action="{{ url_for('auth.register_post') }}" id="registerForm" novalidate>
-          <!-- Full Name (no required attribute) -->
+          <!-- Full Name -->
           <div class="auth-field {% if errors and errors.full_name %}error{% endif %}">
             <label>Full Name</label>
             <div class="auth-input-wrap">
@@ -87,7 +93,7 @@
             {% endif %}
           </div>
 
-          <!-- Email (no required attribute) -->
+          <!-- Email -->
           <div class="auth-field {% if errors and errors.email %}error{% endif %}">
             <label>Email Address</label>
             <div class="auth-input-wrap">
@@ -99,7 +105,7 @@
             {% endif %}
           </div>
 
-          <!-- Password (no required attribute) -->
+          <!-- Password -->
           <div class="auth-field {% if errors and errors.password %}error{% endif %}">
             <label>Password</label>
             <div class="auth-input-wrap">
@@ -116,7 +122,7 @@
             {% endif %}
           </div>
 
-          <!-- Confirm Password (no required attribute) -->
+          <!-- Confirm Password -->
           <div class="auth-field {% if errors and errors.confirm_password %}error{% endif %}">
             <label>Confirm Password</label>
             <div class="auth-input-wrap">
@@ -128,7 +134,7 @@
             {% endif %}
           </div>
 
-          <!-- Terms checkbox (no required attribute) -->
+          <!-- Terms checkbox -->
           <label class="check-label {% if errors and errors.terms %}error{% endif %}" style="margin-bottom:1.25rem;margin-top:.25rem">
             <input type="checkbox" name="terms" value="1" {% if form_data.terms %}checked{% endif %} />
             <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
@@ -138,7 +144,23 @@
           {% endif %}
 
           <button type="submit" class="auth-submit">Create Free Account</button>
+
+          <!-- Google Sign-In (fully working) -->
+          <div class="auth-divider"><span>or</span></div>
+
+          <a href="{{ url_for('auth.google_login') }}" class="google-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Sign up with Google</span>
+          </a>
+
         </form>
+
+        <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
       </div>
     </div>
   </div>
@@ -162,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('registerForm');
   if (!form) return;
 
-  // Remove error class and error message on input/change
   const fields = ['input[name="full_name"]', 'input[name="email"]', 'input[name="password"]', 'input[name="confirm_password"]'];
   fields.forEach(selector => {
     const input = form.querySelector(selector);
@@ -184,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const parent = this.closest('.check-label');
       if (parent) {
         parent.classList.remove('error');
-        // Remove the associated error span (if any)
         const errorSpan = parent.parentElement?.querySelector('.field-error');
         if (errorSpan && errorSpan.innerText.includes('agree')) errorSpan.remove();
       }
