@@ -18,6 +18,11 @@ class UserModel(BaseModel):
         return cls.fetch_one('SELECT * FROM users WHERE email=%s LIMIT 1', (email,))
 
     @classmethod
+    def find_by_id(cls, user_id):
+        """Fetch a single user by primary key"""
+        return cls.fetch_one('SELECT * FROM users WHERE id=%s LIMIT 1', (user_id,))
+
+    @classmethod
     def authenticate(cls, email, password):
         u = cls.find_by_email(email)
         if u and verify_password(password, u['password_hash']):
