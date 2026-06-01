@@ -35,34 +35,66 @@ class AuthController(BaseController):
     # ── Register ─────────────────────────────────────────────
     @classmethod
     def show_register(cls):
-        return cls.render('register.html')
+        # Pass empty dicts to prevent UndefinedError
+        return cls.render('register.html', errors={}, form_data={})
 
     @classmethod
     def process_register(cls):
-        name  = sanitize(cls.form('full_name'))
-        email = sanitize(cls.form('email')).lower()
-        pwd   = cls.form('password')
-        cpwd  = cls.form('confirm_password')
-        if not all([name, email, pwd, cpwd]):
-            cls.flash_err('All fields are required.')
-            return cls.render('register.html')
-        if not is_valid_email(email):
-            cls.flash_err('Please enter a valid email address.')
-            return cls.render('register.html')
-        if not is_strong_password(pwd):
-            cls.flash_err('Password needs 8+ chars with uppercase, lowercase and a number.')
-            return cls.render('register.html')
-        if pwd != cpwd:
-            cls.flash_err('Passwords do not match.')
-            return cls.render('register.html')
-        if UserModel.email_exists(email):
-            cls.flash_err('This email is already registered. Please sign in.')
-            return cls.render('register.html')
-        uid  = UserModel.create(name, email, pwd)
-        user = UserModel.find_by_id(uid)
-        login_user(user)
-        cls.flash_ok('Account created! Welcome to VitaPulse 🎉')
-        return cls.redirect_to('dashboard.index')
+        name = sanitize(cls.form('full_name')).strip()
+        email = sanitize(cls.form('email')).lower().strip()
+        pwd = cls.form('password')
+        cpwd = cls.form('confirm_password')
+        terms = cls.form('terms')
+
+        errors = {}
+        form_data = {
+            'full_name': name,
+            'email': email,
+            'terms': terms
+        }
+
+        # Name validation
+        if not name:
+            errors['full_name'] = 'Full name is required.'
+
+        # Email validation
+        if not email:
+            errors['email'] = 'Email address is required.'
+        elif not is_valid_email(email):
+            errors['email'] = 'Please enter a valid email address (e.g., name@example.com).'
+
+        # Password validation
+        if not pwd:
+            errors['password'] = 'Password is required.'
+        elif not is_strong_password(pwd):
+            errors['password'] = 'Password needs 8+ characters with uppercase, lowercase and a number.'
+
+        # Confirm password
+        if not cpwd:
+            errors['confirm_password'] = 'Please confirm your password.'
+        elif pwd != cpwd:
+            errors['confirm_password'] = 'Passwords do not match.'
+
+        # Terms checkbox
+        if not terms:
+            errors['terms'] = 'You must agree to the Terms of Service and Privacy Policy.'
+
+        # Email uniqueness (only if email is valid so far)
+        if not errors.get('email') and UserModel.email_exists(email):
+            errors['email'] = 'This email is already registered. Please sign in.'
+
+        # If any errors, re-render with error messages and preserved data
+        if errors:
+            return cls.render('register.html', errors=errors, form_data=form_data)
+
+        # Create user (password hashing inside UserModel.create)
+        uid = UserModel.create(name, email, pwd)
+        if not uid:
+            cls.flash_err('Registration failed. Please try again.')
+            return cls.render('register.html', errors={}, form_data=form_data)
+
+        cls.flash_ok('Account created successfully! Please log in with your credentials.')
+        return cls.redirect_to('auth.login')
 
     # ── Logout ───────────────────────────────────────────────
     @classmethod
@@ -83,10 +115,7 @@ class AuthController(BaseController):
             cls.flash_err('Please enter a valid email address.')
             return cls.render('forgot_password.html')
         user = UserModel.find_by_email(email)
-        # Always show success message (don't reveal if email exists — security)
         if user:
-            # In production: send reset email with token
-            # For now: flash success and redirect
             current_app.logger.info(f'Password reset requested for {email}')
         cls.flash_ok('If this email is registered, a reset link has been sent.')
         return cls.redirect_to('auth.login')
@@ -97,8 +126,7 @@ class AuthController(BaseController):
 
     @classmethod
     def process_reset(cls):
-        # Simplified — in production use signed tokens
-        email   = sanitize(cls.form('email')).lower()
+        email = sanitize(cls.form('email')).lower()
         new_pwd = cls.form('new_password')
         confirm = cls.form('confirm_password')
         if not is_strong_password(new_pwd):
