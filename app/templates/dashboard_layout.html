@@ -25,21 +25,22 @@
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
-  // Fallback: ensure dropdown works even if dashboard.js fails
+  // Professional dropdown toggle – closes when clicking outside
   (function() {
     function initDropdown() {
       var btn = document.getElementById('userDropdownBtn');
       var dd = document.getElementById('userDropdown');
       if (btn && dd) {
+        // Toggle on button click (stop propagation to avoid immediate close)
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           dd.classList.toggle('open');
         });
-        document.body.addEventListener('click', function() {
+        // Close dropdown when clicking anywhere outside the dropdown and button
+        document.addEventListener('click', function(e) {
+          // If click is inside the dropdown or on the button, do nothing
+          if (dd.contains(e.target) || btn.contains(e.target)) return;
           dd.classList.remove('open');
-        });
-        dd.addEventListener('click', function(e) {
-          e.stopPropagation();
         });
       }
     }
