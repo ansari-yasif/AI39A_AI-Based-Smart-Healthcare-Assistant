@@ -30,7 +30,7 @@ class AuthController(BaseController):
         if nxt and nxt.startswith('/'):
             from flask import redirect
             return redirect(nxt)
-        return cls.redirect_to('dashboard.index')
+        return cls.redirect_to('index')   # ← changed from 'dashboard.index'
 
     # ── Register ─────────────────────────────────────────────
     @classmethod
@@ -96,7 +96,7 @@ class AuthController(BaseController):
         cls.flash_ok('Account created successfully! Please log in with your credentials.')
         return cls.redirect_to('auth.login')
     
-        # ── Google OAuth ──────────────────────────────────────────
+    # ── Google OAuth ──────────────────────────────────────────
     @classmethod
     def google_login(cls):
         """Redirect user to Google's OAuth 2.0 server."""
@@ -150,7 +150,7 @@ class AuthController(BaseController):
                 # Existing user – log them in
                 login_user(user)
                 cls.flash_ok(f'Welcome back, {user["full_name"].split()[0]}!')
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('index'))   # ← changed from 'dashboard.index'
             else:
                 # Create new user with Google data
                 import secrets
@@ -162,7 +162,7 @@ class AuthController(BaseController):
                     # UserModel.update_avatar(uid, avatar)
                     login_user(user)
                     cls.flash_ok('Account created with Google! Welcome to VitaPulse 🎉')
-                    return redirect(url_for('dashboard.index'))
+                    return redirect(url_for('index'))   # ← changed from 'dashboard.index'
                 else:
                     cls.flash_err('Could not create account. Please try again.')
                     return redirect(url_for('auth.register'))

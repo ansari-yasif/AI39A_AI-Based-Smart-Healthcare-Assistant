@@ -31,11 +31,11 @@ def admin_required(fn):
 
 
 def guest_only(fn):
-    """Redirect already-logged-in users to dashboard."""
+    """Redirect already-logged-in users to home page."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         if 'user_id' in session:
-            return redirect(url_for('dashboard.index'))
+            return redirect(url_for('index'))   # ← fixed (was 'dashboard.index')
         return fn(*args, **kwargs)
     return wrapper
 
