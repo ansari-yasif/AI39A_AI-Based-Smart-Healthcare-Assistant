@@ -1,0 +1,53 @@
+{# dashboard_layout.html — authenticated shell with sidebar + topnav #}
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  {% include 'partials/sidebar.html' %}
+
+  <div class="main-area" id="mainArea">
+    {% include 'partials/nav.html' %}
+
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% include 'partials/footer.html' %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  // Fallback: ensure dropdown works even if dashboard.js fails
+  (function() {
+    function initDropdown() {
+      var btn = document.getElementById('userDropdownBtn');
+      var dd = document.getElementById('userDropdown');
+      if (btn && dd) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+        document.body.addEventListener('click', function() {
+          dd.classList.remove('open');
+        });
+        dd.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDropdown);
+    } else {
+      initDropdown();
+    }
+  })();
+</script>
+{% endblock %}

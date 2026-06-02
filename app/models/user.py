@@ -34,11 +34,17 @@ class UserModel(BaseModel):
         return bool(cls.fetch_one('SELECT id FROM users WHERE email=%s LIMIT 1', (email,)))
 
     @classmethod
-    def update_profile(cls, uid, full_name, bio=''):
+    def update_profile(cls, uid, full_name, phone, bio=''):
+        """Update user profile: full_name, phone, bio"""
         return cls.execute(
-            'UPDATE users SET full_name=%s,bio=%s,updated_at=NOW() WHERE id=%s',
-            (full_name, bio, uid)
+            'UPDATE users SET full_name=%s, phone=%s, bio=%s, updated_at=NOW() WHERE id=%s',
+            (full_name, phone, bio, uid)
         )
+
+    @classmethod
+    def update_phone(cls, uid, phone):
+        """Update only phone number"""
+        return cls.execute('UPDATE users SET phone=%s WHERE id=%s', (phone, uid))
 
     @classmethod
     def update_health(cls, uid, age, gender, weight_kg, height_cm, goal, activity):

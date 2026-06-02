@@ -1,4 +1,4 @@
-{# partials/sidebar.html — Full feature sidebar with all 15 routes #}
+{# partials/sidebar.html — sidebar without user card and without My Profile #}
 <aside class="sidebar" id="sidebar">
 
   <!-- Brand -->
@@ -6,21 +6,6 @@
     <img src="{{ url_for('static', filename='images/Vita_pulse.png') }}" alt="VitaPulse" class="sb-logo"/>
     <span class="sb-title">VITAPULSE</span>
     <button class="sb-close" id="sbClose" aria-label="Close"><i data-lucide="x"></i></button>
-  </div>
-
-  <!-- User card -->
-  <div class="sb-user">
-    <div class="sb-avatar">
-      {% if current_user.avatar %}
-        <img src="{{ current_user.avatar }}" alt="avatar"/>
-      {% else %}
-        <span class="sb-av-initials">{{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}</span>
-      {% endif %}
-    </div>
-    <div class="sb-userinfo">
-      <p class="sb-name">{{ current_user.full_name or 'User' }}</p>
-      <span class="sb-role">{{ current_user.role | title }}</span>
-    </div>
   </div>
 
   <!-- Navigation -->
@@ -32,82 +17,12 @@
       <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
     </a>
 
-    <a href="{{ url_for('profile.index') }}"
-       class="sb-link {% if 'profile' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="user-circle"></i><span>My Profile</span>
-    </a>
-
+    {# ========== ALL OTHER LINKS ARE COMMENTED OUT ========== #}
+    {#
+    <a href="{{ url_for('profile.profile') }}" class="sb-link">...</a>
     <p class="sb-section-lbl">Health & Fitness</p>
-
-    <a href="{{ url_for('calorie.index') }}"
-       class="sb-link {% if 'calorie' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="flame"></i><span>Calories</span>
-    </a>
-
-    <a href="{{ url_for('meal.index') }}"
-       class="sb-link {% if 'meal' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="utensils"></i><span>Meals</span>
-    </a>
-
-    <a href="{{ url_for('workout.index') }}"
-       class="sb-link {% if 'workout' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="dumbbell"></i><span>Workout</span>
-    </a>
-
-    <a href="{{ url_for('weight.index') }}"
-       class="sb-link {% if 'weight' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="scale"></i><span>Weight</span>
-    </a>
-
-    <p class="sb-section-lbl">Wellbeing</p>
-
-    <a href="{{ url_for('sleep.index') }}"
-       class="sb-link {% if 'sleep' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="moon"></i><span>Sleep</span>
-    </a>
-
-    <a href="{{ url_for('mood.index') }}"
-       class="sb-link {% if 'mood' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="smile"></i><span>Mood</span>
-    </a>
-
-    <a href="{{ url_for('goal.index') }}"
-       class="sb-link {% if 'goal' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="target"></i><span>Goals</span>
-    </a>
-
-    <p class="sb-section-lbl">Analytics</p>
-
-    <a href="{{ url_for('report.index') }}"
-       class="sb-link {% if 'report' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="bar-chart-2"></i><span>Reports</span>
-    </a>
-
-    <a href="{{ url_for('expense.index') }}"
-       class="sb-link {% if 'expense' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="wallet"></i><span>Expenses</span>
-    </a>
-
-    <p class="sb-section-lbl">Health Hub</p>
-
-    <a href="{{ url_for('health.index') }}"
-       class="sb-link {% if request.endpoint == 'health.index' %}active{% endif %}">
-      <i data-lucide="heart-pulse"></i><span>Health</span>
-    </a>
-
-    <a href="{{ url_for('ai.chat') }}"
-       class="sb-link sb-ai {% if 'ai' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="bot"></i><span>AI Assistant</span>
-      <span class="sb-ai-badge">AI</span>
-    </a>
-
-    {% if current_user.role == 'admin' %}
-    <div class="sb-divider"></div>
-    <a href="{{ url_for('admin.index') }}"
-       class="sb-link sb-admin {% if 'admin' in (request.endpoint or '') %}active{% endif %}">
-      <i data-lucide="shield"></i><span>Admin Panel</span>
-    </a>
-    {% endif %}
+    ...
+    #}
   </nav>
 
   <!-- Logout -->

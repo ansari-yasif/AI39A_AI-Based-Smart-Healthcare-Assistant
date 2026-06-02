@@ -1,0 +1,211 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Dashboard — VitaPulse{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+
+  <!-- Welcome -->
+  <div class="dash-welcome">
+    <div>
+      <h1 class="dash-greeting">
+        Good {{ 'Morning' if now.hour < 12 else 'Afternoon' if now.hour < 18 else 'Evening' }},
+        <span class="teal-text">{{ session.get('full_name','User').split()[0] }}</span> 👋
+      </h1>
+      <p class="dash-date">{{ today }} — Here's your health overview</p>
+    </div>
+    <div class="dash-quote">
+      <i data-lucide="flame" class="quote-icon"></i>
+      <div>
+        <p class="quote-text">"No Pain, <span class="teal-text">No Gain</span>"</p>
+        <p class="quote-auth">Stay consistent, stay strong</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top metrics row -->
+  <div class="metrics-row">
+    <!-- Calories -->
+    <div class="metric-card mc-teal" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-teal"><i data-lucide="flame"></i></div>
+        <span class="mc-badge">Today</span>
+      </div>
+      <p class="mc-label">Calories</p>
+      {% set consumed = totals.cal | int %}
+      {% set goal = calorie_goal | int %}
+      <div class="mc-big">{{ consumed }}</div>
+      <p class="mc-sub">/ {{ goal }} kcal goal</p>
+      <svg class="mc-ring" viewBox="0 0 80 80" width="80" height="80">
+        <circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,0.08)" stroke-width="7" fill="none"/>
+        <circle cx="40" cy="40" r="34" stroke="url(#tealGrad)" stroke-width="7" fill="none"
+          stroke-linecap="round"
+          stroke-dasharray="{{ (2*3.14159*34)|round(1) }}"
+          stroke-dashoffset="{{ ((1 - [consumed/goal,1]|min) * 2 * 3.14159 * 34)|round(1) }}"
+          transform="rotate(-90 40 40)" class="ring-path"/>
+        <defs>
+          <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00C897"/>
+            <stop offset="100%" stop-color="#00a67e"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- Sleep -->
+    <div class="metric-card" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-blue"><i data-lucide="moon"></i></div>
+        <span class="mc-badge">Last night</span>
+      </div>
+      <p class="mc-label">Sleep</p>
+      <div class="mc-big">{{ sleep_today.hours_slept if sleep_today else '—' }}</div>
+      <p class="mc-sub">hrs &nbsp;·&nbsp; avg {{ avg_sleep }}h/week</p>
+      {% if sleep_today %}
+      <span class="mc-chip mc-chip-blue">{{ sleep_today.quality }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Mood -->
+    <div class="metric-card" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-purple"><i data-lucide="smile"></i></div>
+        <span class="mc-badge">Today</span>
+      </div>
+      <p class="mc-label">Mood</p>
+      <div class="mc-big mc-emoji">
+        {% if mood_today %}
+          {% if mood_today.mood == 'Happy' %}😊
+          {% elif mood_today.mood == 'Energetic' %}⚡
+          {% elif mood_today.mood == 'Tired' %}😴
+          {% elif mood_today.mood == 'Stressed' %}😰
+          {% elif mood_today.mood == 'Calm' %}😌
+          {% elif mood_today.mood == 'Sad' %}😢
+          {% elif mood_today.mood == 'Focused' %}🎯
+          {% else %}🙂{% endif %}
+        {% else %}—{% endif %}
+      </div>
+      <p class="mc-sub">{{ mood_today.mood if mood_today else 'Not logged' }}{% if mood_today %} · ⚡ {{ mood_today.energy_level }}/10{% endif %}</p>
+    </div>
+
+    <!-- Workouts -->
+    <div class="metric-card" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-orange"><i data-lucide="dumbbell"></i></div>
+        <span class="mc-badge">This week</span>
+      </div>
+      <p class="mc-label">Workouts</p>
+      <div class="mc-big">{{ wkt.sessions }}</div>
+      <p class="mc-sub">{{ wkt.mins }} min · {{ wkt.burned }} kcal burned</p>
+    </div>
+  </div>
+
+  <!-- BMR / TDEE / BMI strip -->
+  {% if bmr %}
+  <div class="stats-strip" data-anim>
+    <div class="ss-item">
+      <i data-lucide="zap" class="ss-icon ss-ic-teal"></i>
+      <div>
+        <p class="ss-label">BMR</p>
+        <p class="ss-val">{{ bmr }} <span>kcal/day</span></p>
+      </div>
+    </div>
+    <div class="ss-item">
+      <i data-lucide="activity" class="ss-icon ss-ic-orange"></i>
+      <div>
+        <p class="ss-label">TDEE</p>
+        <p class="ss-val">{{ tdee }} <span>kcal/day</span></p>
+      </div>
+    </div>
+    <div class="ss-item">
+      <i data-lucide="scale" class="ss-icon" style="color:{{ bmi_color }}"></i>
+      <div>
+        <p class="ss-label">BMI</p>
+        <p class="ss-val" style="color:{{ bmi_color }}">{{ bmi }} <span>— {{ bmi_label }}</span></p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Charts row -->
+  <div class="charts-row">
+    <div class="chart-card" data-anim>
+      <div class="cc-header">
+        <h3>Sleep This Week</h3>
+        <i data-lucide="moon" class="cc-ico"></i>
+      </div>
+      <canvas id="sleepChart" height="200"></canvas>
+    </div>
+    <div class="chart-card" data-anim>
+      <div class="cc-header">
+        <h3>Calorie Intake</h3>
+        <i data-lucide="flame" class="cc-ico"></i>
+      </div>
+      <canvas id="calChart" height="200"></canvas>
+    </div>
+  </div>
+
+  {# Quick Log section commented out (features not implemented) #}
+  {#
+  <div class="qa-section" data-anim>
+    <h3 class="qa-title">Quick Log</h3>
+    <div class="qa-btns">
+      <a href="{{ url_for('calorie.index') }}" class="qa-btn qa-teal"><i data-lucide="flame"></i>Calories</a>
+      <a href="{{ url_for('meal.index') }}"    class="qa-btn qa-blue"><i data-lucide="utensils"></i>Add Meal</a>
+      <a href="{{ url_for('sleep.index') }}"   class="qa-btn qa-purple"><i data-lucide="moon"></i>Sleep</a>
+      <a href="{{ url_for('mood.index') }}"    class="qa-btn qa-green"><i data-lucide="smile"></i>Mood</a>
+      <a href="{{ url_for('expense.index') }}" class="qa-btn qa-yellow"><i data-lucide="wallet"></i>Expense</a>
+      <a href="{{ url_for('ai.chat') }}"       class="qa-btn qa-ai"><i data-lucide="bot"></i>AI Chat</a>
+    </div>
+  </div>
+  #}
+
+</div>
+
+{# Floating AI button commented out #}
+{#
+<a href="{{ url_for('ai.chat') }}" class="dash-ai-float" title="AI Assistant">
+  <i data-lucide="bot"></i>
+  <span class="daf-tooltip">AI Assistant</span>
+</a>
+#}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var topDateElem = document.getElementById('topDate');
+  if (topDateElem) {
+    topDateElem.textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  var sleepLabels = {{ sleep_labels|tojson }};
+  var sleepData = {{ sleep_data|tojson }};
+  var calLabels = {{ cal_labels|tojson }};
+  var calData = {{ cal_chart|tojson }};
+
+  if (typeof initSleepChart === 'function') {
+    initSleepChart('sleepChart', sleepLabels, sleepData);
+  }
+  if (typeof initCalChart === 'function') {
+    initCalChart('calChart', calLabels, calData);
+  }
+
+  var rings = document.querySelectorAll('.ring-path');
+  rings.forEach(function(ring) {
+    var dashArray = parseFloat(ring.getAttribute('stroke-dasharray'));
+    var dashOffset = ring.getAttribute('stroke-dashoffset');
+    ring.style.strokeDashoffset = dashArray;
+    setTimeout(function() {
+      ring.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+      ring.style.strokeDashoffset = dashOffset;
+    }, 200);
+  });
+});
+</script>
+{% endblock %}

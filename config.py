@@ -1,10 +1,14 @@
 """config.py — Dev/Prod/Test configurations"""
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
 
+# Load environment variables from .env file (if exists)
+load_dotenv()
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'vitapulse-secret-2026-change-in-prod')
+    # Use SECRET_KEY from .env; if not set, use a fixed default (but you should set it!)
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'vitapulse-secret-2026-change-in-prod-fixed')
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'

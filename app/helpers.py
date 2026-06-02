@@ -1,7 +1,6 @@
 """app/helpers.py — Pure utility functions for health calculations and validation"""
 from datetime import date, datetime, timedelta
 from typing import Dict, Tuple
-# from app.constants import BMI_RANGES
 
 
 def calculate_bmr(weight_kg: float, height_cm: float, age: int, gender: str = 'male') -> float:
@@ -14,15 +13,20 @@ def calculate_tdee(bmr: float, activity: float) -> float:
     return round(bmr * activity, 1)
 
 
-# def calculate_bmi(weight_kg: float, height_cm: float) -> Tuple[float, str, str]:
-#     if height_cm <= 0:
-#         return 0.0, 'Invalid', '#999'
-#     h = height_cm / 100
-#     bmi = round(weight_kg / (h * h), 1)
-#     for lo, hi, label, color in BMI_RANGES:
-#         if lo <= bmi < hi:
-#             return bmi, label, color
-#     return bmi, 'Unknown', '#999'
+def calculate_bmi(weight_kg: float, height_cm: float) -> Tuple[float, str, str]:
+    """Return (bmi, label, color) – independent of BMI_RANGES."""
+    if height_cm <= 0:
+        return 0.0, 'Invalid', '#999'
+    h = height_cm / 100
+    bmi = round(weight_kg / (h * h), 1)
+    if bmi < 18.5:
+        return bmi, 'Underweight', '#f97316'
+    elif bmi < 25:
+        return bmi, 'Normal', '#10b981'
+    elif bmi < 30:
+        return bmi, 'Overweight', '#f59e0b'
+    else:
+        return bmi, 'Obese', '#ef4444'
 
 
 def calculate_macros(tdee: float, goal: str = 'maintain') -> Dict[str, int]:

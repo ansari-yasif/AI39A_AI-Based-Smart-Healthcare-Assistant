@@ -1,4 +1,6 @@
 """app/__init__.py — Application factory"""
+from dotenv import load_dotenv
+load_dotenv()  
 from flask import Flask, render_template
 from config import get_config
 
@@ -15,7 +17,7 @@ def create_app(env: str = None) -> Flask:
 
 def _register_blueprints(app):
     from app.routes.auth_routes      import auth_bp
-    # from app.routes.dashboard_routes import dashboard_bp
+    from app.routes.dashboard_routes import dashboard_bp   # ✓ uncommented
     # from app.routes.calorie_routes   import calorie_bp
     # from app.routes.meal_routes      import meal_bp
     # from app.routes.sleep_routes     import sleep_bp
@@ -28,10 +30,10 @@ def _register_blueprints(app):
     # from app.routes.weight_routes    import weight_bp
     # from app.routes.goal_routes      import goal_bp
     # from app.routes.report_routes    import report_bp
-    # from app.routes.profile_routes   import profile_bp
+    from app.routes.profile_routes   import profile_bp      # ✓ uncommented
 
     app.register_blueprint(auth_bp,      url_prefix='/auth')
-    # app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     # app.register_blueprint(calorie_bp,   url_prefix='/calorie')
     # app.register_blueprint(meal_bp,      url_prefix='/meals')
     # app.register_blueprint(sleep_bp,     url_prefix='/sleep')
@@ -44,7 +46,7 @@ def _register_blueprints(app):
     # app.register_blueprint(weight_bp,    url_prefix='/weight')
     # app.register_blueprint(goal_bp,      url_prefix='/goals')
     # app.register_blueprint(report_bp,    url_prefix='/reports')
-    # app.register_blueprint(profile_bp,   url_prefix='/profile')
+    app.register_blueprint(profile_bp,   url_prefix='')
 
     @app.route('/')
     def index():
