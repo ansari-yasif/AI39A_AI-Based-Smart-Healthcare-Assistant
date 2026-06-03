@@ -1,21 +1,22 @@
 """app/__init__.py — Application factory with global OAuth"""
 from dotenv import load_dotenv
 load_dotenv()
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, session  # added redirect, url_for, session
 from config import get_config
 from authlib.integrations.flask_client import OAuth
+from datetime import timedelta
 
-# Global OAuth object (will be initialized in create_app)
 oauth = OAuth()
 
 def create_app(env: str = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(get_config(env))
 
-    # Initialize OAuth with the app
+    # Session lasts 7 days (browser close doesn't log out)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
     oauth.init_app(app)
 
-    # Register Google OAuth provider (once, using config values)
     oauth.register(
         name='google',
         client_id=app.config['GOOGLE_CLIENT_ID'],
@@ -43,6 +44,9 @@ def _register_blueprints(app):
 
     @app.route('/')
     def index():
+        # Redirect logged-in users directly to dashboard
+        if 'user_id' in session:
+            return redirect(url_for('dashboard.index'))
         return render_template('index.html')
 
 def _register_error_handlers(app):
