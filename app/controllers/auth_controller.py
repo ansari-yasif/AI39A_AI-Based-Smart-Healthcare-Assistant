@@ -1,9 +1,14 @@
-"""app/controllers/auth_controller.py — Full auth: login, register, forgot password, Google OAuth | Feature: Auth"""
-from flask import request, session, current_app
+"""app/controllers/auth_controller.py — Fixed Google OAuth with global oauth"""
+from flask import request, session, current_app, redirect, url_for
 from app.controllers.base_controller import BaseController
 from app.models.user import UserModel
 from app.auth import login_user, logout_user
 from app.helpers import is_valid_email, is_strong_password, sanitize
+from app import oauth  # Import the global OAuth object
+import secrets
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AuthController(BaseController):
@@ -28,9 +33,7 @@ class AuthController(BaseController):
         cls.flash_ok(f'Welcome back, {user["full_name"].split()[0]}!')
         nxt = request.args.get('next', '')
         if nxt and nxt.startswith('/'):
-            from flask import redirect
             return redirect(nxt)
-        # Redirect to dashboard instead of home page
         return cls.redirect_to('dashboard.index')
 
     # ── Register ─────────────────────────────────────────────
@@ -84,45 +87,49 @@ class AuthController(BaseController):
         cls.flash_ok('Account created successfully! Please log in with your credentials.')
         return cls.redirect_to('auth.login')
 
-    # ── Google OAuth (professional, uses config redirect URI) ─
+    # ── Google OAuth (with full exception handling) ──────────
     @classmethod
     def google_login(cls):
-        from authlib.integrations.flask_client import OAuth
-        from flask import current_app, redirect
+        """Step 1: Redirect user to Google consent screen"""
+        try:
+            # Generate a random state token for CSRF protection
+            state = secrets.token_urlsafe(32)
+            session['oauth_state'] = state
 
-        oauth = OAuth(current_app)
-        oauth.register(
-            name='google',
-            client_id=current_app.config.get('GOOGLE_CLIENT_ID'),
-            client_secret=current_app.config.get('GOOGLE_CLIENT_SECRET'),
-            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-            client_kwargs={'scope': 'openid email profile'},
-        )
-        # Force exact redirect URI from .env (avoids private IP error)
-        redirect_uri = current_app.config.get('GOOGLE_REDIRECT_URI')
-        return oauth.google.authorize_redirect(redirect_uri)
+            # Use Flask's url_for to get the absolute callback URL
+            redirect_uri = url_for('auth.google_callback', _external=True)
+
+            # Pass the state parameter to Google
+            return oauth.google.authorize_redirect(redirect_uri, state=state)
+
+        except Exception as e:
+            current_app.logger.error(f'Google login init error: {str(e)}', exc_info=True)
+            cls.flash_err('Unable to start Google sign‑in. Please try again later.')
+            return redirect(url_for('auth.login'))
 
     @classmethod
     def google_callback(cls):
-        from authlib.integrations.flask_client import OAuth
-        from flask import current_app, redirect, url_for
-        from app.models.user import UserModel
-        from app.auth import login_user
-        import traceback, secrets
+        """Step 2: Handle Google's callback and log in the user"""
+        # Validate state to prevent CSRF
+        stored_state = session.pop('oauth_state', None)
+        request_state = request.args.get('state')
+        if not stored_state or stored_state != request_state:
+            current_app.logger.error(f'State mismatch: stored={stored_state}, received={request_state}')
+            cls.flash_err('Security validation failed. Please try again.')
+            return redirect(url_for('auth.login'))
 
         try:
-            oauth = OAuth(current_app)
-            oauth.register(
-                name='google',
-                client_id=current_app.config.get('GOOGLE_CLIENT_ID'),
-                client_secret=current_app.config.get('GOOGLE_CLIENT_SECRET'),
-                server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-                client_kwargs={'scope': 'openid email profile'},
-            )
-            # FIX: bypass state mismatch for development (remove in production)
-            token = oauth.google.authorize_access_token(use_state=False)
-            user_info = oauth.google.parse_id_token(token)
+            # Fetch access token
+            token = oauth.google.authorize_access_token()
 
+            # Get user info from Google UserInfo endpoint
+            resp = oauth.google.get('https://www.googleapis.com/oauth2/v3/userinfo')
+            if resp.status_code != 200:
+                current_app.logger.error(f'Google userinfo failed: {resp.status_code} - {resp.text}')
+                cls.flash_err('Could not retrieve your profile from Google. Please try again.')
+                return redirect(url_for('auth.login'))
+
+            user_info = resp.json()
             email = user_info.get('email', '').lower()
             full_name = user_info.get('name', '')
             avatar = user_info.get('picture', '')
@@ -138,6 +145,7 @@ class AuthController(BaseController):
                 cls.flash_ok(f'Welcome back, {user["full_name"].split()[0]}!')
                 return redirect(url_for('dashboard.index'))
             else:
+                # Create a new account with a random password (user will use Google only)
                 temp_password = secrets.token_urlsafe(16)
                 uid = UserModel.create(full_name, email, temp_password)
                 if uid:
@@ -150,7 +158,7 @@ class AuthController(BaseController):
                     return redirect(url_for('auth.register'))
 
         except Exception as e:
-            current_app.logger.error(f'Google OAuth error: {str(e)}\n{traceback.format_exc()}')
+            current_app.logger.error(f'Google OAuth callback error: {str(e)}', exc_info=True)
             cls.flash_err('Google authentication failed. Please try again.')
             return redirect(url_for('auth.login'))
 
