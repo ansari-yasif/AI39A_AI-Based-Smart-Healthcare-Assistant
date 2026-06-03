@@ -30,6 +30,7 @@ class AuthController(BaseController):
             cls.flash_err('Invalid email or password.')
             return cls.render('login.html')
         login_user(user)
+        session.permanent = True   # <-- ADD THIS LINE (makes session survive browser restart)
         cls.flash_ok(f'Welcome back, {user["full_name"].split()[0]}!')
         nxt = request.args.get('next', '')
         if nxt and nxt.startswith('/'):
@@ -142,6 +143,7 @@ class AuthController(BaseController):
 
             if user:
                 login_user(user)
+                session.permanent = True   # <-- ADD THIS LINE
                 cls.flash_ok(f'Welcome back, {user["full_name"].split()[0]}!')
                 return redirect(url_for('dashboard.index'))
             else:
@@ -151,6 +153,7 @@ class AuthController(BaseController):
                 if uid:
                     user = UserModel.find_by_id(uid)
                     login_user(user)
+                    session.permanent = True   # <-- ADD THIS LINE
                     cls.flash_ok('Account created with Google! Welcome to VitaPulse 🎉')
                     return redirect(url_for('dashboard.index'))
                 else:
