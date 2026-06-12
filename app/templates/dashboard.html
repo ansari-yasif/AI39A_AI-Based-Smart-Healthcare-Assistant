@@ -160,52 +160,46 @@
   </div>
   #}
 
-</div>
+</div> <!-- closing dash-page -->
 
-{# Floating AI button commented out #}
-{#
-<a href="{{ url_for('ai.chat') }}" class="dash-ai-float" title="AI Assistant">
-  <i data-lucide="bot"></i>
-  <span class="daf-tooltip">AI Assistant</span>
-</a>
-#}
 {% endblock %}
 
 {% block extra_js %}
+{{ super() }}
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  var topDateElem = document.getElementById('topDate');
-  if (topDateElem) {
-    topDateElem.textContent = new Date().toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
+  document.addEventListener('DOMContentLoaded', function() {
+    var topDateElem = document.getElementById('topDate');
+    if (topDateElem) {
+      topDateElem.textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    var sleepLabels = {{ sleep_labels|tojson }};
+    var sleepData = {{ sleep_data|tojson }};
+    var calLabels = {{ cal_labels|tojson }};
+    var calData = {{ cal_chart|tojson }};
+
+    if (typeof initSleepChart === 'function') {
+      initSleepChart('sleepChart', sleepLabels, sleepData);
+    }
+    if (typeof initCalChart === 'function') {
+      initCalChart('calChart', calLabels, calData);
+    }
+
+    var rings = document.querySelectorAll('.ring-path');
+    rings.forEach(function(ring) {
+      var dashArray = parseFloat(ring.getAttribute('stroke-dasharray'));
+      var dashOffset = ring.getAttribute('stroke-dashoffset');
+      ring.style.strokeDashoffset = dashArray;
+      setTimeout(function() {
+        ring.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+        ring.style.strokeDashoffset = dashOffset;
+      }, 200);
     });
-  }
-
-  var sleepLabels = {{ sleep_labels|tojson }};
-  var sleepData = {{ sleep_data|tojson }};
-  var calLabels = {{ cal_labels|tojson }};
-  var calData = {{ cal_chart|tojson }};
-
-  if (typeof initSleepChart === 'function') {
-    initSleepChart('sleepChart', sleepLabels, sleepData);
-  }
-  if (typeof initCalChart === 'function') {
-    initCalChart('calChart', calLabels, calData);
-  }
-
-  var rings = document.querySelectorAll('.ring-path');
-  rings.forEach(function(ring) {
-    var dashArray = parseFloat(ring.getAttribute('stroke-dasharray'));
-    var dashOffset = ring.getAttribute('stroke-dashoffset');
-    ring.style.strokeDashoffset = dashArray;
-    setTimeout(function() {
-      ring.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
-      ring.style.strokeDashoffset = dashOffset;
-    }, 200);
   });
-});
 </script>
 {% endblock %}

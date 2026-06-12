@@ -638,3 +638,9 @@
   visibility: visible !important;
   transform: translateY(0) !important;
 }
+
+.chatbot-float {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
