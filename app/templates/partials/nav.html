@@ -1,0 +1,176 @@
+<header class="topnav">
+  <div class="topnav-l">
+    <button class="menu-btn" id="sbOpen"><i data-lucide="menu"></i></button>
+    <div class="breadcrumb">
+      <span class="bc-app">VitaPulse</span>
+      <i data-lucide="chevron-right" class="bc-sep"></i>
+      <span class="bc-page">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+  </div>
+  <div class="topnav-r">
+    <span class="topnav-date" id="topDate"></span>
+
+    <!-- ── Notification Bell ── -->
+    <div class="notify-dropdown" id="notifyDropdown">
+      <button class="icon-btn notify-btn" id="notifyBtn">
+        <i data-lucide="bell"></i>
+        <span class="notify-badge" id="notifyBadge" style="display:none">0</span>
+      </button>
+      <div class="notify-menu" id="notifyMenu">
+        <div class="notify-header">
+          <span class="notify-title">Notifications</span>
+          <button id="markAllRead" class="mark-read-btn">Mark all read</button>
+        </div>
+        <div class="notify-list" id="notifyList">
+          <div class="notify-empty"><i data-lucide="bell-off" style="width:28px;height:28px;opacity:.3"></i><p>No notifications</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── User Dropdown ── -->
+    <div class="user-dropdown" id="userDropdown">
+      <button class="user-dropdown-btn" id="userDropdownBtn"
+        onclick="document.getElementById('userDropdown').classList.toggle('open'); event.stopPropagation();">
+        <div class="user-avatar">
+          {% if current_user.avatar %}
+            <img src="{{ current_user.avatar }}" alt="avatar">
+          {% else %}
+            <span>{{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}</span>
+          {% endif %}
+        </div>
+        <span class="user-name">{{ current_user.full_name.split()[0] if current_user.full_name else 'User' }}</span>
+        <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+      </button>
+      <div class="user-dropdown-menu">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar">
+            {% if current_user.avatar %}
+              <img src="{{ current_user.avatar }}" alt="avatar">
+            {% else %}
+              <span>{{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}</span>
+            {% endif %}
+          </div>
+          <div class="dropdown-info">
+            <p class="dropdown-name">{{ current_user.full_name or 'User' }}</p>
+            <p class="dropdown-role" style="color: {{ 'var(--red)' if current_user.role == 'admin' else 'inherit' }}">{{ current_user.role | upper }}</p>
+            <p class="dropdown-email">{{ current_user.email or '' }}</p>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('profile.profile') }}" class="dropdown-item">
+          <i data-lucide="user"></i> <span>My Profile</span>
+        </a>
+        <a href="{{ url_for('profile.settings') }}" class="dropdown-item">
+          <i data-lucide="settings"></i> <span>Settings</span>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+          <i data-lucide="log-out"></i> <span>Logout</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+/* ── Notification System ─────────────────────────────── */
+(function () {
+  const btn      = document.getElementById('notifyBtn');
+  const menu     = document.getElementById('notifyMenu');
+  const list     = document.getElementById('notifyList');
+  const badge    = document.getElementById('notifyBadge');
+  const markAll  = document.getElementById('markAllRead');
+  let   open     = false;
+
+  function typeIcon(t) {
+    const icons = {
+      success: '✅', info: 'ℹ️', tip: '💡', health: '❤️',
+      warning: '⚠️', error: '❌'
+    };
+    return icons[t] || 'ℹ️';
+  }
+
+  function timeAgo(dtStr) {
+    const diff = (Date.now() - new Date(dtStr)) / 1000;
+    if (diff < 60)   return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  function renderNotifs(notifs, unread) {
+    badge.textContent = unread;
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+
+    if (!notifs.length) {
+      list.innerHTML = '<div class="notify-empty"><p style="color:#555;text-align:center;padding:1rem">No notifications</p></div>';
+      return;
+    }
+    list.innerHTML = notifs.map(n => `
+      <div class="notify-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+        <span class="notify-icon">${typeIcon(n.type)}</span>
+        <div class="notify-body">
+          <p class="notify-item-title">${n.title}</p>
+          ${n.body ? `<p class="notify-item-body">${n.body}</p>` : ''}
+          <span class="notify-time">${timeAgo(n.created_at)}</span>
+          ${n.link ? `<a href="${n.link}" class="notify-link">View →</a>` : ''}
+        </div>
+        <button class="notify-del" data-id="${n.id}" title="Dismiss">×</button>
+      </div>`).join('');
+
+    list.querySelectorAll('.notify-item').forEach(el => {
+      el.addEventListener('click', function(e) {
+        if (e.target.classList.contains('notify-del') || e.target.classList.contains('notify-link')) return;
+        const id = this.dataset.id;
+        fetch('/nutrition/notifications/read', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({id})
+        }).then(() => { this.classList.remove('unread'); fetchNotifs(); });
+      });
+    });
+
+    list.querySelectorAll('.notify-del').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const id = this.dataset.id;
+        fetch('/nutrition/notifications/delete', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({id})
+        }).then(() => fetchNotifs());
+      });
+    });
+  }
+
+  function fetchNotifs() {
+    fetch('/nutrition/notifications')
+      .then(r => r.json())
+      .then(d => renderNotifs(d.notifications, d.unread))
+      .catch(() => {});
+  }
+
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    open = !open;
+    menu.classList.toggle('show', open);
+    if (open) fetchNotifs();
+  });
+
+  markAll.addEventListener('click', function() {
+    fetch('/nutrition/notifications/read', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({id:'all'})
+    }).then(() => fetchNotifs());
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('notifyDropdown').contains(e.target)) {
+      open = false;
+      menu.classList.remove('show');
+    }
+  });
+
+  // Poll every 60s for new notifications
+  fetchNotifs();
+  setInterval(fetchNotifs, 60000);
+})();
+</script>
