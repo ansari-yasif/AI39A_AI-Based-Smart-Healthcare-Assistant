@@ -1,0 +1,81 @@
+{# dashboard_layout.html — authenticated shell with sidebar + topnav #}
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nutrition.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}"/>
+{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  {% include 'partials/sidebar.html' %}
+
+  <div class="main-area" id="mainArea">
+    {% include 'partials/nav.html' %}
+
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% include 'partials/footer.html' %}
+  </div>
+</div>
+
+<!-- ========== AI HEALTH ASSISTANT CHATBOT WIDGET ========== -->
+<div class="chatbot-float" id="chatbotFloat">
+  <button class="chatbot-btn" id="chatbotToggle"><i data-lucide="message-circle"></i></button>
+  <div class="chatbot-win" id="chatbotWin">
+    <div class="cw-header">
+      <div class="cw-av"><i data-lucide="sparkles"></i></div>
+      <div><p class="cw-title">VitaPulse AI</p><p class="cw-sub">Your wellness assistant</p></div>
+      <div class="header-buttons">
+        <button id="expandChat"><i data-lucide="maximize-2"></i></button>
+        <button class="cw-close" id="cwClose"><i data-lucide="chevron-down"></i></button>
+      </div>
+    </div>
+    <div class="cw-body">
+      <div class="cw-msg cw-bot"><div class="cw-msg-av"><i data-lucide="sparkles"></i></div><div class="cw-bubble">Hi, I'm VitaPulse AI. How can I help you today?</div></div>
+      <div class="cw-quick"><p class="cw-quick-label">Quick questions:</p><div class="cw-quick-btns"><button class="cw-quick-btn">How many food items have I added?</button><button class="cw-quick-btn">Show my weekly stats</button><button class="cw-quick-btn">Give me a healthy recipe</button></div></div>
+    </div>
+    <div class="cw-input-wrap">
+      <textarea id="cwInput" placeholder="Type your message..." class="cw-input" rows="1"></textarea>
+      <button class="cw-send" id="cwSend"><i data-lucide="send" class="cw-send-icon"></i></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{# Base shell JS — chart.js + dashboard.js + dropdown.
+   Child templates that extend THIS layout should use {% block extra_js %}
+   and call {{ super() }} first to keep these scripts. #}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/motivation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+<script>
+  (function () {
+    function initDropdown() {
+      var btn = document.getElementById('userDropdownBtn');
+      var dd  = document.getElementById('userDropdown');
+      if (btn && dd) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+        document.body.addEventListener('click', function () {
+          dd.classList.remove('open');
+        });
+        dd.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDropdown);
+    } else {
+      initDropdown();
+    }
+  })();
+</script>
+{% endblock %}
