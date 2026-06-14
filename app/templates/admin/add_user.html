@@ -1,0 +1,44 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Add User — VitaPulse Admin{% endblock %}
+{% block page_title %}Add User{% endblock %}
+{% block content %}
+<div class="nutr-page" style="max-width:600px">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(34,197,94,.15);color:#22c55e"><i data-lucide="user-plus"></i></div>
+      <div><h1 class="nutr-title">Add New User</h1><p class="nutr-subtitle">Create a user or admin account</p></div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('admin.users_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="arrow-left"></i> Back</a>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div class="nutr-card">
+    <form method="POST" action="{{ url_for('admin.add_user_submit') }}">
+      <div class="nutr-form-group" style="margin-bottom:1rem">
+        <label class="nutr-label">Full Name</label>
+        <input type="text" name="full_name" class="nutr-input" required>
+      </div>
+      <div class="nutr-form-group" style="margin-bottom:1rem">
+        <label class="nutr-label">Email</label>
+        <input type="email" name="email" class="nutr-input" required>
+      </div>
+      <div class="nutr-form-group" style="margin-bottom:1rem">
+        <label class="nutr-label">Password</label>
+        <input type="password" name="password" class="nutr-input" required minlength="6">
+      </div>
+      <div class="nutr-form-group" style="margin-bottom:1.25rem">
+        <label class="nutr-label">Role</label>
+        <select name="role" class="nutr-input">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%"><i data-lucide="user-plus"></i> Create User</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
