@@ -52,11 +52,11 @@ def guest_only(fn):
 
 def login_user(user: dict):
     session.permanent = True
-    session['user_id']   = user['id']
+    session['user_id'] = user['id']
     session['full_name'] = user['full_name']
-    session['email']     = user['email']
-    session['role']      = user.get('role', 'user')
-    session['avatar']    = user.get('avatar_url', '')
+    session['email'] = user['email']
+    session['role'] = str(user.get('role') or 'user').lower().strip()
+    session['avatar'] = user.get('avatar_url', '')
 
 
 def logout_user():
@@ -70,7 +70,7 @@ def current_user() -> dict:
         'id':        session.get('user_id'),
         'full_name': session.get('full_name', ''),
         'email':     session.get('email', ''),
-        'role':      session.get('role', 'user'),
+        'role':      str(session.get('role') or 'user').lower().strip(),
         'avatar':    session.get('avatar', ''),
     }
 
