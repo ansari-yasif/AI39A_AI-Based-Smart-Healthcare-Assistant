@@ -57,7 +57,8 @@ def month_range() -> Tuple[str, str]:
     today = date.today()
     first = today.replace(day=1)
     if today.month == 12:
-        last = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+        last = today.replace(year=today.year + 1, month=1,
+                             day=1) - timedelta(days=1)
     else:
         last = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
     return first.isoformat(), last.isoformat()
