@@ -65,3 +65,65 @@ class UserModel(BaseModel):
         return cls.fetch_all(
             'SELECT id,full_name,email,role,created_at FROM users ORDER BY created_at DESC'
         )
+    # ──────────────────────────────────────────────────────────────────────
+    # ADMIN CONTROL PANEL METHODS
+    # ──────────────────────────────────────────────────────────────────────
+
+    @classmethod
+    def get_all_detailed(cls, search=''):
+        if search:
+            return cls.fetch_all(
+                'SELECT id,full_name,email,role,phone,is_active,created_at,'
+                'age,gender,weight_kg,height_cm,goal '
+                'FROM users WHERE full_name LIKE %s OR email LIKE %s '
+                'ORDER BY created_at DESC',
+                (f'%{search}%', f'%{search}%')
+            )
+        return cls.fetch_all(
+            'SELECT id,full_name,email,role,phone,is_active,created_at,'
+            'age,gender,weight_kg,height_cm,goal '
+            'FROM users ORDER BY created_at DESC'
+        )
+
+    @classmethod
+    def count_all(cls):
+        row = cls.fetch_one('SELECT COUNT(*) AS cnt FROM users')
+        return int(row['cnt']) if row else 0
+
+    @classmethod
+    def count_active_today(cls):
+        row = cls.fetch_one(
+            "SELECT COUNT(DISTINCT user_id) AS cnt FROM calorie_logs WHERE log_date = CURDATE()"
+        )
+        return int(row['cnt']) if row else 0
+
+    @classmethod
+    def count_new_this_week(cls):
+        row = cls.fetch_one(
+            "SELECT COUNT(*) AS cnt FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+        )
+        return int(row['cnt']) if row else 0
+
+    @classmethod
+    def admin_update(cls, uid, full_name, email, role, is_active):
+        return cls.execute(
+            'UPDATE users SET full_name=%s, email=%s, role=%s, is_active=%s WHERE id=%s',
+            (full_name, email, role, is_active, uid)
+        )
+
+    @classmethod
+    def set_active(cls, uid, is_active):
+        return cls.execute('UPDATE users SET is_active=%s WHERE id=%s', (is_active, uid))
+
+    @classmethod
+    def admin_delete(cls, uid):
+        # Clean up related records first (FK-safe deletion)
+        tables = ['meals', 'calorie_logs', 'custom_foods', 'bmi_records', 'notifications',
+                  'macro_targets', 'sleep_logs', 'mood_logs', 'weight_logs', 'workouts',
+                  'medicines', 'medicine_logs', 'health_expenses', 'support_messages']
+        for t in tables:
+            try:
+                cls.execute(f'DELETE FROM {t} WHERE user_id=%s', (uid,))
+            except Exception:
+                pass
+        return cls.execute('DELETE FROM users WHERE id=%s', (uid,))
