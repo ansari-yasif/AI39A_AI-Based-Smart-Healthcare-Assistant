@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Password visibility toggles
   document.querySelectorAll('.pwd-eye').forEach(btn => {
     btn.addEventListener('click', () => {
-      const inp  = btn.closest('.auth-input-wrap').querySelector('input');
-      const ico  = btn.querySelector('i[data-lucide]');
+      const inp = btn.closest('.auth-input-wrap').querySelector('input');
+      const ico = btn.querySelector('i[data-lucide]');
       if (!inp || !ico) return;
       const show = inp.type === 'password';
-      inp.type   = show ? 'text' : 'password';
+      inp.type = show ? 'text' : 'password';
       ico.setAttribute('data-lucide', show ? 'eye-off' : 'eye');
       lucide.createIcons();
     });
