@@ -1,0 +1,51 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Support Messages — VitaPulse Admin{% endblock %}
+{% block page_title %}Support Messages{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .msg-badge { font-size: .7rem; padding: .2rem .6rem; border-radius: 999px; flex-shrink: 0; margin-left: 1rem; }
+  .badge-open { background: rgba(245,158,11,.15); color: #f59e0b; }
+  .badge-replied { background: rgba(34,197,94,.15); color: #22c55e; }
+  .badge-closed { background: rgba(100,116,139,.15); color: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(99,102,241,.15);color:#818cf8"><i data-lucide="mail"></i></div>
+      <div><h1 class="nutr-title">Support Messages</h1><p class="nutr-subtitle">{{ messages|length }} message(s)</p></div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('admin.dashboard') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="layout-dashboard"></i> Admin Home</a>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:.5rem;margin-bottom:1.25rem">
+    <a href="{{ url_for('admin.messages_index') }}" class="nutr-btn {% if not status %}nutr-btn-teal{% else %}nutr-btn-outline{% endif %}" style="font-size:.8rem">All</a>
+    <a href="{{ url_for('admin.messages_index', status='open') }}" class="nutr-btn {% if status=='open' %}nutr-btn-teal{% else %}nutr-btn-outline{% endif %}" style="font-size:.8rem">Open</a>
+    <a href="{{ url_for('admin.messages_index', status='replied') }}" class="nutr-btn {% if status=='replied' %}nutr-btn-teal{% else %}nutr-btn-outline{% endif %}" style="font-size:.8rem">Replied</a>
+    <a href="{{ url_for('admin.messages_index', status='closed') }}" class="nutr-btn {% if status=='closed' %}nutr-btn-teal{% else %}nutr-btn-outline{% endif %}" style="font-size:.8rem">Closed</a>
+  </div>
+
+  <div class="nutr-card">
+    {% for m in messages %}
+    <a href="{{ url_for('admin.message_view', mid=m.id) }}" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
+      <div>
+        <strong style="font-size:.88rem">{{ m.subject }}</strong>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">{{ m.full_name }} ({{ m.email }}) · {{ m.created_at }}</div>
+        <p style="font-size:.78rem;color:#94a3b8;margin-top:.3rem">{{ m.message[:100] }}{% if m.message|length > 100 %}...{% endif %}</p>
+      </div>
+      <span class="msg-badge {{ 'badge-open' if m.status == 'open' else ('badge-replied' if m.status == 'replied' else 'badge-closed') }}">
+        {{ m.status|capitalize }}
+      </span>
+    </a>
+    {% else %}
+    <p style="color:var(--muted);text-align:center;padding:1.5rem">No messages found.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

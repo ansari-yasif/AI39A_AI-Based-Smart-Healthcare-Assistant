@@ -1,0 +1,98 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Workout Tracker — VitaPulse{% endblock %}
+{% block page_title %}Workout Tracker{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(239,68,68,.15);color:#ef4444"><i data-lucide="dumbbell"></i></div>
+      <div><h1 class="nutr-title">Workout Tracker</h1><p class="nutr-subtitle">Log workouts · Track duration · Calories burned</p></div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <!-- Week Stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#ef4444">{{ wkt.sessions }}</div>
+      <div class="report-stat-label">Sessions This Week</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#f97316">{{ wkt.mins }}</div>
+      <div class="report-stat-label">Minutes</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:var(--teal)">{{ wkt.burned }}</div>
+      <div class="report-stat-label">kcal Burned</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Log Workout</h3></div>
+      <form method="POST" action="{{ url_for('health.workout_log') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Workout Type</label>
+          <select name="workout_type" class="nutr-input">
+            {% for t in workout_types %}
+            <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="nutr-form-group">
+            <label class="nutr-label">Duration (min)</label>
+            <input type="number" name="duration" class="nutr-input" min="1" max="480" placeholder="30" required>
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Calories Burned</label>
+            <input type="number" name="calories_burned" class="nutr-input" min="0" placeholder="200">
+          </div>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Date</label>
+          <input type="date" name="log_date" class="nutr-input" value="{{ today }}">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Notes</label>
+          <textarea name="notes" class="nutr-input" rows="2" placeholder="e.g. 5km run, felt strong"></textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="save"></i> Log Workout
+        </button>
+      </form>
+    </div>
+
+    <!-- Recent workouts -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="list"></i><h3>Recent Workouts</h3></div>
+      {% if recent %}
+      {% for r in recent %}
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:var(--r-sm);background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center;font-size:1rem">
+          {% if 'run' in r.workout_type|lower or 'walk' in r.workout_type|lower %}🏃
+          {% elif 'gym' in r.workout_type|lower or 'weight' in r.workout_type|lower %}🏋️
+          {% elif 'yoga' in r.workout_type|lower %}🧘
+          {% elif 'swim' in r.workout_type|lower %}🏊
+          {% elif 'cycl' in r.workout_type|lower %}🚴
+          {% else %}⚡{% endif %}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:.85rem;font-weight:600">{{ r.workout_type }}</div>
+          <div style="font-size:.75rem;color:var(--muted)">{{ r.log_date }} · {{ r.duration_min }}min · {{ r.calories_burned }}kcal</div>
+        </div>
+        <form method="POST" action="{{ url_for('health.workout_delete', wid=r.id) }}" onsubmit="return confirm('Delete?')">
+          <button type="submit" style="background:none;border:none;color:#ef4444;cursor:pointer">✕</button>
+        </form>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p style="color:var(--muted);text-align:center;padding:1.5rem">No workouts logged yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

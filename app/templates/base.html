@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}VitaPulse{% endblock %}</title>
+
+  <!-- Fonts: Playfair Display (hero titles) + Inter (body) — exact Figma fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <!-- Lucide icons CDN -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  {# Flash messages — shown on every page via base.html #}
+  {% include 'partials/alerts.html' %}
+
+  {% block body %}{% endblock %}
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+  <script>
+    lucide.createIcons();
+
+    // ========== THEME PERSISTENCE (applies saved theme on every page) ==========
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+      }
+    })();
+  </script>
+</body>
+</html>

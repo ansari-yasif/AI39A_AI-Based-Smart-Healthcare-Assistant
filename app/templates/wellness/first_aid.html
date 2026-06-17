@@ -1,0 +1,53 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}First Aid Guide — VitaPulse{% endblock %}
+{% block page_title %}AI First Aid Guide{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(239,68,68,.15);color:#ef4444"><i data-lucide="cross"></i></div>
+      <div><h1 class="nutr-title">First Aid Guide</h1><p class="nutr-subtitle">{{ guides|length }} common emergencies · Step-by-step instructions</p></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-md);padding:.85rem 1rem;margin-bottom:1.5rem;font-size:.82rem;color:#f87171">
+    <i data-lucide="alert-triangle" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:.4rem"></i>
+    For life-threatening emergencies, call your local emergency number immediately. This guide is for basic first response only.
+  </div>
+
+  <!-- Search -->
+  <div class="nutr-form-group" style="margin-bottom:1.5rem">
+    <input type="text" id="faSearch" class="nutr-input" placeholder="Search first aid topics (e.g. burns, choking, sprain)...">
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem" id="faGrid">
+    {% for g in guides %}
+    <div class="nutr-card fa-card" data-title="{{ g.title|lower }}">
+      <div class="nutr-card-head"><span style="font-size:1.4rem">{{ g.icon }}</span><h3>{{ g.title }}</h3></div>
+      <ol style="padding-left:1.25rem;font-size:.84rem;line-height:1.7;color:#cbd5e1">
+        {% for step in g.steps %}
+        <li style="margin-bottom:.3rem">{{ step }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p id="faNoResults" style="display:none;text-align:center;color:var(--muted);padding:2rem">No matching topics found.</p>
+</div>
+{% endblock %}
+{% block extra_js %}{{ super() }}
+<script>
+document.getElementById('faSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.fa-card');
+  let visible = 0;
+  cards.forEach(c => {
+    const match = c.dataset.title.includes(q);
+    c.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  document.getElementById('faNoResults').style.display = visible === 0 ? 'block' : 'none';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Mood Tracker — VitaPulse{% endblock %}
+{% block page_title %}Mood Tracker{% endblock %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  .mood-opt { opacity: 0.5; transition: 0.2s; border: 2px solid var(--border); }
+  .mood-opt.selected { opacity: 1 !important; border-color: var(--teal) !important; transform: scale(1.1); }
+  .progress-fill { background: var(--teal); border-radius: 999px; height: 100%; transition: width 0.3s; width: var(--progress-width, 0%); }
+  .bg-even { background: var(--bg-2); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(245,158,11,.15);color:#f59e0b"><i data-lucide="smile"></i></div>
+      <div><h1 class="nutr-title">Mood Tracker</h1><p class="nutr-subtitle">Log mood · Energy · 30-day trends</p></div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Log Form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Log Today's Mood</h3></div>
+      <form method="POST" action="{{ url_for('health.mood_log') }}">
+        <!-- Mood selector -->
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">How are you feeling?</label>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:.5rem" id="moodGrid">
+            {% for mood, icon in [('happy','😊'),('energetic','⚡'),('calm','😌'),('focused','🎯'),
+                                   ('tired','😴'),('stressed','😰'),('anxious','😬'),('sad','😢')] %}
+            <label style="cursor:pointer;text-align:center">
+              <input type="radio" name="mood" value="{{ mood }}" style="display:none"
+                {% if (entry and entry.mood == mood) or (not entry and mood == 'calm') %}checked{% endif %}
+                onchange="document.querySelectorAll('.mood-opt').forEach(el=>el.classList.remove('selected')); this.parentElement.querySelector('.mood-opt').classList.add('selected');">
+              <div class="mood-opt {% if (entry and entry.mood == mood) or (not entry and mood == 'calm') %}selected{% endif %}" 
+                style="font-size:1.6rem;padding:.4rem;border-radius:var(--r-md);">
+                {{ icon }}
+              </div>
+              <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">{{ mood }}</div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <!-- Energy -->
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Energy Level <span id="energyVal" style="color:var(--teal)">({{ entry.energy_level if entry else 3 }}/5)</span></label>
+          <input type="range" name="energy" id="energyRange" min="1" max="5" step="1"
+            value="{{ entry.energy_level if entry else 3 }}"
+            style="width:100%;accent-color:var(--teal)"
+            oninput="document.getElementById('energyVal').textContent='('+this.value+'/5)'">
+          <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:.3rem">
+            <span>Exhausted</span><span>Low</span><span>Neutral</span><span>Good</span><span>High</span>
+          </div>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Date</label>
+          <input type="date" name="log_date" class="nutr-input" value="{{ today }}">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Notes (optional)</label>
+          <textarea name="notes" class="nutr-input" rows="2" placeholder="What's on your mind?">{{ entry.notes if entry else '' }}</textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="save"></i> {{ 'Update' if entry else 'Log' }} Mood
+        </button>
+      </form>
+    </div>
+
+    <!-- Stats -->
+    <div>
+      {% if entry %}
+      <div class="nutr-card" style="margin-bottom:1rem;border-color:rgba(245,158,11,.3)">
+        <div class="nutr-card-head"><i data-lucide="check-circle"></i><h3>Today Logged</h3></div>
+        <div style="font-size:2.5rem;text-align:center;padding:.5rem 0">
+          {{ mood_icons.get(entry.mood, '😐') }}
+        </div>
+        <div style="text-align:center;font-size:.9rem">
+          <strong style="color:#f59e0b">{{ entry.mood|capitalize }}</strong>
+          <span style="color:var(--muted);margin-left:.5rem">Energy {{ entry.energy_level }}/5</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 30-day mood frequency -->
+      {% if freq %}
+      <div class="nutr-card">
+        <div class="nutr-card-head"><i data-lucide="pie-chart"></i><h3>30-Day Mood Frequency</h3></div>
+        {% set total_freq = freq|sum(attribute='cnt') %}
+        {% for f in freq %}
+        {% set pct = (f.cnt / total_freq * 100)|round(0)|int %}
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0">
+          <span style="font-size:1.1rem">{{ mood_icons.get(f.mood,'😐') }}</span>
+          <span style="width:80px;font-size:.82rem">{{ f.mood|capitalize }}</span>
+          <div style="flex:1;background:var(--border);border-radius:999px;height:8px;overflow:hidden">
+            <div class="progress-fill" style="--progress-width: {{ pct }}%;"></div>
+          </div>
+          <span style="font-size:.75rem;color:var(--muted);width:35px;text-align:right">{{ pct }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Log -->
+  {% if recent %}
+  <div class="nutr-card" style="margin-top:1rem">
+    <div class="nutr-card-head"><i data-lucide="calendar-days"></i><h3>Recent Mood Log</h3></div>
+    <table style="width:100%;border-collapse:collapse;font-size:.83rem">
+      <thead><tr style="background:var(--bg)">
+        <th style="padding:.5rem;text-align:left;color:var(--muted)">Date</th>
+        <th style="padding:.5rem;color:#f59e0b">Mood</th>
+        <th style="padding:.5rem;color:#3b82f6">Energy</th>
+        <th style="padding:.5rem;text-align:left;color:var(--muted)">Notes</th>
+      </tr></thead>
+      <tbody>
+      {% for r in recent %}
+      <tr class="{% if loop.index is even %}bg-even{% endif %}" style="border-bottom:1px solid var(--border);">
+        <td style="padding:.5rem">{{ r.log_date }}</td>
+        <td style="padding:.5rem;text-align:center">{{ mood_icons.get(r.mood,'😐') }} <span style="color:#f59e0b">{{ r.mood|capitalize }}</span></td>
+        <td style="padding:.5rem;text-align:center;color:#3b82f6">{{ r.energy_level }}/5</td>
+        <td style="padding:.5rem;color:var(--muted);font-size:.78rem">{{ (r.notes or '')[:50] }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
