@@ -37,7 +37,9 @@ def _register_blueprints(app):
     from app.routes.auth_routes      import auth_bp
     from app.routes.dashboard_routes import dashboard_bp
     from app.routes.profile_routes   import profile_bp
+    from app.routes.chat_routes import chat_bp
 
+    app.register_blueprint(chat_bp, url_prefix='/chat')
     app.register_blueprint(auth_bp,      url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(profile_bp,   url_prefix='')
