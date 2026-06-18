@@ -1,10 +1,20 @@
 from flask import session, current_app, request, jsonify
-import markdown
 import re
 import logging
 import traceback
-from groq import Groq
 from app.models.stat_models import get_user_stats_from_db, get_contact_info
+
+try:
+    import markdown
+    HAS_MARKDOWN = True
+except ImportError:
+    HAS_MARKDOWN = False
+
+try:
+    from groq import Groq
+    HAS_GROQ = True
+except ImportError:
+    HAS_GROQ = False
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +147,12 @@ You are **VitaPulse AI**, the premium enterprise assistant for VitaPulse users.
                     "html": "<p>Chat service is temporarily unavailable.</p>"
                 }), 503
 
+            if not HAS_GROQ:
+                return jsonify({
+                    "reply": "Chat service is temporarily unavailable (groq package not installed).",
+                    "html": "<p>Chat service is temporarily unavailable.</p>"
+                }), 503
+
             client = Groq(api_key=groq_api_key)
 
             # Call Groq API with proper model selection
@@ -182,7 +198,10 @@ You are **VitaPulse AI**, the premium enterprise assistant for VitaPulse users.
             reply_text = response.choices[0].message.content
             
             # Convert markdown to HTML with table support
-            html_reply = markdown.markdown(reply_text, extensions=['tables', 'fenced_code'])
+            if HAS_MARKDOWN:
+                html_reply = markdown.markdown(reply_text, extensions=['tables', 'fenced_code'])
+            else:
+                html_reply = f"<p>{reply_text}</p>"
             
             return jsonify({
                 "reply": reply_text,
