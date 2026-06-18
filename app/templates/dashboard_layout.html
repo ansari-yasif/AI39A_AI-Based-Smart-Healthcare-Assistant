@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nutrition.css') }}"/>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}"/>
 {% endblock %}
 
@@ -21,7 +22,7 @@
   </div>
 </div>
 
-<!-- ========== CHATBOT WIDGET (with expand button) ========== -->
+<!-- ========== AI HEALTH ASSISTANT CHATBOT WIDGET ========== -->
 <div class="chatbot-float" id="chatbotFloat">
   <button class="chatbot-btn" id="chatbotToggle"><i data-lucide="message-circle"></i></button>
   <div class="chatbot-win" id="chatbotWin">
@@ -45,27 +46,29 @@
 </div>
 {% endblock %}
 
+{# Base shell JS — chart.js + dashboard.js + dropdown.
+   Child templates that extend THIS layout should use {% block extra_js %}
+   and call {{ super() }} first to keep these scripts. #}
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/motivation.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
 <script>
-  // Fallback: ensure dropdown works even if dashboard.js fails
-  (function() {
+  (function () {
     function initDropdown() {
       var btn = document.getElementById('userDropdownBtn');
-      var dd = document.getElementById('userDropdown');
+      var dd  = document.getElementById('userDropdown');
       if (btn && dd) {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function (e) {
           e.stopPropagation();
           dd.classList.toggle('open');
         });
-        document.body.addEventListener('click', function() {
+        document.body.addEventListener('click', function () {
           dd.classList.remove('open');
         });
-        dd.addEventListener('click', function(e) {
-          e.stopPropagation();
-        });
+        dd.addEventListener('click', function (e) { e.stopPropagation(); });
       }
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDropdown);

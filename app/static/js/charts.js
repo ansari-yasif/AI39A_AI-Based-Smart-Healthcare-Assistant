@@ -1,5 +1,6 @@
 /* charts.js — Chart.js initializers | Feature: Dashboard charts */
 
+<<<<<<< HEAD
 // Figma exact chart colours
 if (!Chart.defaults.color) {
   Chart.defaults.color           = '#94a3b8';
@@ -7,6 +8,12 @@ if (!Chart.defaults.color) {
   Chart.defaults.font.size       = 12;
   Chart.defaults.plugins.legend.display = false;
 }
+=======
+Chart.defaults.color           = '#94a3b8';
+Chart.defaults.font.family     = "'Inter', sans-serif";
+Chart.defaults.font.size       = 12;
+Chart.defaults.plugins.legend.display = false;
+>>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
 
 // Define chart constants (use let to avoid const redeclaration errors on hot reload)
 if (typeof TEAL === 'undefined') {
@@ -16,15 +23,23 @@ if (typeof TEAL === 'undefined') {
   window.GRID   = 'rgba(255,255,255,0.05)';
 }
 
+// Registry to avoid duplicate chart instances
+const _chartRegistry = {};
+function _destroyChart(id) {
+  if (_chartRegistry[id]) {
+    _chartRegistry[id].destroy();
+    delete _chartRegistry[id];
+  }
+}
 
 /**
- * Sleep bar chart — teal/blue/red bars by quality threshold
+ * Sleep bar chart
  */
 function initSleepChart(id, labels, data) {
   const ctx = document.getElementById(id);
   if (!ctx || !labels.length) return;
-
-  new Chart(ctx, {
+  _destroyChart(id);
+  _chartRegistry[id] = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
@@ -60,15 +75,18 @@ function initSleepChart(id, labels, data) {
   });
 }
 
-
 /**
- * Calorie line chart — teal gradient fill
+ * Calorie line chart — teal gradient fill, fixed height container
  */
 function initCalChart(id, labels, data) {
   const ctx = document.getElementById(id);
-  if (!ctx || !labels.length) return;
+  if (!ctx) return;
+  _destroyChart(id);
 
-  new Chart(ctx, {
+  // Ensure canvas has proper dimensions
+  ctx.style.maxHeight = '220px';
+
+  _chartRegistry[id] = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
@@ -89,29 +107,96 @@ function initCalChart(id, labels, data) {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
+<<<<<<< HEAD
         x: { grid:{ color:window.GRID }, border:{ display:false } },
         y: { grid:{ color:window.GRID }, border:{ display:false },
+=======
+        x: { grid:{ color:GRID }, border:{ display:false } },
+        y: { grid:{ color:GRID }, border:{ display:false },
+             beginAtZero: true,
+>>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
              title:{ display:true, text:'kcal', color:'#475569' },
         },
       },
       plugins: {
+        legend: { display: false },
         tooltip: { callbacks: { label: c => ` ${c.parsed.y} kcal` } },
       },
     },
   });
 }
 
+/**
+ * Macro doughnut chart — fixed to avoid glitch when no data
+ */
+function initMacroChart(id, protein, carbs, fat) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  _destroyChart(id);
+
+  const total = protein + carbs + fat;
+  if (total <= 0) {
+    // Show placeholder text instead of blank chart
+    const parent = ctx.parentElement;
+    ctx.style.display = 'none';
+    if (!parent.querySelector('.macro-empty-msg')) {
+      const msg = document.createElement('p');
+      msg.className = 'macro-empty-msg';
+      msg.style.cssText = 'color:#555;text-align:center;padding:40px 0;font-size:.85rem';
+      msg.textContent = 'Log meals to see macro breakdown';
+      parent.appendChild(msg);
+    }
+    return;
+  }
+
+  _chartRegistry[id] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Protein', 'Carbs', 'Fat'],
+      datasets: [{
+        data: [protein, carbs, fat],
+        backgroundColor: ['#3b82f6', '#00C897', '#f97316'],
+        borderColor:     ['#1e40af', '#00a67e', '#c2410c'],
+        borderWidth: 2,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            color: '#aaa',
+            font: { size: 12 },
+            padding: 12,
+            usePointStyle: true,
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.label}: ${c.parsed}g (${Math.round(c.parsed/total*100)}%)`
+          }
+        }
+      }
+    },
+  });
+}
 
 /**
- * Expense doughnut — for expense page if added
+ * Expense doughnut
  */
 function initExpenseChart(id, labels, data) {
   const ctx = document.getElementById(id);
   if (!ctx || !data.length) return;
+  _destroyChart(id);
 
   const COLORS = [window.TEAL, window.ORANGE, window.BLUE, '#8B5CF6', '#10b981', '#F59E0B', '#EC4899'];
 
-  new Chart(ctx, {
+  _chartRegistry[id] = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels,

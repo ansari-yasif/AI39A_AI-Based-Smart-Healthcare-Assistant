@@ -20,3 +20,7 @@ class WorkoutModel(BaseModel):
             'SELECT COUNT(*) AS sessions,COALESCE(SUM(duration_min),0) AS mins,COALESCE(SUM(calories_burned),0) AS burned FROM workouts WHERE user_id=%s AND log_date BETWEEN %s AND %s',
             (uid,start,end))
         return row or {'sessions':0,'mins':0,'burned':0}
+
+    @classmethod
+    def delete(cls, wid, uid):
+        return cls.execute('DELETE FROM workouts WHERE id=%s AND user_id=%s', (wid, uid))

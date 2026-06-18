@@ -1,0 +1,98 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Outbreak Alerts — VitaPulse Admin{% endblock %}
+{% block page_title %}Outbreak Alerts{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .ob-badge { font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; font-weight: 600; display: inline-block; }
+  .badge-critical { background: rgba(220,38,38,.15); color: #dc2626; }
+  .badge-high     { background: rgba(239,68,68,.15); color: #ef4444; }
+  .badge-medium   { background: rgba(245,158,11,.15); color: #f59e0b; }
+  .badge-low      { background: rgba(34,197,94,.15); color: #22c55e; }
+  .status-active { color: #22c55e; }
+  .status-inactive { color: #64748b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(239,68,68,.15);color:#ef4444"><i data-lucide="alert-triangle"></i></div>
+      <div><h1 class="nutr-title">Outbreak Alerts</h1><p class="nutr-subtitle">Visible to all users on their dashboard</p></div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('admin.dashboard') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="layout-dashboard"></i> Admin Home</a>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Create alert -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Create New Alert</h3></div>
+      <form method="POST" action="{{ url_for('admin.outbreak_create') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Title</label>
+          <input type="text" name="title" class="nutr-input" placeholder="e.g. Dengue Outbreak Alert" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Severity</label>
+          <select name="severity" class="nutr-input">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Region</label>
+          <input type="text" name="region" class="nutr-input" placeholder="e.g. Kathmandu Valley, Nepal">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Expires At (optional)</label>
+          <input type="datetime-local" name="expires_at" class="nutr-input">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Description</label>
+          <textarea name="description" class="nutr-input" rows="4" placeholder="Details about the outbreak and precautions..."></textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%"><i data-lucide="megaphone"></i> Publish Alert</button>
+      </form>
+    </div>
+
+    <!-- Existing alerts -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="list"></i><h3>All Alerts</h3></div>
+      {% for a in alerts %}
+      <div style="padding:.75rem 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong style="font-size:.88rem">{{ a.title }}</strong>
+          <span class="ob-badge badge-{{ a.severity }}">
+            {{ a.severity|upper }}
+          </span>
+        </div>
+        {% if a.region %}<p style="font-size:.75rem;color:var(--muted);margin-top:.2rem"><i data-lucide="map-pin" style="width:11px;height:11px;display:inline;vertical-align:middle"></i> {{ a.region }}</p>{% endif %}
+        <p style="font-size:.78rem;color:#94a3b8;margin-top:.3rem">{{ (a.description or '')[:100] }}</p>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center">
+          <span style="font-size: .7rem;" class="{{ 'status-active' if a.active else 'status-inactive' }}">{{ 'Active' if a.active else 'Inactive' }}</span>
+          {% if a.active %}
+          <form method="POST" action="{{ url_for('admin.outbreak_deactivate', aid=a.id) }}">
+            <button type="submit" class="nutr-btn nutr-btn-outline" style="font-size:.68rem;padding:.25rem .5rem">Deactivate</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('admin.outbreak_delete', aid=a.id) }}" onsubmit="return confirm('Delete this alert?')">
+            <button type="submit" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:.75rem">✕</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <p style="color:var(--muted);text-align:center;padding:1.5rem">No alerts created yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

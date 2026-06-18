@@ -1,0 +1,324 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Macro Targets — VitaPulse{% endblock %}
+{% block page_title %}Macro Targets{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bg-even { background: var(--bg-2); }
+  .macro-bar-fill { width: var(--p-pct, 0%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(168,85,247,.15);color:#a855f7">
+        <i data-lucide="pie-chart"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">Macro Targets</h1>
+        <p class="nutr-subtitle">Set daily protein, carb & fat goals · Track progress</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('nutrition.calorie_index') }}" class="nutr-btn nutr-btn-outline">
+        <i data-lucide="calculator"></i> Calorie Calc
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="nutr-alert nutr-alert-{{ cat }}" style="margin-bottom:1rem">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+    <!-- Left: Set Targets Form -->
+    <div>
+      <div class="nutr-card">
+        <div class="nutr-card-head">
+          <i data-lucide="sliders-horizontal"></i>
+          <h3>Set Today's Targets</h3>
+          <span style="font-size:.72rem;color:var(--muted);margin-left:auto">{{ today }}</span>
+        </div>
+
+        <!-- Auto-suggested targets -->
+        {% if auto_protein %}
+        <div style="background:rgba(0,200,151,.06);border:1px solid rgba(0,200,151,.2);border-radius:var(--r-md);padding:.85rem;margin-bottom:1.25rem">
+          <p style="font-size:.78rem;color:var(--teal);font-weight:600;margin-bottom:.4rem">
+            <i data-lucide="sparkles" style="width:13px;height:13px;display:inline;vertical-align:middle"></i>
+            Smart Suggestions (based on your TDEE of {{ calorie_goal }} kcal)
+          </p>
+          <div style="display:flex;gap:1.5rem;font-size:.82rem">
+            <span>Protein: <strong style="color:#3b82f6">{{ auto_protein }}g</strong></span>
+            <span>Carbs: <strong style="color:#22c55e">{{ auto_carbs }}g</strong></span>
+            <span>Fat: <strong style="color:#f97316">{{ auto_fat }}g</strong></span>
+          </div>
+          <button type="button" id="applyAuto" class="nutr-btn nutr-btn-outline"
+            style="margin-top:.6rem;font-size:.75rem;padding:.3rem .75rem"
+            data-p="{{ auto_protein }}" data-c="{{ auto_carbs }}"
+            data-f="{{ auto_fat }}" data-cal="{{ calorie_goal }}">
+            Apply suggestions
+          </button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('nutrition.macro_targets_save') }}" id="macroForm">
+          <div class="macro-form-row">
+            <div class="nutr-form-group">
+              <label class="nutr-label" style="color:#3b82f6">Protein (g)</label>
+              <input type="number" name="protein" id="inp_protein" class="nutr-input"
+                placeholder="150" min="0" max="600" step="1"
+                value="{{ saved.protein_target|int if saved else auto_protein }}" required>
+            </div>
+            <div class="nutr-form-group">
+              <label class="nutr-label" style="color:#22c55e">Carbs (g)</label>
+              <input type="number" name="carbs" id="inp_carbs" class="nutr-input"
+                placeholder="250" min="0" max="800" step="1"
+                value="{{ saved.carbs_target|int if saved else auto_carbs }}" required>
+            </div>
+            <div class="nutr-form-group">
+              <label class="nutr-label" style="color:#f97316">Fat (g)</label>
+              <input type="number" name="fat" id="inp_fat" class="nutr-input"
+                placeholder="65" min="0" max="400" step="1"
+                value="{{ saved.fat_target|int if saved else auto_fat }}" required>
+            </div>
+          </div>
+
+          <div class="nutr-form-group" style="margin-bottom:1.25rem">
+            <label class="nutr-label">Daily Calorie Target (kcal)</label>
+            <input type="number" name="calories" id="inp_cal" class="nutr-input"
+              placeholder="{{ calorie_goal }}" min="500" max="6000" step="50"
+              value="{{ saved.calorie_target|int if saved else calorie_goal }}" required>
+          </div>
+
+          <!-- Live calorie estimate from macros -->
+          <div style="background:var(--bg-2);border-radius:var(--r-md);padding:.75rem;margin-bottom:1.25rem;font-size:.83rem">
+            <span style="color:var(--muted)">Estimated kcal from macros:</span>
+            <strong id="estKcal" style="color:var(--teal);margin-left:.5rem">— kcal</strong>
+            <span style="color:var(--muted);font-size:.72rem;margin-left:.4rem">(P×4 + C×4 + F×9)</span>
+          </div>
+
+          <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+            <i data-lucide="save"></i> Save Macro Targets
+          </button>
+        </form>
+      </div>
+
+      <!-- 14-day history table -->
+      {% if history %}
+      <div class="nutr-card" style="margin-top:1rem">
+        <div class="nutr-card-head">
+          <i data-lucide="calendar-days"></i>
+          <h3>Recent Targets</h3>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+            <thead><tr style="background:var(--bg)">
+              <th style="padding:.5rem;text-align:left;color:var(--muted)">Date</th>
+              <th style="padding:.5rem;color:#3b82f6">Protein</th>
+              <th style="padding:.5rem;color:#22c55e">Carbs</th>
+              <th style="padding:.5rem;color:#f97316">Fat</th>
+              <th style="padding:.5rem;color:var(--teal)">kcal</th>
+            </tr></thead>
+            <tbody>
+            {% for h in history %}
+            <tr class="{% if loop.index is even %}bg-even{% endif %}" style="border-bottom:1px solid var(--border)">
+              <td style="padding:.5rem">{{ h.target_date }}</td>
+              <td style="padding:.5rem;text-align:center;color:#3b82f6">{{ h.protein_target|int }}g</td>
+              <td style="padding:.5rem;text-align:center;color:#22c55e">{{ h.carbs_target|int }}g</td>
+              <td style="padding:.5rem;text-align:center;color:#f97316">{{ h.fat_target|int }}g</td>
+              <td style="padding:.5rem;text-align:center;color:var(--teal)">{{ h.calorie_target|int }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Progress vs Targets -->
+    <div>
+      <div class="nutr-card">
+        <div class="nutr-card-head">
+          <i data-lucide="activity"></i>
+          <h3>Today's Progress</h3>
+          <span style="font-size:.72rem;color:var(--muted);margin-left:auto">vs your targets</span>
+        </div>
+
+        {% set p_target = saved.protein_target if saved else auto_protein or 150 %}
+        {% set c_target = saved.carbs_target  if saved else auto_carbs  or 250 %}
+        {% set f_target = saved.fat_target    if saved else auto_fat    or 65  %}
+        {% set cal_target = saved.calorie_target if saved else calorie_goal %}
+
+        {% set p_pct = [(totals.prot|float / p_target * 100)|round(0)|int, 100]|min if p_target else 0 %}
+        {% set c_pct = [(totals.carbs|float / c_target * 100)|round(0)|int, 100]|min if c_target else 0 %}
+        {% set f_pct = [(totals.fat|float / f_target * 100)|round(0)|int, 100]|min if f_target else 0 %}
+        {% set cal_consumed = totals.cal|float %}
+        {% set cal_pct = [(cal_consumed / cal_target * 100)|round(0)|int, 100]|min if cal_target else 0 %}
+
+        <!-- Calorie progress ring -->
+        <div style="text-align:center;margin-bottom:1.5rem">
+          <div style="position:relative;display:inline-block;width:130px;height:130px">
+            <canvas id="macroRingCalories" width="130" height="130"></canvas>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+              <div style="font-size:1.3rem;font-weight:800;color:var(--teal)">{{ cal_pct }}%</div>
+              <div style="font-size:.65rem;color:var(--muted)">of goal</div>
+            </div>
+          </div>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:.5rem">
+            {{ cal_consumed|int }} / {{ cal_target|int }} kcal
+          </p>
+        </div>
+
+        <!-- Macro progress bars -->
+        <div class="macro-track-wrap">
+          <div class="macro-track-card">
+            <div class="macro-track-label">Protein</div>
+            <div class="macro-track-val" style="color:#3b82f6">{{ totals.prot|float|round(1) }}g</div>
+            <div class="macro-track-sub">/ {{ p_target|int }}g target</div>
+            <div class="macro-progress">
+              <div class="macro-progress-bar" style="--p-pct: {{ p_pct }}%; width: var(--p-pct); background:#3b82f6"></div>
+            </div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">{{ p_pct }}%</div>
+          </div>
+          <div class="macro-track-card">
+            <div class="macro-track-label">Carbs</div>
+            <div class="macro-track-val" style="color:#22c55e">{{ totals.carbs|float|round(1) }}g</div>
+            <div class="macro-track-sub">/ {{ c_target|int }}g target</div>
+            <div class="macro-progress">
+              <div class="macro-progress-bar" style="--p-pct: {{ c_pct }}%; width: var(--p-pct); background:#22c55e"></div>
+            </div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">{{ c_pct }}%</div>
+          </div>
+          <div class="macro-track-card">
+            <div class="macro-track-label">Fat</div>
+            <div class="macro-track-val" style="color:#f97316">{{ totals.fat|float|round(1) }}g</div>
+            <div class="macro-track-sub">/ {{ f_target|int }}g target</div>
+            <div class="macro-progress">
+              <div class="macro-progress-bar" style="--p-pct: {{ f_pct }}%; width: var(--p-pct); background:#f97316"></div>
+            </div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">{{ f_pct }}%</div>
+          </div>
+        </div>
+
+        <!-- Doughnut breakdown -->
+        <div style="height:200px;position:relative;margin-top:.5rem">
+          <canvas id="macroBreakdownChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Macro ratio guide -->
+      <div class="nutr-card" style="margin-top:1rem">
+        <div class="nutr-card-head">
+          <i data-lucide="info"></i>
+          <h3>Recommended Macro Ratios</h3>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+          <thead><tr style="background:var(--bg)">
+            <th style="padding:.5rem;text-align:left;color:var(--muted)">Goal</th>
+            <th style="padding:.5rem;color:#3b82f6">Protein</th>
+            <th style="padding:.5rem;color:#22c55e">Carbs</th>
+            <th style="padding:.5rem;color:#f97316">Fat</th>
+          </tr></thead>
+          <tbody>
+            {% for row in [
+              ('Muscle Gain', '30%', '45%', '25%'),
+              ('Fat Loss', '35%', '35%', '30%'),
+              ('Maintenance', '25%', '50%', '25%'),
+              ('Endurance', '20%', '55%', '25%'),
+              ('Keto', '25%', '5%', '70%'),
+            ] %}
+            <tr class="{% if loop.index is even %}bg-even{% endif %}" style="border-bottom:1px solid var(--border)">
+              <td style="padding:.5rem">{{ row[0] }}</td>
+              <td style="padding:.5rem;text-align:center;color:#3b82f6">{{ row[1] }}</td>
+              <td style="padding:.5rem;text-align:center;color:#22c55e">{{ row[2] }}</td>
+              <td style="padding:.5rem;text-align:center;color:#f97316">{{ row[3] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script id="macro-data" type="application/json">
+  {
+    "cal_pct": {{ cal_pct|default(0) }},
+    "totals": { "p": {{ totals.prot|float }}, "c": {{ totals.carbs|float }}, "f": {{ totals.fat|float }} }
+  }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const config = JSON.parse(document.getElementById('macro-data').textContent);
+  // ── Live kcal estimate ──────────────────────────────────────────
+  const pInp = document.getElementById('inp_protein');
+  const cInp = document.getElementById('inp_carbs');
+  const fInp = document.getElementById('inp_fat');
+  const est  = document.getElementById('estKcal');
+
+  function updateEst() {
+    const p = parseFloat(pInp.value)||0;
+    const c = parseFloat(cInp.value)||0;
+    const f = parseFloat(fInp.value)||0;
+    const kcal = Math.round(p*4 + c*4 + f*9);
+    est.textContent = kcal > 0 ? kcal + ' kcal' : '— kcal';
+    document.getElementById('inp_cal').value = kcal || '';
+  }
+  [pInp, cInp, fInp].forEach(el => el && el.addEventListener('input', updateEst));
+  updateEst();
+
+  // ── Apply auto suggestions ──────────────────────────────────────
+  const applyBtn = document.getElementById('applyAuto');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', function () {
+      pInp.value = this.dataset.p;
+      cInp.value = this.dataset.c;
+      fInp.value = this.dataset.f;
+      document.getElementById('inp_cal').value = this.dataset.cal;
+      updateEst();
+    });
+  }
+
+  // ── Calorie ring chart ──────────────────────────────────────────
+  const ringCtx = document.getElementById('macroRingCalories');
+  if (ringCtx) {
+    const pct    = config.cal_pct;
+    const filled = pct;
+    const empty  = 100 - pct;
+    new Chart(ringCtx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [filled, empty],
+          backgroundColor: ['#00C897', 'rgba(255,255,255,.06)'],
+          borderWidth: 0,
+          hoverOffset: 0,
+        }]
+      },
+      options: {
+        responsive: false,
+        cutout: '76%',
+        plugins: { legend:{display:false}, tooltip:{enabled:false} },
+        animation: { duration: 800 }
+      }
+    });
+  }
+
+  // ── Macro doughnut breakdown ────────────────────────────────────
+  initMacroChart('macroBreakdownChart', config.totals.p, config.totals.c, config.totals.f);
+
+});
+</script>
+{% endblock %}

@@ -55,7 +55,7 @@ def login_user(user: dict):
     session['user_id']   = user['id']
     session['full_name'] = user['full_name']
     session['email']     = user['email']
-    session['role']      = user.get('role', 'user')
+    session['role']      = str(user.get('role') or 'user').lower().strip()
     session['avatar']    = user.get('avatar_url', '')
 
 
@@ -70,7 +70,7 @@ def current_user() -> dict:
         'id':        session.get('user_id'),
         'full_name': session.get('full_name', ''),
         'email':     session.get('email', ''),
-        'role':      session.get('role', 'user'),
+        'role':      str(session.get('role') or 'user').lower().strip(),
         'avatar':    session.get('avatar', ''),
     }
 

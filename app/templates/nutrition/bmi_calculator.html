@@ -1,0 +1,189 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}BMI Calculator — VitaPulse{% endblock %}
+{% block page_title %}BMI Calculator{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bmi-indicator-text { color: var(--bmi-color, var(--teal)); }
+  .bmi-indicator-dot { position: absolute; left: var(--bmi-pct, 0%); top: -26px; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid var(--bg); box-shadow: 0 0 0 3px var(--bmi-color); transform: translateX(-50%); transition: .4s; }
+  .bmi-hist-val { color: var(--bmi-color, var(--teal)); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page bmi-page">
+
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(0,200,151,.15);color:var(--teal)">
+        <i data-lucide="scale"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">BMI Calculator</h1>
+        <p class="nutr-subtitle">Body Mass Index · Health Classification · Track Progress</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('dashboard.index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+    <!-- Calculator Form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="calculator"></i>
+        <h3>Calculate Your BMI</h3>
+      </div>
+      <form method="POST" action="{{ url_for('nutrition.bmi_calculate') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Weight (kg)</label>
+          <input type="number" name="weight" class="nutr-input" placeholder="e.g. 70"
+                 value="{{ prefill_weight }}" min="20" max="300" step="0.1" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.5rem">
+          <label class="nutr-label">Height (cm)</label>
+          <input type="number" name="height" class="nutr-input" placeholder="e.g. 170"
+                 value="{{ prefill_height }}" min="100" max="250" step="0.1" required>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="calculator"></i> Calculate BMI
+        </button>
+      </form>
+
+      {% if bmi %}
+      <div class="bmi-result-box" style="margin-top:1.5rem">
+        <div class="bmi-value-big bmi-indicator-text" style="--bmi-color: {{ bmi_color }}">{{ bmi }}</div>
+        <div class="bmi-label bmi-indicator-text" style="--bmi-color: {{ bmi_color }}">{{ bmi_label }}</div>
+        <p style="color:var(--muted);font-size:.8rem;margin-top:.4rem">
+          Weight: {{ prefill_weight }}kg · Height: {{ prefill_height }}cm
+        </p>
+
+        <!-- BMI Scale Bar -->
+        <div style="margin-top:1.5rem">
+          <div class="bmi-scale">
+            <div class="bmi-scale-seg" style="background:#3b82f6;flex:2" title="Underweight < 18.5"></div>
+            <div class="bmi-scale-seg" style="background:#22c55e;flex:4" title="Normal 18.5–24.9"></div>
+            <div class="bmi-scale-seg" style="background:#f59e0b;flex:3" title="Overweight 25–29.9"></div>
+            <div class="bmi-scale-seg" style="background:#ef4444;flex:3" title="Obese ≥ 30"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted)">
+            <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40+</span>
+          </div>
+          <!-- Indicator position -->
+          {% set pct = [(([bmi|float, 40]|min - 15) / 25 * 100)|round(1), 0]|max %}
+          <div style="position:relative;height:0">
+            <div class="bmi-indicator-dot" style="--bmi-pct: {{ pct }}%; --bmi-color: {{ bmi_color }};"></div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- BMI Reference Table -->
+    <div>
+      <div class="nutr-card" style="margin-bottom:1rem">
+        <div class="nutr-card-head">
+          <i data-lucide="info"></i>
+          <h3>BMI Classification</h3>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+          <thead>
+            <tr style="background:var(--bg-2)">
+              <th style="padding:.6rem;text-align:left;color:var(--muted)">BMI Range</th>
+              <th style="padding:.6rem;text-align:left;color:var(--muted)">Category</th>
+              <th style="padding:.6rem;text-align:center;color:var(--muted)">Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.6rem;color:#3b82f6">Below 18.5</td>
+              <td style="padding:.6rem">Underweight</td>
+              <td style="padding:.6rem;text-align:center"><span style="color:#3b82f6">⚠ Moderate</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);background:var(--bg-2)">
+              <td style="padding:.6rem;color:#22c55e">18.5 – 24.9</td>
+              <td style="padding:.6rem">Normal</td>
+              <td style="padding:.6rem;text-align:center"><span style="color:#22c55e">✓ Low</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.6rem;color:#f59e0b">25.0 – 29.9</td>
+              <td style="padding:.6rem">Overweight</td>
+              <td style="padding:.6rem;text-align:center"><span style="color:#f59e0b">⚠ Elevated</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);background:var(--bg-2)">
+              <td style="padding:.6rem;color:#f97316">30.0 – 34.9</td>
+              <td style="padding:.6rem">Obese Class I</td>
+              <td style="padding:.6rem;text-align:center"><span style="color:#f97316">⚠ High</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.6rem;color:#ef4444">35.0 – 39.9</td>
+              <td style="padding:.6rem">Obese Class II</td>
+              <td style="padding:.6rem;text-align:center"><span style="color:#ef4444">⚠ Very High</span></td>
+            </tr>
+            <tr>
+              <td style="padding:.6rem;color:#dc2626">40.0+</td>
+              <td style="padding:.6rem">Obese Class III</td>
+              <td style="padding:.6rem;text-align:center"><span style="color:#dc2626">⚠ Extreme</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BMI History -->
+      {% if bmi_history %}
+      <div class="nutr-card">
+        <div class="nutr-card-head">
+          <i data-lucide="history"></i>
+          <h3>Calculation History</h3>
+        </div>
+        {% for h in bmi_history %}
+        <div class="bmi-history-item">
+          <span style="color:var(--muted)">{{ h.recorded_at }}</span>
+          <span>{{ h.weight_kg }}kg / {{ h.height_cm }}cm</span>
+          <strong class="bmi-hist-val" style="--bmi-color: {{ h.bmi_color or '#00C897' }}">{{ h.bmi_value }} — {{ h.bmi_label }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Ideal Weight Calculator (bonus) -->
+  <div class="nutr-card" style="margin-top:1.5rem">
+    <div class="nutr-card-head">
+      <i data-lucide="target"></i>
+      <h3>Healthy Weight Range</h3>
+    </div>
+    {% if prefill_height %}
+    {% set h_m = prefill_height|float / 100 %}
+    {% set ideal_min = (18.5 * h_m * h_m)|round(1) %}
+    {% set ideal_max = (24.9 * h_m * h_m)|round(1) %}
+    <p style="color:var(--muted);font-size:.9rem">For your height of <strong>{{ prefill_height }}cm</strong>, a healthy weight range is:</p>
+    <div style="display:flex;gap:2rem;margin-top:1rem">
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:800;color:#22c55e">{{ ideal_min }} kg</div>
+        <div style="color:var(--muted);font-size:.8rem">Minimum (BMI 18.5)</div>
+      </div>
+      <div style="font-size:2rem;font-weight:800;color:var(--muted);align-self:center">—</div>
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:800;color:#22c55e">{{ ideal_max }} kg</div>
+        <div style="color:var(--muted);font-size:.8rem">Maximum (BMI 24.9)</div>
+      </div>
+    </div>
+    {% else %}
+    <p style="color:var(--muted);font-size:.9rem">Enter your height above to see your ideal weight range.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

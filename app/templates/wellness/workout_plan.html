@@ -1,0 +1,118 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Workout Plan — VitaPulse{% endblock %}
+{% block page_title %}Workout Plan Generator{% endblock %}
+{% block content %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bmi-underweight { color: #3b82f6; }
+  .bmi-normal { color: #22c55e; }
+  .bmi-overweight { color: #f59e0b; }
+  .bmi-obese { color: #ef4444; }
+  .workout-row { border-bottom: 1px solid var(--border); }
+  .row-even { background: var(--bg-2); }
+</style>
+{% endblock %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(239,68,68,.15);color:#ef4444"><i data-lucide="dumbbell"></i></div>
+      <div><h1 class="nutr-title">Workout Plan Generator</h1><p class="nutr-subtitle">Based on your BMI, weight &amp; goals · Targeted by body part</p></div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('wellness.workout_plan_pdf') }}" class="report-download-btn"><i data-lucide="download" style="width:16px;height:16px"></i> Download PDF</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+    <div class="report-stat">
+      <div class="report-stat-val {% if bmi_val < 18.5 %}bmi-underweight{% elif bmi_val < 25 %}bmi-normal{% elif bmi_val < 30 %}bmi-overweight{% else %}bmi-obese{% endif %}">
+        {{ bmi_val if bmi_val else '—' }}
+      </div>
+      <div class="report-stat-label">Current BMI ({{ bmi_label }})</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:var(--teal)">{{ goal|capitalize }}</div>
+      <div class="report-stat-label">Your Goal</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#f97316">{{ daily_target }}</div>
+      <div class="report-stat-label">Daily Burn Target (kcal)</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#a855f7">{{ daily_burn_total }}</div>
+      <div class="report-stat-label">Full Plan Burn (kcal)</div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="nutr-card" style="margin-bottom:1.5rem">
+    <div class="nutr-card-head"><i data-lucide="lightbulb"></i><h3>Recommendations</h3></div>
+    {% for s in suggestions %}
+    <div class="rec-item">{{ s }}</div>
+    {% endfor %}
+    {% if bmi_val == 0 %}
+    <a href="{{ url_for('nutrition.bmi_index') }}" class="nutr-btn nutr-btn-teal" style="margin-top:1rem">
+      <i data-lucide="scale"></i> Go to BMI Calculator
+    </a>
+    {% endif %}
+    <div style="background:rgba(0,200,151,.06);border:1px solid rgba(0,200,151,.2);border-radius:var(--r-md);padding:.75rem 1rem;margin-top:.75rem;font-size:.82rem">
+      <i data-lucide="flame" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:.4rem;color:var(--teal)"></i>
+      Based on your weight ({{ weight_kg }}kg), completing all exercises below burns approximately
+      <strong style="color:var(--teal)">{{ daily_burn_total }} kcal</strong> — exceeding your
+      <strong style="color:#f97316">{{ daily_target }} kcal</strong> daily target for your goal.
+    </div>
+  </div>
+
+  <!-- Body Parts -->
+  <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:1rem">Exercises by Body Part (5 Key Areas)</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem">
+    {% for key, part in body_parts.items() %}
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <span style="font-size:1.3rem">{{ part.icon }}</span><h3>{{ part.name }}</h3>
+        <span style="margin-left:auto;font-size:.75rem;color:var(--teal);font-weight:700">~{{ part.total_kcal }} kcal</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead><tr style="background:var(--bg)">
+          <th style="padding:.4rem;text-align:left;color:var(--muted)">Exercise</th>
+          <th style="padding:.4rem;color:var(--teal)">Sets</th>
+          <th style="padding:.4rem;color:#3b82f6">Reps</th>
+          <th style="padding:.4rem;color:#f97316">kcal</th>
+        </tr></thead>
+        <tbody>
+        {% for ex in part.exercises %}
+        <tr class="workout-row {% if loop.index is even %}row-even{% endif %}">
+          <td style="padding:.4rem">
+            <strong>{{ ex.name }}</strong>
+            <div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">{{ ex.desc }}</div>
+          </td>
+          <td style="padding:.4rem;text-align:center;color:var(--teal)">{{ ex.sets }}</td>
+          <td style="padding:.4rem;text-align:center;color:#3b82f6">{{ ex.reps }}</td>
+          <td style="padding:.4rem;text-align:center;color:#f97316;font-weight:700">{{ ex.kcal }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Cardio -->
+  <div class="nutr-card">
+    <div class="nutr-card-head"><i data-lucide="heart-pulse"></i><h3>Cardio Options</h3>
+      <span style="margin-left:auto;font-size:.75rem;color:var(--teal);font-weight:700">~{{ cardio_total }} kcal combined</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem">
+      {% for c in cardio %}
+      <div style="background:var(--bg-2);border-radius:var(--r-md);padding:.85rem;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:.85rem;font-weight:700">{{ c.name }}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">{{ c.duration_min }} min</div>
+        <div style="font-size:.78rem;color:var(--teal);margin-top:.2rem;font-weight:700">~{{ c.kcal }} kcal</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

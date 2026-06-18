@@ -1,0 +1,353 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Health Reports — VitaPulse{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bg-even { background: var(--bg-2); }
+  .bmi-report-val { color: var(--bmi-color, var(--teal)); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(0,200,151,.15);color:var(--teal)">
+        <i data-lucide="bar-chart-2"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">Health Reports</h1>
+        <p class="nutr-subtitle">Weekly & Monthly analysis · Downloadable PDF</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('dashboard.index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    </div>
+  </div>
+
+  <!-- ═══════════ WEEKLY REPORT ═══════════ -->
+  <div class="report-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem">
+      <div>
+        <div class="report-period-badge"><i data-lucide="calendar-days" style="width:14px;height:14px"></i> Last 7 Days</div>
+        <h2 style="font-size:1.3rem;font-weight:800">Weekly Report</h2>
+        <p style="color:var(--muted);font-size:.85rem">7-day health summary with nutrition breakdown</p>
+      </div>
+      <a href="{{ url_for('nutrition.weekly_report_pdf') }}" class="report-download-btn">
+        <i data-lucide="download" style="width:16px;height:16px"></i> Download PDF
+      </a>
+    </div>
+
+    <div class="report-stats-grid">
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:var(--teal)">{{ weekly.total_cal }}</div>
+        <div class="report-stat-label">Total Calories</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#f97316">{{ weekly.avg_cal }}</div>
+        <div class="report-stat-label">Avg Daily kcal</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#3b82f6">{{ weekly.avg_prot }}g</div>
+        <div class="report-stat-label">Avg Protein/day</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#22c55e">{{ weekly.max_cal }}</div>
+        <div class="report-stat-label">Peak Day kcal</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#a855f7">{{ weekly.avg_sleep }}h</div>
+        <div class="report-stat-label">Avg Sleep</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#f59e0b">{{ weekly.days_logged }}/7</div>
+        <div class="report-stat-label">Days Logged</div>
+      </div>
+      {% if weekly.current_bmi %}
+      <div class="report-stat">
+        <div class="report-stat-val bmi-report-val" style="--bmi-color: {% if weekly.current_bmi < 18.5 %}#3b82f6{% elif weekly.current_bmi < 25 %}#22c55e{% elif weekly.current_bmi < 30 %}#f59e0b{% else %}#ef4444{% endif %};">{{ weekly.current_bmi }}</div>
+        <div class="report-stat-label">Current BMI</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="flame"></i>
+        <h3>Calorie Intake — 7 Days</h3>
+      </div>
+      <div class="report-chart-wrap">
+        <canvas id="weeklyCalChart"></canvas>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+      <div class="nutr-card">
+        <div class="nutr-card-head"><i data-lucide="layers"></i><h3>Macros — 7 Days</h3></div>
+        <div class="report-chart-wrap">
+          <canvas id="weeklyMacroChart"></canvas>
+        </div>
+      </div>
+      <div class="nutr-card">
+        <div class="nutr-card-head"><i data-lucide="list"></i><h3>Daily Breakdown</h3></div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+            <thead><tr style="background:var(--bg-2)">
+              <th style="padding:.5rem;text-align:left;color:var(--muted)">Date</th>
+              <th style="padding:.5rem;color:var(--muted)">kcal</th>
+              <th style="padding:.5rem;color:var(--muted)">Prot</th>
+              <th style="padding:.5rem;color:var(--muted)">Carbs</th>
+              <th style="padding:.5rem;color:var(--muted)">Fat</th>
+            </tr></thead>
+            <tbody>
+            {% for i in range(weekly.labels|length) %}
+            <tr class="{% if loop.index is even %}bg-even{% endif %}" style="border-bottom:1px solid var(--border)">
+              <td style="padding:.5rem">{{ weekly.labels[i] }}</td>
+              <td style="padding:.5rem;text-align:center;color:var(--teal)">{{ weekly.cal_data[i] }}</td>
+              <td style="padding:.5rem;text-align:center;color:#3b82f6">{{ weekly.prot_data[i] }}g</td>
+              <td style="padding:.5rem;text-align:center;color:#22c55e">{{ weekly.carbs_data[i] }}g</td>
+              <td style="padding:.5rem;text-align:center;color:#f97316">{{ weekly.fat_data[i] }}g</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ MONTHLY REPORT ═══════════ -->
+  <div class="report-section" style="margin-top:2.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem">
+      <div>
+        <div class="report-period-badge" style="background:rgba(99,102,241,.1);color:#818cf8"><i data-lucide="calendar-range" style="width:14px;height:14px"></i> Last 30 Days</div>
+        <h2 style="font-size:1.3rem;font-weight:800">Monthly Report</h2>
+        <p style="color:var(--muted);font-size:.85rem">30-day deep analysis with trends and goal attainment</p>
+      </div>
+      <a href="{{ url_for('nutrition.monthly_report_pdf') }}" class="report-download-btn">
+        <i data-lucide="download" style="width:16px;height:16px"></i> Download PDF
+      </a>
+    </div>
+
+    <div class="report-stats-grid">
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:var(--teal)">{{ monthly.total_cal }}</div>
+        <div class="report-stat-label">Total Calories</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#f97316">{{ monthly.avg_cal }}</div>
+        <div class="report-stat-label">Avg Daily kcal</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#3b82f6">{{ monthly.avg_prot }}g</div>
+        <div class="report-stat-label">Avg Protein/day</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val" style="color:#22c55e">{{ monthly.max_cal }}</div>
+        <div class="report-stat-label">Peak Day kcal</div>
+      </div>
+      <div class="report-stat">
+        {% set days_logged = monthly.cal_data | select('gt', 0) | list | length %}
+        <div class="report-stat-val" style="color:#a855f7">{{ days_logged }}/30</div>
+        <div class="report-stat-label">Days Logged</div>
+      </div>
+      <div class="report-stat">
+        {% set goal_days = [] %}
+        {% for v in monthly.cal_data %}
+          {% if v >= calorie_goal * 0.8 and v <= calorie_goal * 1.2 %}{% set _ = goal_days.append(v) %}{% endif %}
+        {% endfor %}
+        <div class="report-stat-val" style="color:#f59e0b">{{ goal_days|length }}</div>
+        <div class="report-stat-label">On-Goal Days</div>
+      </div>
+    </div>
+
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="trending-up"></i>
+        <h3>Calorie Trend — 30 Days</h3>
+        <span style="font-size:.75rem;color:var(--muted)">Goal: {{ calorie_goal }} kcal/day</span>
+      </div>
+      <div class="report-chart-wrap" style="height:250px">
+        <canvas id="monthlyCalChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+  <!-- ══ Personalised Recommendations in Report ══ -->
+  <div class="report-section" style="margin-top:2.5rem">
+    <div style="margin-bottom:1rem">
+      <div class="report-period-badge" style="background:rgba(245,158,11,.1);color:#f59e0b">
+        <i data-lucide="lightbulb" style="width:14px;height:14px"></i> Based on Your Data
+      </div>
+      <h2 style="font-size:1.3rem;font-weight:800">Personalised Recommendations</h2>
+      <p style="color:var(--muted);font-size:.85rem">Generated from your logged health data</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      {% if recs %}
+        {% for section, items in recs.items() if items %}
+        <div class="nutr-card">
+          <div class="nutr-card-head">
+            {% if section == 'nutrition' %}<i data-lucide="utensils"></i><h3>🥗 Nutrition</h3>
+            {% elif section == 'sleep' %}<i data-lucide="moon"></i><h3>😴 Sleep</h3>
+            {% elif section == 'workout' %}<i data-lucide="dumbbell"></i><h3>💪 Workout</h3>
+            {% else %}<i data-lucide="scale"></i><h3>⚖️ Weight & BMI</h3>{% endif %}
+          </div>
+          {% for item in items %}
+          <div class="rec-item">{{ item }}</div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="nutr-card" style="grid-column:1/-1">
+          <p style="color:var(--muted);text-align:center;padding:1rem">
+            Log more health data to unlock personalised recommendations.
+            <a href="{{ url_for('nutrition.recommendations_index') }}" style="color:var(--teal)">View full recommendations →</a>
+          </p>
+        </div>
+      {% endif %}
+    </div>
+    <div style="margin-top:1rem">
+      <a href="{{ url_for('nutrition.recommendations_index') }}" class="nutr-btn nutr-btn-outline">
+        <i data-lucide="lightbulb"></i> View Full Recommendations
+      </a>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script id="report-chart-data" type="application/json">
+  {
+    "weekly": {
+      "labels": {{ weekly.labels | tojson }},
+      "cal": {{ weekly.cal_data | tojson }},
+      "prot": {{ weekly.prot_data | tojson }},
+      "carbs": {{ weekly.carbs_data | tojson }},
+      "fat": {{ weekly.fat_data | tojson }}
+    },
+    "monthly": {
+      "labels": {{ monthly.labels | tojson }},
+      "cal": {{ monthly.cal_data | tojson }}
+    },
+    "goal": {{ calorie_goal }}
+  }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const config = JSON.parse(document.getElementById('report-chart-data').textContent);
+  const TEAL = '#00C897', ORANGE = '#f97316';
+  const GRID = 'rgba(255,255,255,0.05)';
+
+  // Weekly calorie bar chart
+  const wCal = document.getElementById('weeklyCalChart');
+  if (wCal) {
+    new Chart(wCal, {
+      type: 'bar',
+      data: {
+        labels: config.weekly.labels,
+        datasets: [{
+          label: 'Calories',
+          data: config.weekly.cal,
+          backgroundColor: 'rgba(0,200,151,.4)',
+          borderColor: TEAL,
+          borderWidth: 2,
+          borderRadius: 6,
+        }, {
+          label: 'Goal',
+          data: Array(7).fill(config.goal),
+          type: 'line',
+          borderColor: ORANGE,
+          borderDash: [5,5],
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid:{color:GRID}, border:{display:false} },
+          y: { grid:{color:GRID}, border:{display:false}, beginAtZero:true,
+               title:{display:true,text:'kcal',color:'#475569'} }
+        },
+        plugins: { legend:{ display:true, labels:{color:'#94a3b8'} } }
+      }
+    });
+  }
+
+  // Weekly macro stacked bar
+  const wMac = document.getElementById('weeklyMacroChart');
+  if (wMac) {
+    new Chart(wMac, {
+      type: 'bar',
+      data: {
+        labels: config.weekly.labels,
+        datasets: [
+          { label:'Protein', data: config.weekly.prot, backgroundColor:'rgba(59,130,246,.7)', borderRadius:4 },
+          { label:'Carbs',   data: config.weekly.carbs, backgroundColor:'rgba(0,200,151,.7)', borderRadius:4 },
+          { label:'Fat',     data: config.weekly.fat, backgroundColor:'rgba(249,115,22,.7)', borderRadius:4 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid:{color:GRID}, border:{display:false}, stacked: true },
+          y: { grid:{color:GRID}, border:{display:false}, stacked: true, beginAtZero:true,
+               title:{display:true,text:'grams',color:'#475569'} }
+        },
+        plugins: { legend:{ display:true, labels:{color:'#94a3b8',font:{size:11}} } }
+      }
+    });
+  }
+
+  // Monthly calorie line chart
+  const mCal = document.getElementById('monthlyCalChart');
+  if (mCal) {
+    // Show every 5th label for readability
+    const sparseLabels = config.monthly.labels.map((l,i) => i % 5 === 0 ? l : '');
+    new Chart(mCal, {
+      type: 'line',
+      data: {
+        labels: config.monthly.labels,
+        datasets: [{
+          label: 'Calories',
+          data: config.monthly.cal,
+          borderColor: TEAL,
+          backgroundColor: 'rgba(0,200,151,.06)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: TEAL,
+          fill: true,
+          tension: 0.3,
+        }, {
+          label: 'Goal',
+          data: Array(30).fill(config.goal),
+          borderColor: ORANGE,
+          borderDash: [5,5],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid:{color:GRID}, border:{display:false},
+            ticks: { callback: (v,i) => i % 5 === 0 ? config.monthly.labels[i] : '', color:'#94a3b8' }
+          },
+          y: { grid:{color:GRID}, border:{display:false}, beginAtZero:true,
+               title:{display:true,text:'kcal',color:'#475569'} }
+        },
+        plugins: { legend:{ display:true, labels:{color:'#94a3b8'} } }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -28,3 +28,18 @@ class SleepModel(BaseModel):
             (uid,start,end))
         if not row or row.get('avg_h') is None: return 0.0
         return round(float(row['avg_h']),1)
+
+    @classmethod
+    def get_by_date(cls, uid, date):
+        return cls.fetch_one('SELECT * FROM sleep_logs WHERE user_id=%s AND log_date=%s', (uid, date))
+
+    @classmethod
+    def recent(cls, uid, limit=14):
+        return cls.fetch_all(
+            'SELECT * FROM sleep_logs WHERE user_id=%s ORDER BY log_date DESC LIMIT %s',
+            (uid, limit)
+        )
+
+    @classmethod
+    def delete(cls, sid, uid):
+        return cls.execute('DELETE FROM sleep_logs WHERE id=%s AND user_id=%s', (sid, uid))

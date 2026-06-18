@@ -1,0 +1,138 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Sleep Tracker — VitaPulse{% endblock %}
+{% block page_title %}Sleep Tracker{% endblock %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bg-even { background: var(--bg-2); }
+  .sleep-row { border-bottom: 1px solid var(--border); }
+  .sleep-cell { padding: .5rem; text-align: center; }
+  .sleep-cell-left { padding: .5rem; text-align: left; }
+  .sleep-header-icon { background: rgba(168,85,247,.15); color: #a855f7; }
+  .sleep-logged-card { margin-bottom: 1rem; border-color: rgba(168,85,247,.3); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap sleep-header-icon"><i data-lucide="moon"></i></div>
+      <div><h1 class="nutr-title">Sleep Tracker</h1><p class="nutr-subtitle">Log sleep · Track quality · 7-day chart</p></div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Log Form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Log Sleep</h3></div>
+      <form method="POST" action="{{ url_for('health.sleep_log') }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="nutr-form-group">
+            <label class="nutr-label">Bedtime</label>
+            <input type="time" name="bedtime" class="nutr-input" value="{{ entry.bedtime if entry else '22:00' }}">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Wake Time</label>
+            <input type="time" name="wake" class="nutr-input" value="{{ entry.wake_time if entry else '06:00' }}">
+          </div>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Hours Slept</label>
+          <input type="number" name="hours" class="nutr-input" step="0.5" min="0" max="24" placeholder="8.0"
+            value="{{ entry.hours_slept if entry else '' }}" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Sleep Quality</label>
+          <select name="quality" class="nutr-input">
+            {% for v,l in [(1,'Poor'),(2,'Fair'),(3,'Good'),(4,'Great'),(5,'Excellent')] %}
+            <option value="{{ v }}" {% if entry and entry.quality == v %}selected{% endif %}>{{ v }} — {{ l }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Date</label>
+          <input type="date" name="log_date" class="nutr-input" value="{{ today }}">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Notes (optional)</label>
+          <textarea name="notes" class="nutr-input" rows="2" placeholder="Any sleep notes...">{{ entry.notes if entry else '' }}</textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="save"></i> {{ 'Update' if entry else 'Log' }} Sleep
+        </button>
+      </form>
+    </div>
+
+    <!-- Stats + Chart -->
+    <div>
+      <div class="nutr-card" style="margin-bottom:1rem">
+        <div class="nutr-card-head"><i data-lucide="bar-chart-2"></i><h3>7-Day Overview</h3>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--teal)">Avg: {{ avg }}h</span>
+        </div>
+        <div style="height:180px;position:relative"><canvas id="sleepChart"></canvas></div>
+      </div>
+      {% if entry %}
+      <div class="nutr-card sleep-logged-card">
+        <div class="nutr-card-head"><i data-lucide="check-circle"></i><h3>Today Logged</h3></div>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:.9rem">
+          <div><span style="color:var(--muted)">Hours:</span> <strong style="color:#a855f7">{{ entry.hours_slept }}h</strong></div>
+          <div><span style="color:var(--muted)">Quality:</span> <strong style="color:#a855f7">{{ entry.quality }}/5</strong></div>
+          {% if entry.bedtime %}<div><span style="color:var(--muted)">Bed:</span> <strong>{{ entry.bedtime }}</strong></div>{% endif %}
+          {% if entry.wake_time %}<div><span style="color:var(--muted)">Wake:</span> <strong>{{ entry.wake_time }}</strong></div>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Log -->
+  {% if recent %}
+  <div class="nutr-card" style="margin-top:1rem">
+    <div class="nutr-card-head"><i data-lucide="calendar-days"></i><h3>Recent Sleep Log</h3></div>
+    <table style="width:100%;border-collapse:collapse;font-size:.83rem">
+      <thead><tr style="background:var(--bg)">
+        <th class="sleep-cell-left" style="color:var(--muted)">Date</th>
+        <th class="sleep-cell" style="color:#a855f7">Hours</th>
+        <th class="sleep-cell" style="color:#f59e0b">Quality</th>
+        <th class="sleep-cell" style="color:var(--muted)">Bedtime</th>
+        <th class="sleep-cell" style="color:var(--muted)">Wake</th>
+        <th class="sleep-cell"></th>
+      </tr></thead>
+      <tbody>
+      {% for r in recent %}
+      <tr class="sleep-row {% if loop.index is even %}bg-even{% endif %}">
+        <td class="sleep-cell-left">{{ r.log_date }}</td>
+        <td class="sleep-cell" style="color:#a855f7">{{ r.hours_slept }}h</td>
+        <td class="sleep-cell">
+          {% set stars = '★' * r.quality|int + '☆' * (5 - r.quality|int) %}
+          <span style="color:#f59e0b">{{ stars }}</span>
+        </td>
+        <td class="sleep-cell">{{ r.bedtime or '—' }}</td>
+        <td class="sleep-cell">{{ r.wake_time or '—' }}</td>
+        <td class="sleep-cell">
+          <form method="POST" action="{{ url_for('health.sleep_delete', sid=r.id) }}" style="display:inline" onsubmit="return confirm('Delete?')">
+            <button type="submit" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:.8rem">✕</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{{ super() }}
+<script id="sleep-data" type="application/json">
+  { "labels": {{ labels|tojson }}, "hours": {{ hours_data|tojson }} }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const data = JSON.parse(document.getElementById('sleep-data').textContent);
+  initSleepChart('sleepChart', data.labels, data.hours);
+});
+</script>
+{% endblock %}

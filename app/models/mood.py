@@ -26,3 +26,14 @@ class MoodModel(BaseModel):
         return cls.fetch_all(
             'SELECT mood, COUNT(*) AS cnt FROM mood_logs WHERE user_id=%s AND log_date BETWEEN %s AND %s GROUP BY mood',
             (uid,start,end))
+
+    @classmethod
+    def get_by_date(cls, uid, date):
+        return cls.fetch_one('SELECT * FROM mood_logs WHERE user_id=%s AND log_date=%s', (uid, date))
+
+    @classmethod
+    def recent(cls, uid, limit=14):
+        return cls.fetch_all(
+            'SELECT * FROM mood_logs WHERE user_id=%s ORDER BY log_date DESC LIMIT %s',
+            (uid, limit)
+        )

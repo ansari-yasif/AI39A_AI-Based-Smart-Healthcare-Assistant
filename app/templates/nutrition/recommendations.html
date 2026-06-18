@@ -1,0 +1,206 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Recommendations — VitaPulse{% endblock %}
+{% block page_title %}Recommendations{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bmi-rec-val { color: var(--bmi-color, var(--muted)); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(245,158,11,.15);color:#f59e0b">
+        <i data-lucide="lightbulb"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">Personalised Recommendations</h1>
+        <p class="nutr-subtitle">Based on your logged health data · Updated daily</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('nutrition.reports_index') }}" class="nutr-btn nutr-btn-outline">
+        <i data-lucide="bar-chart-2"></i> View Reports
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Snapshot -->
+  <div class="rec-insight-grid" style="margin-bottom:1.5rem">
+    <div class="rec-insight-card">
+      <div class="rec-insight-val" style="color:var(--teal)">{{ data_7.avg_cal }}</div>
+      <div class="rec-insight-label">Avg kcal/day (7d)</div>
+    </div>
+    <div class="rec-insight-card">
+      <div class="rec-insight-val" style="color:#3b82f6">{{ data_7.avg_prot }}g</div>
+      <div class="rec-insight-label">Avg Protein/day</div>
+    </div>
+    <div class="rec-insight-card">
+      <div class="rec-insight-val" style="color:#a855f7">{{ data_7.avg_sleep }}h</div>
+      <div class="rec-insight-label">Avg Sleep/night</div>
+    </div>
+    <div class="rec-insight-card">
+      <div class="rec-insight-val" style="color:#f97316">{{ data_7.days_logged }}/7</div>
+      <div class="rec-insight-label">Days Logged</div>
+    </div>
+    <div class="rec-insight-card">
+      <div class="rec-insight-val bmi-rec-val" style="--bmi-color: {% if data_7.current_bmi < 18.5 %}#3b82f6{% elif data_7.current_bmi < 25 %}#22c55e{% elif data_7.current_bmi < 30 %}#f59e0b{% else %}#ef4444{% endif %};">
+        {{ data_7.current_bmi if data_7.current_bmi > 0 else '—' }}
+      </div>
+      <div class="rec-insight-label">Current BMI</div>
+    </div>
+    <div class="rec-insight-card">
+      <div class="rec-insight-val" style="color:#22c55e">{{ data_30.days_logged }}/30</div>
+      <div class="rec-insight-label">Days Logged (30d)</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+
+    <!-- Nutrition -->
+    <div class="rec-card">
+      <div class="rec-card-head">
+        <div class="rec-card-icon" style="background:rgba(0,200,151,.12)">🥗</div>
+        <div>
+          <h3>Nutrition</h3>
+          <p style="font-size:.75rem;color:var(--muted)">Calorie & macro insights</p>
+        </div>
+      </div>
+      {% if recs.nutrition %}
+        {% for r in recs.nutrition %}
+        <div class="rec-item">{{ r }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="rec-item" style="color:var(--muted)">Log meals for personalised nutrition tips.</div>
+      {% endif %}
+    </div>
+
+    <!-- Sleep -->
+    <div class="rec-card">
+      <div class="rec-card-head">
+        <div class="rec-card-icon" style="background:rgba(168,85,247,.12)">😴</div>
+        <div>
+          <h3>Sleep</h3>
+          <p style="font-size:.75rem;color:var(--muted)">Recovery & rest quality</p>
+        </div>
+      </div>
+      {% if recs.sleep %}
+        {% for r in recs.sleep %}
+        <div class="rec-item">{{ r }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="rec-item" style="color:var(--muted)">Log sleep to get personalised tips.</div>
+      {% endif %}
+    </div>
+
+    <!-- Workout -->
+    <div class="rec-card">
+      <div class="rec-card-head">
+        <div class="rec-card-icon" style="background:rgba(249,115,22,.12)">💪</div>
+        <div>
+          <h3>Workout</h3>
+          <p style="font-size:.75rem;color:var(--muted)">Activity & exercise guidance</p>
+        </div>
+      </div>
+      {% if recs.workout %}
+        {% for r in recs.workout %}
+        <div class="rec-item">{{ r }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="rec-item" style="color:var(--muted)">Set your activity level in Health Settings.</div>
+      {% endif %}
+    </div>
+
+    <!-- Weight & BMI -->
+    <div class="rec-card">
+      <div class="rec-card-head">
+        <div class="rec-card-icon" style="background:rgba(59,130,246,.12)">⚖️</div>
+        <div>
+          <h3>Weight & BMI</h3>
+          <p style="font-size:.75rem;color:var(--muted)">Body composition insights</p>
+        </div>
+      </div>
+      {% if recs.weight %}
+        {% for r in recs.weight %}
+        <div class="rec-item">{{ r }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="rec-item" style="color:var(--muted)">Use the BMI Calculator to track your progress.</div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- 30-day trend comparison -->
+  <div class="nutr-card" style="margin-top:1.5rem">
+    <div class="nutr-card-head">
+      <i data-lucide="trending-up"></i>
+      <h3>30-Day Calorie Trend</h3>
+      <span style="font-size:.75rem;color:var(--muted);margin-left:auto">Avg: {{ data_30.avg_cal }} kcal/day</span>
+    </div>
+    <div style="height:200px;position:relative">
+      <canvas id="recCalChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem">
+    <a href="{{ url_for('nutrition.bmi_index') }}" class="nutr-btn nutr-btn-teal">
+      <i data-lucide="scale"></i> Update BMI
+    </a>
+    <a href="{{ url_for('nutrition.macro_targets_index') }}" class="nutr-btn" style="background:rgba(168,85,247,.15);color:#a855f7;border:1px solid rgba(168,85,247,.3)">
+      <i data-lucide="pie-chart"></i> Set Macro Targets
+    </a>
+    <a href="{{ url_for('nutrition.reports_index') }}" class="nutr-btn nutr-btn-outline">
+      <i data-lucide="download"></i> Download Report
+    </a>
+    <a href="{{ url_for('profile.edit') if 'profile.edit' in request.url_rule.endpoint|string else url_for('profile.profile') }}" class="nutr-btn nutr-btn-outline">
+      <i data-lucide="user"></i> Update Profile
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script id="rec-chart-data" type="application/json">
+  { "labels": {{ data_30.labels | tojson }}, "cal": {{ data_30.cal_data | tojson }} }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('recCalChart');
+  if (!ctx) return;
+  const config = JSON.parse(document.getElementById('rec-chart-data').textContent);
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: config.labels,
+      datasets: [{
+        data: config.cal,
+        borderColor: '#00C897',
+        backgroundColor: 'rgba(0,200,151,.07)',
+        borderWidth: 2,
+        pointRadius: 2,
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid:{color:'rgba(255,255,255,.04)'}, border:{display:false},
+             ticks:{ callback:(v,i)=> i%5===0?config.labels[i]:'', color:'#94a3b8' } },
+        y: { grid:{color:'rgba(255,255,255,.04)'}, border:{display:false},
+             beginAtZero:true, ticks:{color:'#94a3b8'} }
+      },
+      plugins:{ legend:{display:false} }
+    }
+  });
+});
+</script>
+{% endblock %}
