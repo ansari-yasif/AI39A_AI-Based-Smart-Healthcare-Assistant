@@ -1,5 +1,5 @@
 """app/controllers/profile_controller.py — User profile | Feature: Profile"""
-from flask import session, request
+from flask import session, request, redirect, url_for, flash
 from app.controllers.base_controller import BaseController
 from app.models.user import UserModel
 from app.auth import verify_password
@@ -9,24 +9,46 @@ from app.constants import ACTIVITY_LEVELS
 
 class ProfileController(BaseController):
 
-    # Show profile page (main)
+    # ---------- Helper ----------
+    @classmethod
+    def _get_user_or_redirect(cls):
+        """Fetch the logged-in user; if not found, redirect to login with error."""
+        uid = cls.uid()
+        if not uid:
+            flash('Please log in to access your profile.', 'warning')
+            return None, redirect(url_for('auth.login'))
+        
+        user = UserModel.find_by_id(uid)
+        if not user:
+            flash('User account not found. Please log in again.', 'danger')
+            return None, redirect(url_for('auth.login'))
+        
+        return user, None  # (user, redirect_response) – redirect_response is None when OK
+
+    # ---------- Profile page ----------
     @classmethod
     def show_profile(cls):
-        uid = cls.uid()
-        user = UserModel.find_by_id(uid)
+        user, redirect_resp = cls._get_user_or_redirect()
+        if redirect_resp:
+            return redirect_resp
         return cls.render('profile/profile.html', user=user)
 
-    # Show edit profile form (GET)
+    # ---------- Edit profile form ----------
     @classmethod
     def edit_profile(cls):
-        uid = cls.uid()
-        user = UserModel.find_by_id(uid)
+        user, redirect_resp = cls._get_user_or_redirect()
+        if redirect_resp:
+            return redirect_resp
         return cls.render('profile/edit_profile.html', user=user)
 
-    # Process profile update (POST)
+    # ---------- Update profile (POST) ----------
     @classmethod
     def update_profile(cls):
-        uid = cls.uid()
+        user, redirect_resp = cls._get_user_or_redirect()
+        if redirect_resp:
+            return redirect_resp
+
+        uid = cls.uid()  # safe because _get_user_or_redirect already checked
         name = sanitize(request.form.get('full_name', ''))
         phone = sanitize(request.form.get('phone', ''))
         bio = sanitize(request.form.get('bio', ''))
@@ -51,21 +73,27 @@ class ProfileController(BaseController):
         cls.flash_ok('Profile updated successfully!')
         return cls.redirect_to('profile.profile')
 
-    # Show change password form (GET)
+    # ---------- Change password form ----------
     @classmethod
     def change_password_form(cls):
+        user, redirect_resp = cls._get_user_or_redirect()
+        if redirect_resp:
+            return redirect_resp
         return cls.render('profile/change_password.html')
 
-    # Process password change (POST)
+    # ---------- Change password (POST) ----------
     @classmethod
     def change_password(cls):
+        user, redirect_resp = cls._get_user_or_redirect()
+        if redirect_resp:
+            return redirect_resp
+
         uid = cls.uid()
         current = request.form.get('current_password')
         new_pwd = request.form.get('new_password')
         confirm = request.form.get('confirm_password')
 
-        user = UserModel.find_by_id(uid)
-
+        # user is guaranteed to be a dict (not None) here
         if user.get('password_hash'):
             if not verify_password(current, user['password_hash']):
                 cls.flash_err('Current password is incorrect.')
@@ -86,8 +114,11 @@ class ProfileController(BaseController):
         UserModel.update_password(uid, new_pwd)
         cls.flash_ok('Password changed successfully!')
         return cls.redirect_to('profile.profile')
-    
-    #settings page of user profile
+
+    # ---------- Settings page ----------
     @classmethod
     def show_settings(cls):
+        user, redirect_resp = cls._get_user_or_redirect()
+        if redirect_resp:
+            return redirect_resp
         return cls.render('settings.html')

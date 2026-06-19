@@ -753,41 +753,93 @@
 {% block extra_js %}
 {{ super() }}
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<script id="dashboard-data" type="application/json">
+  {
+    "sleep": { "labels": {{ sleep_labels|tojson }}, "data": {{ sleep_data|tojson }}, "avg": "{{ avg_sleep }}" },
+    "calories": { "labels": {{ cal_labels|tojson }}, "data": {{ cal_chart|tojson }} },
+    "macros": { "p": {{ totals.prot|default(0) }}, "c": {{ totals.carbs|default(0) }}, "f": {{ totals.fat|default(0) }} },
+    "weight": { "labels": {{ weight_labels|tojson }}, "data": {{ weight_chart|tojson }} }
+  }
+</script>
+>>>>>>> Saksham-Shrestha
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var topDateElem = document.getElementById('topDate');
-    if (topDateElem) {
-      topDateElem.textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      });
-    }
+document.addEventListener('DOMContentLoaded', function () {
+  const config = JSON.parse(document.getElementById('dashboard-data').textContent);
 
-    var sleepLabels = {{ sleep_labels|tojson }};
-    var sleepData = {{ sleep_data|tojson }};
-    var calLabels = {{ cal_labels|tojson }};
-    var calData = {{ cal_chart|tojson }};
+  // ── date display ──────────────────────────────────
+  const topDateElem = document.getElementById('topDate');
+  if (topDateElem) topDateElem.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    if (typeof initSleepChart === 'function') {
-      initSleepChart('sleepChart', sleepLabels, sleepData);
-    }
-    if (typeof initCalChart === 'function') {
-      initCalChart('calChart', calLabels, calData);
-    }
+  // ── calorie chart ─────────────────────────────────
+  if (typeof initCalChart === 'function') initCalChart('calChart', config.calories.labels, config.calories.data);
 
-    var rings = document.querySelectorAll('.ring-path');
-    rings.forEach(function(ring) {
-      var dashArray = parseFloat(ring.getAttribute('stroke-dasharray'));
-      var dashOffset = ring.getAttribute('stroke-dashoffset');
-      ring.style.strokeDashoffset = dashArray;
-      setTimeout(function() {
-        ring.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
-        ring.style.strokeDashoffset = dashOffset;
-      }, 200);
+  // ── macro doughnut ────────────────────────────────
+  initMacroChart('macroChart', config.macros.p, config.macros.c, config.macros.f);
+
+  // ── Sleep 7-day bar chart ──────────────────────────────────────────
+  initSleepChart('dashSleepChart', config.sleep.labels, config.sleep.data);
+
+  // ── Weight trend line chart ────────────────────────────────────────
+  (function() {
+    const wCtx = document.getElementById('dashWeightChart');
+    if (!wCtx) return;
+    if (!config.weight.data.length) {
+      wCtx.parentElement.innerHTML = '<p style="color:#555;text-align:center;padding:40px 0;font-size:.85rem">Log weight to see trend</p>';
+      return;
+    }
+    new Chart(wCtx, {
+      type: 'line',
+      data: {
+        labels: config.weight.labels,
+        datasets: [{
+          data: config.weight.data,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#f97316',
+          pointBorderColor: '#0a0e1a',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          fill: true,
+          tension: 0.4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid:{color:'rgba(255,255,255,.05)'}, border:{display:false} },
+          y: { grid:{color:'rgba(255,255,255,.05)'}, border:{display:false},
+               beginAtZero: false,
+               title:{display:true,text:'kg',color:'#475569'} }
+        },
+        plugins: { legend:{display:false}, tooltip:{callbacks:{label: c => ' ' + c.parsed.y + ' kg'}} }
+      }
     });
+  })();
+
+  // ── Motivation Generator — rotates every 2 minutes ──────────────────
+  if (typeof initMotivationGenerator === 'function') {
+    initMotivationGenerator([
+      { text: '#headerQuoteText', author: '#headerQuoteAuth' },
+      { text: '#cardQuoteText',   author: '#cardQuoteAuth' },
+    ]);
+  }
+
+  // ── ring animation ────────────────────────────────
+  document.querySelectorAll('.ring-path').forEach(function (ring) {
+    var dashArray  = parseFloat(ring.getAttribute('stroke-dasharray'));
+    var dashOffset = ring.getAttribute('stroke-dashoffset');
+    ring.style.strokeDashoffset = dashArray;
+    setTimeout(function () {
+      ring.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+      ring.style.strokeDashoffset = dashOffset;
+    }, 200);
   });
+<<<<<<< HEAD
 =======
 <script id="dashboard-data" type="application/json">
   {
@@ -883,4 +935,16 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 >>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
 </script>
+=======
+
+  // ── animate feature cards on scroll ──────────────
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('vp-visible'); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('[data-anim]').forEach(function (el) { observer.observe(el); });
+});
+</script>
+>>>>>>> Saksham-Shrestha
 {% endblock %}
