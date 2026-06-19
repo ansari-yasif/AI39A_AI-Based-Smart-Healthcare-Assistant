@@ -4,6 +4,18 @@ import logging
 import traceback
 from app.models.stat_models import get_user_stats_from_db, get_contact_info
 
+try:
+    import markdown
+    HAS_MARKDOWN = True
+except ImportError:
+    HAS_MARKDOWN = False
+
+try:
+    from groq import Groq
+    HAS_GROQ = True
+except ImportError:
+    HAS_GROQ = False
+
 logger = logging.getLogger(__name__)
 
 FORBIDDEN_PATTERNS = [
@@ -135,14 +147,21 @@ You are **VitaPulse AI**, the premium enterprise assistant for VitaPulse users.
                     "html": "<p>Chat service is temporarily unavailable.</p>"
                 }), 503
 
+            if not HAS_GROQ:
+                return jsonify({
+                    "reply": "Chat service is temporarily unavailable (groq package not installed).",
+                    "html": "<p>Chat service is temporarily unavailable.</p>"
+                }), 503
+
             client = Groq(api_key=groq_api_key)
 
             # Call Groq API with proper model selection
             models = [
-                "meta-llama/llama-4-scout-17b-16e-instruct",
-                "meta-llama/llama-4-maverick-17b-128e-instruct",
                 "llama-3.1-8b-instant",
+                "llama3-8b-8192",
                 "gemma2-9b-it",
+                "llama-3.3-70b-versatile",
+                "meta-llama/llama-4-scout-17b-16e-instruct",
             ]
             response = None
             last_error = None
@@ -155,20 +174,15 @@ You are **VitaPulse AI**, the premium enterprise assistant for VitaPulse users.
                             {"role": "user", "content": user_message}
                         ],
                         temperature=0.7,
-                        max_tokens=2000,
+                        max_tokens=1500,
                         top_p=1
                     )
-                    break
+                    if response and response.choices:
+                        break  # success — stop trying models
                 except Exception as groq_error:
                     last_error = groq_error
-                    error_text = str(groq_error).lower()
                     logger.warning(f"Groq model {model_name} failed: {groq_error}")
-                    if "model_decommissioned" not in error_text and "deprecated" not in error_text:
-                        logger.error(f"Unexpected Groq error for {model_name}: {groq_error}")
-                        return jsonify({
-                            "reply": "I encountered an error processing your request. Please try again.",
-                            "html": "<p>I encountered an error processing your request. Please try again.</p>"
-                        }), 500
+                    continue  # always try next model
 
             if response is None:
                 logger.error(f"Groq API error: no valid model available. last error: {last_error}")
@@ -180,7 +194,10 @@ You are **VitaPulse AI**, the premium enterprise assistant for VitaPulse users.
             reply_text = response.choices[0].message.content
             
             # Convert markdown to HTML with table support
-            html_reply = markdown.markdown(reply_text, extensions=['tables', 'fenced_code'])
+            if HAS_MARKDOWN:
+                html_reply = markdown.markdown(reply_text, extensions=['tables', 'fenced_code'])
+            else:
+                html_reply = f"<p>{reply_text}</p>"
             
             return jsonify({
                 "reply": reply_text,
