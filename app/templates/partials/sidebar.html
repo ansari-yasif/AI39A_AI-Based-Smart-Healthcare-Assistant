@@ -1,0 +1,151 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <a href="{{ url_for('index') }}" class="sb-logo-link">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="VitaPulse" class="sb-logo-img" onerror="this.style.display='none'">
+      <span class="sb-logo-text">VITAPULSE</span>
+    </a>
+  </div>
+
+  <nav class="sb-nav">
+
+    <!-- Go to Homepage -->
+    <a href="{{ url_for('index') }}" class="sb-home-btn">
+      <i data-lucide="home"></i><span>Homepage</span>
+    </a>
+
+    <p class="sb-section-lbl">Overview</p>
+
+    <a href="{{ url_for('dashboard.index') }}"
+       class="sb-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+      <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+    </a>
+
+    <p class="sb-section-lbl">Nutrition</p>
+
+    <a href="{{ url_for('nutrition.calorie_index') }}"
+       class="sb-link {% if request.endpoint == 'nutrition.calorie_index' %}active{% endif %}">
+      <i data-lucide="calculator"></i><span>Calorie Calculator</span>
+    </a>
+
+    <a href="{{ url_for('nutrition.meal_index') }}"
+       class="sb-link {% if request.endpoint == 'nutrition.meal_index' %}active{% endif %}">
+      <i data-lucide="utensils"></i><span>Meal Tracker</span>
+    </a>
+
+    <a href="{{ url_for('nutrition.food_db_index') }}"
+       class="sb-link {% if request.endpoint in ['nutrition.food_db_index'] %}active{% endif %}">
+      <i data-lucide="database"></i><span>Food Database</span>
+    </a>
+
+    <a href="{{ url_for('nutrition.bmi_index') }}"
+       class="sb-link {% if request.endpoint == 'nutrition.bmi_index' %}active{% endif %}">
+      <i data-lucide="scale"></i><span>BMI Calculator</span>
+    </a>
+
+    <a href="{{ url_for('nutrition.macro_targets_index') }}"
+       class="sb-link {% if request.endpoint == 'nutrition.macro_targets_index' %}active{% endif %}">
+      <i data-lucide="pie-chart"></i><span>Macro Targets</span>
+    </a>
+
+    <a href="{{ url_for('nutrition.reports_index') }}"
+       class="sb-link {% if request.endpoint == 'nutrition.reports_index' %}active{% endif %}">
+      <i data-lucide="bar-chart-2"></i><span>Reports</span>
+    </a>
+
+    <a href="{{ url_for('nutrition.recommendations_index') }}"
+       class="sb-link {% if request.endpoint == 'nutrition.recommendations_index' %}active{% endif %}">
+      <i data-lucide="lightbulb"></i><span>Recommendations</span>
+    </a>
+
+    <p class="sb-section-lbl">Health Trackers</p>
+
+    <a href="{{ url_for('health.sleep_index') }}"
+       class="sb-link {% if request.endpoint == 'health.sleep_index' %}active{% endif %}">
+      <i data-lucide="moon"></i><span>Sleep</span>
+    </a>
+
+    <a href="{{ url_for('health.mood_index') }}"
+       class="sb-link {% if request.endpoint == 'health.mood_index' %}active{% endif %}">
+      <i data-lucide="smile"></i><span>Mood</span>
+    </a>
+
+    <a href="{{ url_for('health.weight_index') }}"
+       class="sb-link {% if request.endpoint == 'health.weight_index' %}active{% endif %}">
+      <i data-lucide="trending-up"></i><span>Weight</span>
+    </a>
+
+    <a href="{{ url_for('health.workout_index') }}"
+       class="sb-link {% if request.endpoint == 'health.workout_index' %}active{% endif %}">
+      <i data-lucide="dumbbell"></i><span>Workouts</span>
+    </a>
+
+    <p class="sb-section-lbl">Wellness</p>
+
+    <a href="{{ url_for('wellness.workout_plan') }}"
+       class="sb-link {% if request.endpoint == 'wellness.workout_plan' %}active{% endif %}">
+      <i data-lucide="dumbbell"></i><span>Workout Plan</span>
+    </a>
+
+    <a href="{{ url_for('wellness.health_risk') }}"
+       class="sb-link {% if request.endpoint == 'wellness.health_risk' %}active{% endif %}">
+      <i data-lucide="activity"></i><span>Health Risk</span>
+    </a>
+
+    <a href="{{ url_for('wellness.first_aid') }}"
+       class="sb-link {% if request.endpoint == 'wellness.first_aid' %}active{% endif %}">
+      <i data-lucide="cross"></i><span>First Aid Guide</span>
+    </a>
+
+    <a href="{{ url_for('wellness.medicine_index') }}"
+       class="sb-link {% if request.endpoint == 'wellness.medicine_index' %}active{% endif %}">
+      <i data-lucide="pill"></i><span>Medicine Checker</span>
+    </a>
+
+    <a href="{{ url_for('wellness.healthcare_finder') }}"
+       class="sb-link {% if request.endpoint == 'wellness.healthcare_finder' %}active{% endif %}">
+      <i data-lucide="map-pin"></i><span>Healthcare Finder</span>
+    </a>
+
+    <a href="{{ url_for('wellness.specialist_navigator') }}"
+       class="sb-link {% if request.endpoint == 'wellness.specialist_navigator' %}active{% endif %}">
+      <i data-lucide="stethoscope"></i><span>Specialist Navigator</span>
+    </a>
+
+    <a href="{{ url_for('wellness.expense_index') }}"
+       class="sb-link {% if request.endpoint == 'wellness.expense_index' %}active{% endif %}">
+      <i data-lucide="wallet"></i><span>Expense Tracker</span>
+    </a>
+
+    <a href="{{ url_for('wellness.support_index') }}"
+       class="sb-link {% if request.endpoint == 'wellness.support_index' %}active{% endif %}">
+      <i data-lucide="mail"></i><span>Contact Support</span>
+    </a>
+
+    {% if current_user.role|lower == 'admin' %}
+    <p class="sb-section-lbl">Admin</p>
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="sb-link {% if request.blueprint == 'admin' %}active{% endif %}" style="color:#ef4444">
+      <i data-lucide="shield"></i><span>Admin Panel</span>
+    </a>
+    {% endif %}
+
+    <p class="sb-section-lbl">Account</p>
+
+    <a href="{{ url_for('profile.profile') }}"
+       class="sb-link {% if request.endpoint == 'profile.profile' %}active{% endif %}">
+      <i data-lucide="user"></i><span>Profile</span>
+    </a>
+
+    <a href="{{ url_for('profile.settings') }}"
+       class="sb-link {% if request.endpoint == 'profile.settings' %}active{% endif %}">
+      <i data-lucide="settings"></i><span>Health Settings</span>
+    </a>
+
+  </nav>
+
+  <div class="sb-logout">
+    <a href="{{ url_for('auth.logout') }}" class="sb-link sb-link-logout">
+      <i data-lucide="log-out"></i><span>Logout</span>
+    </a>
+  </div>
+</aside>
