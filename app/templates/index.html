@@ -26,10 +26,6 @@
         <i data-lucide="search" class="search-icon"></i>
         <input type="text" placeholder="Search..." class="search-input"/>
       </div>
-<<<<<<< HEAD
-      <a href="{{ url_for('auth.login') }}" class="btn-login"><i data-lucide="user"></i><span>Login</span></a>
-      <a href="{{ url_for('auth.register') }}" class="btn-register">Register</a>
-=======
 
       <!-- Auth buttons -->
       {% if current_user.logged_in %}
@@ -46,7 +42,6 @@
       {% endif %}
 
       <!-- Mobile hamburger -->
->>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
       <button class="hamburger" id="hamburger"><i data-lucide="menu"></i></button>
     </div>
   </div>
@@ -57,17 +52,12 @@
     <a href="#about" class="mob-link">About</a>
     <a href="#contact-section" class="mob-link">Contact</a>
     <div class="mob-auth">
-<<<<<<< HEAD
-      <a href="{{ url_for('auth.login') }}" class="btn-login w-full">Login</a>
-      <a href="{{ url_for('auth.register') }}" class="btn-register w-full">Register</a>
-=======
       {% if current_user.logged_in %}
         <a href="{{ url_for('dashboard.index') }}" class="btn-register w-full">Dashboard</a>
       {% else %}
         <a href="{{ url_for('auth.login') }}" class="btn-login w-full">Login</a>
         <a href="{{ url_for('auth.register') }}" class="btn-register w-full">Register</a>
       {% endif %}
->>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
     </div>
   </div>
 </nav>
