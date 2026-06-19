@@ -9,12 +9,39 @@ from app.constants import ACTIVITY_LEVELS
 
 class ProfileController(BaseController):
 
+    # Calculate profile completion percentage
+    @classmethod
+    def profile_completion(cls):
+        uid = cls.uid()
+        user = UserModel.find_by_id(uid)
+
+        fields = [
+            user.get('full_name'),
+            user.get('phone'),
+            user.get('bio'),
+            user.get('age'),
+            user.get('weight_kg'),
+            user.get('height_cm'),
+            user.get('gender')
+        ]
+
+        completed = sum(1 for field in fields if field)
+        percentage = int((completed / len(fields)) * 100)
+
+        return percentage
+
     # Show profile page (main)
     @classmethod
     def show_profile(cls):
         uid = cls.uid()
         user = UserModel.find_by_id(uid)
-        return cls.render('profile/profile.html', user=user)
+        completion = cls.profile_completion()
+
+        return cls.render(
+            'profile/profile.html',
+            user=user,
+            completion=completion
+        )
 
     # Show edit profile form (GET)
     @classmethod
@@ -86,8 +113,8 @@ class ProfileController(BaseController):
         UserModel.update_password(uid, new_pwd)
         cls.flash_ok('Password changed successfully!')
         return cls.redirect_to('profile.profile')
-    
-    #settings page of user profile
+
+    # Settings page of user profile
     @classmethod
     def show_settings(cls):
         return cls.render('settings.html')
