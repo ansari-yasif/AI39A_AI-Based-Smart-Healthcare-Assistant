@@ -1,0 +1,848 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Dashboard — VitaPulse{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bmi-stat { color: var(--bmi-color, var(--teal)); }
+  .progress-ring-base { stroke: rgba(255,255,255,0.08); }
+  .ring-path { transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+  .vp-progress-fill { width: var(--vp-progress, 0%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-page vp-dashboard">
+
+  <!-- ══════════════════════════════════════════
+       OUTBREAK ALERTS BANNER
+  ══════════════════════════════════════════ -->
+  {% if outbreak_alerts %}
+  {% for alert in outbreak_alerts %}
+  <div class="outbreak-banner outbreak-{{ alert.severity }}">
+    <i data-lucide="alert-triangle" class="ob-icon"></i>
+    <div class="ob-content">
+      <strong>{{ alert.title }}</strong>
+      {% if alert.region %}<span class="ob-region"> · {{ alert.region }}</span>{% endif %}
+      {% if alert.description %}<p class="ob-desc">{{ alert.description }}</p>{% endif %}
+    </div>
+    <span class="ob-badge">{{ alert.severity|upper }} RISK</span>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════
+       WELCOME HEADER
+  ══════════════════════════════════════════ -->
+  <div class="dash-welcome">
+    <div>
+      <h1 class="dash-greeting">
+        Good {{ 'Morning' if now.hour < 12 else 'Afternoon' if now.hour < 18 else 'Evening' }},
+        <span class="teal-text">{{ session.get('full_name','User').split()[0] }}</span> 👋
+      </h1>
+      <p class="dash-date">{{ today }} — Here's your complete health overview</p>
+    </div>
+    <div class="dash-quote">
+      <i data-lucide="flame" class="quote-icon"></i>
+      <div>
+        <p class="quote-text" id="headerQuoteText">"No Pain, No Gain"</p>
+        <p class="quote-auth" id="headerQuoteAuth">Stay consistent, stay strong</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TOP QUICK-STATS ROW
+  ══════════════════════════════════════════ -->
+  <div class="metrics-row">
+    <!-- Calories -->
+    <div class="metric-card mc-teal" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-teal"><i data-lucide="flame"></i></div>
+        <span class="mc-badge">Today</span>
+      </div>
+      <p class="mc-label">Calories</p>
+      {% set consumed = totals.cal | int %}
+      {% set goal_cal = calorie_goal | int %}
+      <div class="mc-big">{{ consumed }}</div>
+      <p class="mc-sub">/ {{ goal_cal }} kcal goal</p>
+      <svg class="mc-ring" viewBox="0 0 80 80" width="80" height="80">
+        <circle cx="40" cy="40" r="34" class="progress-ring-base" stroke-width="7" fill="none"/>
+        <circle cx="40" cy="40" r="34" stroke="url(#tealGrad)" stroke-width="7" fill="none"
+          stroke-linecap="round"
+          stroke-dasharray="{{ (2*3.14159*34)|round(1) }}"
+          stroke-dashoffset="{{ ((1 - [consumed/goal_cal if goal_cal else 0,1]|min) * 2 * 3.14159 * 34)|round(1) }}"
+          transform="rotate(-90 40 40)" class="ring-path"/>
+        <defs>
+          <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00C897"/>
+            <stop offset="100%" stop-color="#00a67e"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- Sleep -->
+    <div class="metric-card" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-blue"><i data-lucide="moon"></i></div>
+        <span class="mc-badge">Last night</span>
+      </div>
+      <p class="mc-label">Sleep</p>
+      <div class="mc-big">{{ sleep_today.hours_slept if sleep_today else '—' }}</div>
+      <p class="mc-sub">hrs &nbsp;·&nbsp; avg {{ avg_sleep }}h/week</p>
+      {% if sleep_today %}
+      <span class="mc-chip mc-chip-blue">Quality {{ sleep_today.quality }}/5</span>
+      {% endif %}
+      <a href="{{ url_for('health.sleep_index') }}" class="mc-link">Log Sleep →</a>
+    </div>
+
+    <!-- Mood -->
+    <div class="metric-card" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-purple"><i data-lucide="smile"></i></div>
+        <span class="mc-badge">Today</span>
+      </div>
+      <p class="mc-label">Mood</p>
+      <div class="mc-big mc-emoji">
+        {% if mood_today %}
+          {% set _icons = {'happy':'😊','energetic':'⚡','tired':'😴','stressed':'😰','calm':'😌','sad':'😢','focused':'🎯','anxious':'😬','excited':'🤩','angry':'😤'} %}
+          {{ _icons.get(mood_today.mood|lower, '🙂') }}
+        {% else %}—{% endif %}
+      </div>
+      <p class="mc-sub">{{ mood_today.mood|capitalize if mood_today else 'Not logged' }}{% if mood_today %} · ⚡ {{ mood_today.energy_level }}/5{% endif %}</p>
+      <a href="{{ url_for('health.mood_index') }}" class="mc-link">Log Mood →</a>
+    </div>
+
+    <!-- Workouts -->
+    <div class="metric-card" data-anim>
+      <div class="mc-header">
+        <div class="mc-icon-wrap mc-ic-orange"><i data-lucide="dumbbell"></i></div>
+        <span class="mc-badge">This week</span>
+      </div>
+      <p class="mc-label">Workouts</p>
+      <div class="mc-big">{{ wkt.sessions }}</div>
+      <p class="mc-sub">{{ wkt.mins }} min · {{ wkt.burned }} kcal burned</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BMR / TDEE / BMI STRIP
+  ══════════════════════════════════════════ -->
+  {% if bmr %}
+  <div class="stats-strip" data-anim>
+    <div class="ss-item">
+      <i data-lucide="zap" class="ss-icon ss-ic-teal"></i>
+      <div><p class="ss-label">BMR</p><p class="ss-val">{{ bmr }} <span>kcal/day</span></p></div>
+    </div>
+    <div class="ss-item">
+      <i data-lucide="activity" class="ss-icon ss-ic-orange"></i>
+      <div><p class="ss-label">TDEE</p><p class="ss-val">{{ tdee }} <span>kcal/day</span></p></div>
+    </div>
+    <div class="ss-item">
+      <i data-lucide="scale" class="ss-icon bmi-stat" style="--bmi-color: {{ bmi_color }};"></i>
+      <div><p class="ss-label">BMI</p><p class="ss-val bmi-stat" style="--bmi-color: {{ bmi_color }};">{{ bmi }} <span>— {{ bmi_label }}</span></p></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════
+       QUICK ACTIONS BAR
+  ══════════════════════════════════════════ -->
+  <div class="qa-section" data-anim>
+    <h3 class="qa-title">Quick Actions</h3>
+    <div class="qa-btns">
+      <a href="{{ url_for('nutrition.calorie_index') }}"   class="qa-btn qa-teal">   <i data-lucide="calculator"></i>Calories</a>
+      <a href="{{ url_for('nutrition.meal_index') }}"      class="qa-btn qa-blue">   <i data-lucide="utensils"></i>Log Meal</a>
+      <a href="{{ url_for('nutrition.food_db_index') }}"   class="qa-btn qa-indigo"> <i data-lucide="database"></i>Food DB</a>
+      <a href="{{ url_for('health.sleep_index') }}"                             class="qa-btn qa-purple">  <i data-lucide="moon"></i>Sleep</a>
+      <a href="{{ url_for('health.mood_index') }}"                              class="qa-btn qa-green">   <i data-lucide="smile"></i>Mood</a>
+      <a href="{{ url_for('health.weight_index') }}"                            class="qa-btn qa-orange">  <i data-lucide="trending-up"></i>Weight</a>
+      <a href="#ai-section"                                class="qa-btn qa-ai">      <i data-lucide="bot"></i>AI Chat</a>
+      <a href="{{ url_for('nutrition.bmi_index') }}"    class="qa-btn" style="background:rgba(0,200,151,.1);color:var(--teal);border:1px solid rgba(0,200,151,.2)"><i data-lucide="scale"></i>BMI</a>
+      <a href="{{ url_for('nutrition.reports_index') }}" class="qa-btn" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.2)"><i data-lucide="bar-chart-2"></i>Reports</a>
+      <a href="#expense-section"                           class="qa-btn qa-yellow">  <i data-lucide="wallet"></i>Expense</a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1 — NUTRITION (LIVE DATA)
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="apple" class="vp-sec-icon teal"></i>
+    <h2>Nutrition Tracker</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-3" data-anim>
+    <!-- Calorie Calculator card -->
+    <div class="vp-feature-card vp-fc-teal">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="calculator"></i></div>
+        <div>
+          <h4>Calorie Calculator</h4>
+          <p class="vp-fc-sub">BMR + TDEE</p>
+        </div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        {% if bmr %}
+        <div class="vp-stat-row">
+          <span>BMR</span><strong class="teal-text">{{ bmr }} kcal</strong>
+        </div>
+        <div class="vp-stat-row">
+          <span>TDEE</span><strong class="teal-text">{{ tdee }} kcal</strong>
+        </div>
+        {% else %}
+        <p class="vp-placeholder-text">Complete your profile (age, weight, height) to see your BMR & TDEE.</p>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('nutrition.calorie_index') }}" class="vp-fc-btn">Open Calculator →</a>
+    </div>
+
+    <!-- Daily Calorie Goal card -->
+    <div class="vp-feature-card vp-fc-orange">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="target"></i></div>
+        <div>
+          <h4>Daily Calorie Goal</h4>
+          <p class="vp-fc-sub">Set & track targets</p>
+        </div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row">
+          <span>Goal</span><strong style="color:#f97316">{{ calorie_goal }} kcal</strong>
+        </div>
+        <div class="vp-stat-row">
+          <span>Consumed</span><strong>{{ totals.cal | int }} kcal</strong>
+        </div>
+        <div class="vp-progress-bar">
+          <div class="vp-progress-fill vp-pf-orange"
+               style="--vp-progress: {{ [((totals.cal or 0) / calorie_goal * 100) if calorie_goal else 0, 100]|min }}%"></div>
+        </div>
+      </div>
+      <a href="{{ url_for('nutrition.calorie_index') }}" class="vp-fc-btn">Set Goal →</a>
+    </div>
+
+    <!-- Meal Tracker card -->
+    <div class="vp-feature-card vp-fc-blue">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="utensils"></i></div>
+        <div>
+          <h4>Meal Tracker</h4>
+          <p class="vp-fc-sub">Log daily meals</p>
+        </div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row">
+          <span>Protein</span><strong style="color:#3b82f6">{{ totals.prot | default(0) | int }}g</strong>
+        </div>
+        <div class="vp-stat-row">
+          <span>Carbs</span><strong style="color:#3b82f6">{{ totals.carbs | default(0) | int }}g</strong>
+        </div>
+        <div class="vp-stat-row">
+          <span>Fat</span><strong style="color:#3b82f6">{{ totals.fat | default(0) | int }}g</strong>
+        </div>
+      </div>
+      <a href="{{ url_for('nutrition.meal_index') }}" class="vp-fc-btn">Log Meals →</a>
+    </div>
+
+    <!-- Custom Food Entry -->
+    <div class="vp-feature-card vp-fc-indigo">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="plus-circle"></i></div>
+        <div>
+          <h4>Custom Food Entry</h4>
+          <p class="vp-fc-sub">Add your own foods</p>
+        </div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <p class="vp-placeholder-text">Manually add local or homemade foods not found in the database.</p>
+      </div>
+      <a href="{{ url_for('nutrition.food_db_index') }}#custom" class="vp-fc-btn">Add Food →</a>
+    </div>
+
+    <!-- Food Search Database -->
+    <div class="vp-feature-card vp-fc-cyan">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="search"></i></div>
+        <div>
+          <h4>Food Search Database</h4>
+          <p class="vp-fc-sub">100+ foods incl. Nepali</p>
+        </div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <p class="vp-placeholder-text">Search proteins, carbs, fats for 100+ international and Nepali foods. Add any to your meal log instantly.</p>
+      </div>
+      <a href="{{ url_for('nutrition.food_db_index') }}" class="vp-fc-btn">Search Foods →</a>
+    </div>
+  </div>
+
+  <!-- Charts row (nutrition) -->
+  <div class="charts-row" data-anim>
+    <div class="chart-card">
+      <div class="cc-header">
+        <h3>Calorie Intake (7 days)</h3>
+        <i data-lucide="flame" class="cc-ico"></i>
+      </div>
+      <canvas id="calChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="cc-header">
+        <h3>Macro Breakdown Today</h3>
+        <a href="{{ url_for('nutrition.macro_targets_index') }}"
+           style="font-size:.72rem;color:var(--teal);font-weight:600;display:flex;align-items:center;gap:.25rem">
+          <i data-lucide="pie-chart" style="width:14px;height:14px"></i> Set Targets
+        </a>
+      </div>
+      <canvas id="macroChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- ══ HEALTH TRACKERS LIVE DATA ══════════════════════════════════════ -->
+  <div class="charts-row" style="margin-top:1.25rem">
+
+    <!-- Sleep Chart -->
+    <div class="chart-card">
+      <div class="cc-header">
+        <h3>Sleep — 7 Days</h3>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <span style="font-size:.75rem;color:#a855f7">Avg {{ avg_sleep }}h</span>
+          <a href="{{ url_for('health.sleep_index') }}" style="font-size:.72rem;color:var(--teal);font-weight:600">Log →</a>
+        </div>
+      </div>
+      {% if sleep_today %}
+      <div style="display:flex;gap:1rem;margin-bottom:.75rem;font-size:.82rem">
+        <span>Last night: <strong style="color:#a855f7">{{ sleep_today.hours_slept }}h</strong></span>
+        <span>Quality: <strong style="color:#a855f7">{{ sleep_today.quality }}/5</strong></span>
+      </div>
+      {% else %}
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">No sleep logged today.</p>
+      {% endif %}
+      <div style="height:160px;position:relative">
+        <canvas id="dashSleepChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Weight Chart -->
+    <div class="chart-card">
+      <div class="cc-header">
+        <h3>Weight Trend</h3>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          {% if current_weight %}<span style="font-size:.75rem;color:#f97316">{{ current_weight }} kg</span>{% endif %}
+          <a href="{{ url_for('health.weight_index') }}" style="font-size:.72rem;color:var(--teal);font-weight:600">Log →</a>
+        </div>
+      </div>
+      {% if weight_today %}
+      <p style="font-size:.82rem;margin-bottom:.75rem">Today: <strong style="color:#f97316">{{ weight_today.weight_kg }} kg</strong></p>
+      {% else %}
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">No weight logged today.</p>
+      {% endif %}
+      <div style="height:160px;position:relative">
+        <canvas id="dashWeightChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mood + Workout summary row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
+
+    <!-- Mood today -->
+    <div class="chart-card" style="min-height:auto">
+      <div class="cc-header">
+        <h3>Mood Today</h3>
+        <a href="{{ url_for('health.mood_index') }}" style="font-size:.72rem;color:var(--teal);font-weight:600">Log →</a>
+      </div>
+      {% if mood_today %}
+      {% set _icons = {'happy':'😊','energetic':'⚡','tired':'😴','stressed':'😰','calm':'😌','sad':'😢','focused':'🎯','anxious':'😬','excited':'🤩','angry':'😤'} %}
+      <div style="display:flex;align-items:center;gap:1rem;padding:.5rem 0">
+        <div style="font-size:2.8rem">{{ _icons.get(mood_today.mood|lower, '🙂') }}</div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:700;color:#f59e0b">{{ mood_today.mood|capitalize }}</div>
+          <div style="font-size:.8rem;color:var(--muted)">Energy {{ mood_today.energy_level }}/5</div>
+          {% if mood_today.notes %}<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">{{ mood_today.notes[:60] }}</div>{% endif %}
+        </div>
+      </div>
+      {% else %}
+      <p style="color:var(--muted);font-size:.85rem;padding:.75rem 0">No mood logged today.</p>
+      {% endif %}
+    </div>
+
+    <!-- This week workouts -->
+    <div class="chart-card" style="min-height:auto">
+      <div class="cc-header">
+        <h3>Workouts This Week</h3>
+        <a href="{{ url_for('health.workout_index') }}" style="font-size:.72rem;color:var(--teal);font-weight:600">Log →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem">
+        <div style="text-align:center;background:var(--bg-2);border-radius:var(--r-md);padding:.6rem">
+          <div style="font-size:1.4rem;font-weight:800;color:#ef4444">{{ wkt.sessions }}</div>
+          <div style="font-size:.65rem;color:var(--muted)">Sessions</div>
+        </div>
+        <div style="text-align:center;background:var(--bg-2);border-radius:var(--r-md);padding:.6rem">
+          <div style="font-size:1.4rem;font-weight:800;color:#f97316">{{ wkt.mins }}</div>
+          <div style="font-size:.65rem;color:var(--muted)">Minutes</div>
+        </div>
+        <div style="text-align:center;background:var(--bg-2);border-radius:var(--r-md);padding:.6rem">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--teal)">{{ wkt.burned }}</div>
+          <div style="font-size:.65rem;color:var(--muted)">kcal</div>
+        </div>
+      </div>
+      {% for w in recent_workouts %}
+      <div style="display:flex;gap:.5rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border);font-size:.78rem">
+        <span style="font-size:1rem">{% if 'run' in w.workout_type|lower or 'walk' in w.workout_type|lower %}🏃{% elif 'gym' in w.workout_type|lower or 'weight' in w.workout_type|lower %}🏋️{% elif 'yoga' in w.workout_type|lower %}🧘{% elif 'cycl' in w.workout_type|lower %}🚴{% else %}⚡{% endif %}</span>
+        <span style="flex:1;font-weight:600">{{ w.workout_type }}</span>
+        <span style="color:var(--muted)">{{ w.duration_min }}min</span>
+      </div>
+      {% else %}
+      <p style="color:var(--muted);font-size:.82rem">No workouts logged this week.</p>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2 — FITNESS TRACKING
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="activity" class="vp-sec-icon orange"></i>
+    <h2>Fitness Tracking</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-3" data-anim>
+
+    <!-- Weight Tracker -->
+    <div class="vp-feature-card vp-fc-orange" id="weight-section">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="trending-up"></i></div>
+        <div><h4>Weight Tracker</h4><p class="vp-fc-sub">Graph & progress</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        {% if current_weight %}
+        <div class="vp-stat-row">
+          <span>Current</span><strong>{{ current_weight }} kg</strong>
+        </div>
+        <p class="vp-placeholder-text">View your 30-day trend in the chart above.</p>
+        {% else %}
+        <p class="vp-placeholder-text">No weight logged today. Start tracking your body composition.</p>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('health.weight_index') }}" class="vp-fc-btn">Weight Log →</a>
+    </div>
+
+    <!-- Workout Tracker -->
+    <div class="vp-feature-card vp-fc-red">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="dumbbell"></i></div>
+        <div><h4>Workout Tracker</h4><p class="vp-fc-sub">Activity & calories</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Sessions</span><strong style="color:#ef4444">{{ wkt.sessions }}</strong></div>
+        <div class="vp-stat-row"><span>Burned</span><strong>{{ wkt.burned }} kcal</strong></div>
+      </div>
+      <a href="{{ url_for('health.workout_index') }}" class="vp-fc-btn">Log Workout →</a>
+    </div>
+
+    <!-- Personalized Recommendations -->
+    <div class="vp-feature-card vp-fc-purple">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="lightbulb"></i></div>
+        <div><h4>Personalized Recommendations</h4><p class="vp-fc-sub">Based on your data</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Nutrition tips</span><strong style="color:#a855f7">✓ Live</strong></div>
+        <div class="vp-stat-row"><span>Sleep insights</span><strong style="color:#a855f7">✓ Live</strong></div>
+        <div class="vp-stat-row"><span>Workout advice</span><strong style="color:#a855f7">✓ Live</strong></div>
+      </div>
+      <a href="{{ url_for('nutrition.recommendations_index') }}" class="vp-fc-btn">View Recommendations →</a>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3 — WELLNESS TRACKING
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="heart" class="vp-sec-icon purple"></i>
+    <h2>Wellness Tracking</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-3" data-anim>
+
+    <!-- Sleep Tracker -->
+    <div class="vp-feature-card vp-fc-blue" id="sleep-section">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="moon"></i></div>
+        <div><h4>Sleep Tracker</h4><p class="vp-fc-sub">Log & analyse sleep</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        {% if sleep_today %}
+        <div class="vp-stat-row"><span>Last night</span><strong>{{ sleep_today.hours_slept }}h</strong></div>
+        <div class="vp-stat-row"><span>Quality</span><strong>{{ sleep_today.quality }}/5</strong></div>
+        {% else %}
+        <p class="vp-placeholder-text">Log your sleep to analyze your recovery patterns.</p>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('health.sleep_index') }}" class="vp-fc-btn">Sleep Log →</a>
+    </div>
+
+    <!-- Mood Tracker -->
+    <div class="vp-feature-card vp-fc-pink" id="mood-section">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="smile"></i></div>
+        <div><h4>Mood Tracker</h4><p class="vp-fc-sub">Daily emotional check-in</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        {% if mood_today %}
+        <div class="vp-stat-row"><span>Mood</span><strong>{{ mood_today.mood|capitalize }}</strong></div>
+        <div class="vp-stat-row"><span>Energy</span><strong>{{ mood_today.energy_level }}/5</strong></div>
+        {% else %}
+        <p class="vp-placeholder-text">Log your mood daily to track your emotional wellbeing.</p>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('health.mood_index') }}" class="vp-fc-btn">Log Mood →</a>
+    </div>
+
+    <!-- Motivation Generator -->
+    <div class="vp-feature-card vp-fc-yellow">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="zap"></i></div>
+        <div><h4>Motivation Generator</h4><p class="vp-fc-sub">Updates every 2 minutes</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-placeholder-widget vp-motivation-box">
+          <i data-lucide="quote" style="width:24px;height:24px;color:#eab308;opacity:0.6"></i>
+          <p class="vp-quote-placeholder" id="cardQuoteText">"No Pain, No Gain"</p>
+          <p style="font-size:.72rem;color:var(--muted);margin-top:.4rem" id="cardQuoteAuth">Stay consistent, stay strong</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 4 — REPORTS
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="bar-chart-2" class="vp-sec-icon teal"></i>
+    <h2>Reports</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-2" data-anim>
+
+    <!-- Weekly Reports -->
+    <div class="vp-feature-card vp-fc-teal">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="calendar-days"></i></div>
+        <div><h4>Weekly Reports</h4><p class="vp-fc-sub">7-day health summary</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Period</span><strong class="teal-text">Last 7 days</strong></div>
+        <div class="vp-stat-row"><span>Includes</span><strong class="teal-text">Calories · Macros</strong></div>
+        <p style="font-size:.8rem;color:var(--muted);margin-top:.5rem">Weekly breakdown downloadable as PDF.</p>
+      </div>
+      <a href="{{ url_for('nutrition.reports_index') }}" class="vp-fc-btn">View Report →</a>
+    </div>
+
+    <!-- Monthly Reports -->
+    <div class="vp-feature-card vp-fc-indigo">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="calendar-range"></i></div>
+        <div><h4>Monthly Reports</h4><p class="vp-fc-sub">30-day deep analysis</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Period</span><strong style="color:#818cf8">Last 30 days</strong></div>
+        <div class="vp-stat-row"><span>Includes</span><strong style="color:#818cf8">Trends · Goals</strong></div>
+        <p style="font-size:.8rem;color:var(--muted);margin-top:.5rem">Full monthly analysis downloadable as PDF.</p>
+      </div>
+      <a href="{{ url_for('nutrition.reports_index') }}#monthly" class="vp-fc-btn">View Report →</a>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 5 — AI &amp; WELLNESS FEATURES
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="bot" class="vp-sec-icon cyan"></i>
+    <h2>AI &amp; Wellness Features</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-3" data-anim id="ai-section">
+
+    <!-- AI Chat Assistant -->
+    <div class="vp-feature-card vp-fc-cyan">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="message-circle"></i></div>
+        <div><h4>AI Chat Assistant</h4><p class="vp-fc-sub">Health Q&amp;A assistant</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-chat-placeholder">
+          <div class="vp-chat-bubble vp-cb-ai">👋 Hi! I'm VitaPulse AI. Ask me anything about your nutrition, fitness, or wellness!</div>
+          <div class="vp-chat-bubble vp-cb-user">Click the chat bubble in the corner →</div>
+        </div>
+      </div>
+      <button class="vp-fc-btn" onclick="document.getElementById('chatbotToggle').click()">Open Chat →</button>
+    </div>
+
+    <!-- Workout Plan Generator -->
+    <div class="vp-feature-card vp-fc-red">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="dumbbell"></i></div>
+        <div><h4>Workout Plan Generator</h4><p class="vp-fc-sub">By body part, BMI &amp; goal</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Body parts covered</span><strong style="color:#ef4444">5</strong></div>
+        <div class="vp-stat-row"><span>Daily burn target</span><strong style="color:#ef4444">{{ workout_daily_target|default(300) }} kcal</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.workout_plan') }}" class="vp-fc-btn">View Plan →</a>
+    </div>
+
+    <!-- Health Risk Predictor -->
+    <div class="vp-feature-card vp-fc-orange">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="shield-alert"></i></div>
+        <div><h4>Health Risk Predictor</h4><p class="vp-fc-sub">Emergency detection</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Risk factors</span><strong style="color:#f97316">4 tracked</strong></div>
+        <div class="vp-stat-row"><span>Based on</span><strong style="color:#f97316">BMI · Food · Activity</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.health_risk') }}" class="vp-fc-btn">Check Risk →</a>
+    </div>
+
+    <!-- AI First Aid Guide -->
+    <div class="vp-feature-card vp-fc-teal">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="cross"></i></div>
+        <div><h4>AI First Aid Guide</h4><p class="vp-fc-sub">20 common emergencies</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Topics</span><strong class="teal-text">20 guides</strong></div>
+        <div class="vp-stat-row"><span>Format</span><strong class="teal-text">Step-by-step</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.first_aid') }}" class="vp-fc-btn">Open Guide →</a>
+    </div>
+
+    <!-- Medicine Checker -->
+    <div class="vp-feature-card vp-fc-blue">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="pill"></i></div>
+        <div><h4>Medicine Checker</h4><p class="vp-fc-sub">Reminders &amp; notifications</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Today's meds</span><strong style="color:#4A9EFF">{{ meds_today|default(0) }}</strong></div>
+        <div class="vp-stat-row"><span>Notifications</span><strong style="color:#4A9EFF">Enabled</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.medicine_index') }}" class="vp-fc-btn">Manage Meds →</a>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 6 — HEALTHCARE FINDER
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="map-pin" class="vp-sec-icon green"></i>
+    <h2>Healthcare Finder</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-2" data-anim>
+
+    <!-- Nearby Healthcare Finder -->
+    <div class="vp-feature-card vp-fc-green">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="map-pin"></i></div>
+        <div><h4>Nearby Healthcare Finder</h4><p class="vp-fc-sub">Clinics, hospitals, pharmacies</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Map</span><strong style="color:#22c55e">Live location</strong></div>
+        <div class="vp-stat-row"><span>Categories</span><strong style="color:#22c55e">4 types</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.healthcare_finder') }}" class="vp-fc-btn">Find Care →</a>
+    </div>
+
+    <!-- Specialist Navigator -->
+    <div class="vp-feature-card vp-fc-blue">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="stethoscope"></i></div>
+        <div><h4>Specialist Navigator</h4><p class="vp-fc-sub">Find the right doctor</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Conditions covered</span><strong style="color:#3b82f6">12+</strong></div>
+        <div class="vp-stat-row"><span>Search</span><strong style="color:#3b82f6">By symptom</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.specialist_navigator') }}" class="vp-fc-btn">Find Specialist →</a>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 7 — FINANCE & ALERTS
+  ══════════════════════════════════════════ -->
+  <div class="vp-section-header" data-anim>
+    <i data-lucide="wallet" class="vp-sec-icon yellow"></i>
+    <h2>Finance &amp; Alerts</h2>
+    <span class="vp-badge-live">LIVE</span>
+  </div>
+
+  <div class="vp-grid-2" data-anim>
+
+    <!-- Expense Tracker -->
+    <div class="vp-feature-card vp-fc-yellow" id="expense-section">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="wallet"></i></div>
+        <div><h4>Expense Tracker</h4><p class="vp-fc-sub">Health spending tracker</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>This month</span><strong style="color:#eab308">{{ expense_total|default(0) }}</strong></div>
+        <div class="vp-stat-row"><span>PDF Reports</span><strong style="color:#eab308">Available</strong></div>
+      </div>
+      <a href="{{ url_for('wellness.expense_index') }}" class="vp-fc-btn">Track Expenses →</a>
+    </div>
+
+    <!-- Outbreak Alerts -->
+    <div class="vp-feature-card vp-fc-red">
+      <div class="vp-fc-head">
+        <div class="vp-fc-icon"><i data-lucide="alert-triangle"></i></div>
+        <div><h4>Outbreak Alerts</h4><p class="vp-fc-sub">Local disease alerts</p></div>
+        <span class="vp-fc-badge vp-badge-active">Active</span>
+      </div>
+      <div class="vp-fc-body">
+        <div class="vp-stat-row"><span>Active alerts</span><strong style="color:#ef4444">{{ outbreak_alerts|length }}</strong></div>
+        <div class="vp-stat-row"><span>Shown</span><strong style="color:#ef4444">Top of dashboard</strong></div>
+      </div>
+      {% if current_user.role|lower == 'admin' %}
+      <a href="{{ url_for('admin.outbreaks_index') }}" class="vp-fc-btn">Manage Alerts →</a>
+      {% else %}
+      <a href="{{ url_for('wellness.support_index') }}" class="vp-fc-btn">Contact Support →</a>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div><!-- /.vp-dashboard -->
+{% endblock %}
+{% block extra_js %}
+{{ super() }}
+<script id="dashboard-data" type="application/json">
+  {
+    "sleep": { "labels": {{ sleep_labels|tojson }}, "data": {{ sleep_data|tojson }}, "avg": "{{ avg_sleep }}" },
+    "calories": { "labels": {{ cal_labels|tojson }}, "data": {{ cal_chart|tojson }} },
+    "macros": { "p": {{ totals.prot|default(0) }}, "c": {{ totals.carbs|default(0) }}, "f": {{ totals.fat|default(0) }} },
+    "weight": { "labels": {{ weight_labels|tojson }}, "data": {{ weight_chart|tojson }} }
+  }
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const config = JSON.parse(document.getElementById('dashboard-data').textContent);
+
+  // ── date display ──────────────────────────────────
+  const topDateElem = document.getElementById('topDate');
+  if (topDateElem) topDateElem.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  // ── calorie chart ─────────────────────────────────
+  if (typeof initCalChart === 'function') initCalChart('calChart', config.calories.labels, config.calories.data);
+
+  // ── macro doughnut ────────────────────────────────
+  initMacroChart('macroChart', config.macros.p, config.macros.c, config.macros.f);
+
+  // ── Sleep 7-day bar chart ──────────────────────────────────────────
+  initSleepChart('dashSleepChart', config.sleep.labels, config.sleep.data);
+
+  // ── Weight trend line chart ────────────────────────────────────────
+  (function() {
+    const wCtx = document.getElementById('dashWeightChart');
+    if (!wCtx) return;
+    if (!config.weight.data.length) {
+      wCtx.parentElement.innerHTML = '<p style="color:#555;text-align:center;padding:40px 0;font-size:.85rem">Log weight to see trend</p>';
+      return;
+    }
+    new Chart(wCtx, {
+      type: 'line',
+      data: {
+        labels: config.weight.labels,
+        datasets: [{
+          data: config.weight.data,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#f97316',
+          pointBorderColor: '#0a0e1a',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          fill: true,
+          tension: 0.4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid:{color:'rgba(255,255,255,.05)'}, border:{display:false} },
+          y: { grid:{color:'rgba(255,255,255,.05)'}, border:{display:false},
+               beginAtZero: false,
+               title:{display:true,text:'kg',color:'#475569'} }
+        },
+        plugins: { legend:{display:false}, tooltip:{callbacks:{label: c => ' ' + c.parsed.y + ' kg'}} }
+      }
+    });
+  })();
+
+  // ── Motivation Generator — rotates every 2 minutes ──────────────────
+  if (typeof initMotivationGenerator === 'function') {
+    initMotivationGenerator([
+      { text: '#headerQuoteText', author: '#headerQuoteAuth' },
+      { text: '#cardQuoteText',   author: '#cardQuoteAuth' },
+    ]);
+  }
+
+  // ── ring animation ────────────────────────────────
+  document.querySelectorAll('.ring-path').forEach(function (ring) {
+    var dashArray  = parseFloat(ring.getAttribute('stroke-dasharray'));
+    var dashOffset = ring.getAttribute('stroke-dashoffset');
+    ring.style.strokeDashoffset = dashArray;
+    setTimeout(function () {
+      ring.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+      ring.style.strokeDashoffset = dashOffset;
+    }, 200);
+  });
+
+  // ── animate feature cards on scroll ──────────────
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('vp-visible'); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('[data-anim]').forEach(function (el) { observer.observe(el); });
+});
+</script>
+{% endblock %}
