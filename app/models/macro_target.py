@@ -28,3 +28,13 @@ class MacroTargetModel(BaseModel):
             'SELECT * FROM macro_targets WHERE user_id=%s ORDER BY target_date DESC LIMIT %s',
             (uid, limit)
         )
+    @classmethod
+    def latest(cls, uid):
+        """
+        Returns the most recent macro target set by the user.
+        Useful for prefilling forms and dashboard widgets.
+        """
+        return cls.fetch_one(
+            'SELECT * FROM macro_targets WHERE user_id=%s ORDER BY target_date DESC LIMIT 1',
+            (uid,)
+        )
