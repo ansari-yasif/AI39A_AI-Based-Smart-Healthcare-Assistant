@@ -9,3 +9,17 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @login_required
 def index():
     return DashboardController.index()
+@dashboard_bp.route('/notifications/json')
+@login_required
+def notifications_json():
+    return DashboardController.notifications_json()
+
+@dashboard_bp.route('/notifications/mark-read', methods=['POST'])
+@login_required
+def notifications_mark_read():
+    return DashboardController.notifications_mark_read()
+
+@dashboard_bp.route('/notifications/mark-all-read', methods=['POST'])
+@login_required
+def notifications_mark_all_read():
+    return DashboardController.notifications_mark_all_read()
