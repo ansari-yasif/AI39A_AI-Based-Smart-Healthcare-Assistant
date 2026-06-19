@@ -816,3 +816,8 @@ class WellnessController(BaseController):
     @classmethod
     def outbreak_banner_data(cls):
         return OutbreakModel.active_alerts()
+
+
+    @classmethod
+def healthcare_finder(cls):
+    return cls.render('wellness/healthcare_finder.html')
