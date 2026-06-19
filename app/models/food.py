@@ -203,3 +203,11 @@ class FoodModel(BaseModel):
     @classmethod
     def delete_custom(cls, cid, uid):
         return cls.execute('DELETE FROM custom_foods WHERE id=%s AND user_id=%s', (cid, uid))
+    
+    @classmethod
+    def total_foods(cls):
+        """
+        Returns total number of built-in foods available in FOOD_DB.
+        Useful for dashboard statistics and food database summaries.
+        """
+        return len(cls.FOOD_DB)
