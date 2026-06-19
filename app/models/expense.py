@@ -26,12 +26,16 @@ class ExpenseModel(BaseModel):
                 (uid, limit)
             )
         except Exception as e:
-            if '1146' in str(e): return []
+            if '1146' in str(e):
+                return []
             raise
 
     @classmethod
     def delete(cls, eid, uid):
-        return cls.execute('DELETE FROM health_expenses WHERE id=%s AND user_id=%s', (eid, uid))
+        return cls.execute(
+            'DELETE FROM health_expenses WHERE id=%s AND user_id=%s',
+            (eid, uid)
+        )
 
     @classmethod
     def total_for_period(cls, uid, start, end):
@@ -57,7 +61,8 @@ class ExpenseModel(BaseModel):
                 (uid, start, end)
             )
         except Exception as e:
-            if '1146' in str(e): return []
+            if '1146' in str(e):
+                return []
             raise
 
     @classmethod
@@ -70,5 +75,24 @@ class ExpenseModel(BaseModel):
                 (uid, months)
             )
         except Exception as e:
-            if '1146' in str(e): return []
+            if '1146' in str(e):
+                return []
+            raise
+
+    @classmethod
+    def highest_expense(cls, uid):
+        """
+        Return the user's highest recorded health expense.
+        """
+        try:
+            return cls.fetch_one(
+                'SELECT * FROM health_expenses '
+                'WHERE user_id=%s '
+                'ORDER BY amount DESC '
+                'LIMIT 1',
+                (uid,)
+            )
+        except Exception as e:
+            if '1146' in str(e):
+                return None
             raise
