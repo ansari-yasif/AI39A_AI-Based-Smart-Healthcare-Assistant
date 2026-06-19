@@ -53,3 +53,16 @@ class BMIModel(BaseModel):
             'SELECT * FROM bmi_records WHERE user_id=%s ORDER BY recorded_at DESC, id DESC LIMIT 1',
             (uid,)
         )
+
+    @classmethod
+    def average_bmi(cls, uid):
+        """Return user's average BMI value."""
+        result = cls.fetch_one(
+            'SELECT ROUND(AVG(bmi_value), 1) AS avg_bmi FROM bmi_records WHERE user_id=%s',
+            (uid,)
+        )
+
+        if result and result.get('avg_bmi') is not None:
+            return result['avg_bmi']
+
+        return 0
