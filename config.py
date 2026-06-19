@@ -20,12 +20,14 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'app', 'static', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     APP_NAME = 'VitaPulse'
-    GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
     
     # Google OAuth
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
     GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'http://localhost:5000/auth/google/callback')
+    
+    # Groq API (AI Health Assistant)
+    GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
     
     DEBUG = False
 
