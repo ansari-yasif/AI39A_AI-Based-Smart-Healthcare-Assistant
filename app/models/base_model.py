@@ -19,8 +19,22 @@ class BaseModel:
 
     @classmethod
     def find_by_id(cls, rid: int):
-        return cls.fetch_one(f'SELECT * FROM {cls.TABLE} WHERE id=%s LIMIT 1', (rid,))
+        return cls.fetch_one(
+            f'SELECT * FROM {cls.TABLE} WHERE id=%s LIMIT 1',
+            (rid,)
+        )
+
+    @classmethod
+    def exists(cls, rid: int) -> bool:
+        result = cls.fetch_one(
+            f'SELECT id FROM {cls.TABLE} WHERE id=%s LIMIT 1',
+            (rid,)
+        )
+        return result is not None
 
     @classmethod
     def delete_by_id(cls, rid: int):
-        return cls.execute(f'DELETE FROM {cls.TABLE} WHERE id=%s', (rid,))
+        return cls.execute(
+            f'DELETE FROM {cls.TABLE} WHERE id=%s',
+            (rid,)
+        )
