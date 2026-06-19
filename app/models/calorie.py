@@ -1,6 +1,7 @@
 """app/models/calorie.py — Calorie logs | Feature: Calorie Tracker"""
 from app.models.base_model import BaseModel
 
+
 class CalorieModel(BaseModel):
     TABLE = 'calorie_logs'
 
@@ -9,14 +10,37 @@ class CalorieModel(BaseModel):
         return cls.execute(
             'INSERT INTO calorie_logs(user_id,log_date,calories_consumed,calorie_goal) VALUES(%s,%s,%s,%s) '
             'ON DUPLICATE KEY UPDATE calories_consumed=%s,calorie_goal=%s,updated_at=NOW()',
-            (uid,date,calories,goal,calories,goal))
+            (uid, date, calories, goal, calories, goal)
+        )
 
     @classmethod
     def today(cls, uid, date):
-        return cls.fetch_one('SELECT * FROM calorie_logs WHERE user_id=%s AND log_date=%s',(uid,date))
+        return cls.fetch_one(
+            'SELECT * FROM calorie_logs WHERE user_id=%s AND log_date=%s',
+            (uid, date)
+        )
 
     @classmethod
     def range(cls, uid, start, end):
         return cls.fetch_all(
             'SELECT * FROM calorie_logs WHERE user_id=%s AND log_date BETWEEN %s AND %s ORDER BY log_date',
-            (uid,start,end))
+            (uid, start, end)
+        )
+
+    @classmethod
+    def goal_progress(cls, uid, date):
+        """
+        Return calorie goal completion percentage for a specific day.
+        """
+        record = cls.today(uid, date)
+
+        if not record:
+            return 0
+
+        goal = record.get('calorie_goal', 0)
+        consumed = record.get('calories_consumed', 0)
+
+        if not goal:
+            return 0
+
+        return round((consumed / goal) * 100, 1)
