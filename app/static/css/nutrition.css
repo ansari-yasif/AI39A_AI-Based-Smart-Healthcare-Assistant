@@ -1,0 +1,520 @@
+/* ═══════════════════════════════════════════════════════════════════
+   nutrition.css — VitaPulse Nutrition Feature
+   Uses global CSS variables from style.css (--bg, --teal, --orange…)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Page wrapper ────────────────────────────────────────────────── */
+.nutr-page {
+  display: flex; flex-direction: column; gap: 1.5rem; padding-bottom: 3rem;
+}
+
+/* ── Alerts ──────────────────────────────────────────────────────── */
+.nutr-alert {
+  padding: .75rem 1.1rem; border-radius: var(--r-sm);
+  font-size: .875rem; line-height: 1.5;
+}
+.nutr-alert-success { background: rgba(0,200,151,.1); border: 1px solid rgba(0,200,151,.3); color: var(--teal); }
+.nutr-alert-danger  { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.3);  color: var(--red); }
+.nutr-alert-info    { background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.3); color: var(--blue); }
+.nutr-alert-warning { background: rgba(249,115,22,.1); border: 1px solid rgba(249,115,22,.3); color: var(--orange); }
+
+/* ── Page header ─────────────────────────────────────────────────── */
+.nutr-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .85rem; padding-bottom: .5rem;
+  border-bottom: 1px solid var(--border);
+}
+.nutr-title-group { display: flex; align-items: center; gap: .85rem; }
+.nutr-icon-wrap {
+  width: 52px; height: 52px; border-radius: var(--r-md);
+  background: var(--teal-dim); color: var(--teal);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.nutr-icon-wrap svg { width: 26px; height: 26px; }
+.nutr-title   { font-size: 1.5rem; font-weight: 800; color: var(--text); margin: 0; font-family: var(--font-display); }
+.nutr-subtitle { font-size: .82rem; color: var(--text-2); margin: 3px 0 0; }
+.nutr-header-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.nutr-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .55rem 1.1rem; border-radius: var(--r-md);
+  font-size: .83rem; font-weight: 600; cursor: pointer;
+  text-decoration: none; border: none; transition: var(--t);
+}
+.nutr-btn svg { width: 15px; height: 15px; }
+.nutr-btn i   { width: 15px; height: 15px; }
+.nutr-btn-teal    { background: var(--teal); color: #000; }
+.nutr-btn-teal:hover { background: #00dfac; transform: translateY(-1px); }
+.nutr-btn-outline {
+  background: transparent; color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.nutr-btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+
+/* ── Notice banner ───────────────────────────────────────────────── */
+.nutr-notice {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .85rem 1.1rem;
+  background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.2);
+  border-radius: var(--r-sm); font-size: .875rem; color: #a5b4fc;
+}
+.nutr-notice svg { width: 18px; height: 18px; flex-shrink: 0; }
+.nutr-notice a   { color: #818cf8; text-decoration: underline; }
+
+/* ── KPI row ─────────────────────────────────────────────────────── */
+.nutr-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: .85rem;
+}
+.nutr-kpi {
+  display: flex; align-items: center; gap: .85rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--bg-3); border: 1px solid var(--border);
+  border-radius: var(--r-lg); transition: var(--t);
+}
+.nutr-kpi:hover { border-color: rgba(255,255,255,.14); transform: translateY(-1px); }
+.nutr-kpi-icon {
+  width: 44px; height: 44px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.nutr-kpi-icon svg { width: 21px; height: 21px; }
+.nutr-kpi-icon i   { width: 21px; height: 21px; }
+.nutr-kpi-label { font-size: .68rem; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; margin: 0 0 2px; }
+.nutr-kpi-value { font-size: 1.25rem; font-weight: 800; color: var(--text); margin: 0; }
+.nutr-kpi-value span { font-size: .72rem; color: var(--text-2); font-weight: 400; }
+.nutr-kpi-hint  { font-size: .7rem; color: var(--text-3); margin: 4px 0 0; }
+.nutr-kpi-bar   {
+  height: 4px; background: rgba(255,255,255,.07);
+  border-radius: 4px; margin-top: 8px; overflow: hidden;
+}
+
+.nutr-kpi-teal   .nutr-kpi-icon { background: var(--teal-dim);   color: var(--teal); }
+.nutr-kpi-orange .nutr-kpi-icon { background: var(--orange-dim); color: var(--orange); }
+.nutr-kpi-blue   .nutr-kpi-icon { background: rgba(74,158,255,.15); color: var(--blue); }
+.nutr-kpi-green  .nutr-kpi-icon { background: rgba(16,185,129,.15); color: var(--green); }
+.nutr-kpi-goal   .nutr-kpi-icon { background: var(--gold-dim);   color: var(--gold); }
+.nutr-kpi-bmi    .nutr-kpi-icon { background: var(--teal-dim);   color: var(--teal); }
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+.nutr-card {
+  background: var(--bg-3); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 1.4rem 1.5rem;
+}
+.nutr-card-wide { grid-column: 1 / -1; }
+
+.nutr-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.nutr-card-head {
+  display: flex; align-items: center; gap: .6rem; margin-bottom: 1.2rem;
+}
+.nutr-card-head h3 { font-size: .95rem; font-weight: 700; color: var(--text); margin: 0; flex: 1; }
+.nutr-card-head svg { width: 18px; height: 18px; color: var(--teal); }
+.nutr-card-head i   { width: 18px; height: 18px; color: var(--teal); }
+.nutr-card-link  { font-size: .78rem; color: var(--teal); text-decoration: none; margin-left: auto; }
+.nutr-card-link:hover { text-decoration: underline; }
+.nutr-card-toggle {
+  font-size: .75rem; color: var(--text-2); cursor: pointer;
+  background: var(--glass); border: 1px solid var(--border);
+  padding: .2rem .6rem; border-radius: var(--r-sm); margin-left: auto;
+  transition: var(--t);
+}
+.nutr-card-toggle:hover { color: var(--teal); border-color: var(--teal); }
+.nutr-date-badge {
+  font-size: .72rem; color: var(--text-3); margin-left: auto;
+  background: var(--glass); padding: .2rem .6rem; border-radius: 6px;
+}
+
+/* ── Calorie ring ─────────────────────────────────────────────────── */
+.nutr-ring-wrap {
+  position: relative; width: 160px; height: 160px; margin: 0 auto 1.2rem;
+}
+.nutr-ring { display: block; }
+.nutr-ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.nutr-ring-val { font-size: 1.75rem; font-weight: 800; color: var(--text); margin: 0; }
+.nutr-ring-sub { font-size: .68rem; color: var(--text-2); margin: 2px 0 0; }
+.nutr-ring-pct { font-size: .78rem; color: var(--teal); font-weight: 700; margin: 4px 0 0; }
+
+/* ── Stat trio ────────────────────────────────────────────────────── */
+.nutr-stat-trio {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; margin: 1rem 0;
+}
+.nutr-stat-item {
+  background: var(--glass); border-radius: var(--r-sm);
+  padding: .85rem .6rem; text-align: center;
+}
+.nsi-label { font-size: .65rem; color: var(--text-2); margin: 0 0 3px; text-transform: uppercase; letter-spacing: .04em; }
+.nsi-val   { font-size: 1.15rem; font-weight: 800; color: var(--text); margin: 0; }
+.nsi-val.teal   { color: var(--teal); }
+.nsi-val.orange { color: var(--orange); }
+
+/* ── Goal form ────────────────────────────────────────────────────── */
+.nutr-goal-form {
+  border-top: 1px solid var(--border); padding-top: 1rem; margin-top: .25rem;
+}
+.nutr-goal-form h4 {
+  font-size: .82rem; color: var(--text-2); margin: 0 0 .7rem;
+  display: flex; align-items: center; gap: .4rem;
+}
+.nutr-goal-form h4 svg, .nutr-goal-form h4 i { width: 14px; height: 14px; }
+.nutr-inline-form { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.nutr-inline-form .nutr-input { flex: 1; min-width: 130px; }
+
+/* ── Form inputs ─────────────────────────────────────────────────── */
+.nutr-input {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text);
+  padding: .6rem .85rem; font-size: .875rem;
+  outline: none; transition: var(--t); width: 100%; box-sizing: border-box;
+}
+.nutr-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-glow); }
+select.nutr-input option { background: var(--bg-2); }
+.nutr-label  { font-size: .75rem; color: var(--text-2); font-weight: 600; margin-bottom: 4px; display: block; }
+.nutr-hint-text { font-size: .72rem; color: var(--text-3); margin: .5rem 0 0; }
+
+/* ── Macro breakdown ─────────────────────────────────────────────── */
+.nutr-macro-grid { display: flex; flex-direction: column; gap: .65rem; margin-bottom: 1.1rem; }
+.nutr-macro-item {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .85rem; border-radius: var(--r-sm);
+}
+.nm-protein { background: rgba(74,158,255,.08); }
+.nm-carbs   { background: rgba(0,200,151,.08); }
+.nm-fat     { background: rgba(249,115,22,.08); }
+.nm-icon {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.nm-icon svg, .nm-icon i { width: 17px; height: 17px; }
+.nm-protein .nm-icon { background: rgba(74,158,255,.2);  color: var(--blue); }
+.nm-carbs   .nm-icon { background: rgba(0,200,151,.2);   color: var(--teal); }
+.nm-fat     .nm-icon { background: rgba(249,115,22,.2);  color: var(--orange); }
+.nm-label { font-size: .7rem; color: var(--text-2); margin: 0 0 1px; }
+.nm-val   { font-size: 1rem; font-weight: 800; color: var(--text); margin: 1px 0; }
+.nm-kcal  { font-size: .68rem; color: var(--text-3); margin: 0; }
+.nm-bar   { flex: 1; height: 5px; background: var(--glass); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+.nm-fill  { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+.nm-protein .nm-fill { background: var(--blue); }
+.nm-carbs   .nm-fill { background: var(--teal); }
+.nm-fat     .nm-fill { background: var(--orange); }
+
+.nutr-macro-chart-wrap { max-width: 220px; margin: 0 auto .85rem; }
+.nutr-actual-macros { border-top: 1px solid var(--border); padding-top: .85rem; }
+
+/* ── Chart wrap ──────────────────────────────────────────────────── */
+.nutr-chart-wrap { max-height: 260px; }
+
+/* ── Info strip ──────────────────────────────────────────────────── */
+.nutr-info-strip {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem;
+}
+.nutr-info-item {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 1rem 1.1rem;
+}
+.nutr-info-item strong {
+  font-size: .82rem; color: var(--text-2); display: flex; align-items: center;
+  gap: .4rem; margin-bottom: 5px;
+}
+.nutr-info-item strong svg, .nutr-info-item strong i { width: 14px; height: 14px; color: var(--teal); }
+.nutr-info-item p { font-size: .78rem; color: var(--text-3); margin: 0; line-height: 1.55; }
+
+/* ── Meals quick-view list ────────────────────────────────────────── */
+.nutr-meals-list { display: flex; flex-direction: column; gap: 5px; }
+.nutr-meal-row {
+  display: flex; align-items: center; gap: .65rem;
+  padding: .65rem .85rem; background: var(--glass);
+  border-radius: var(--r-sm); font-size: .8rem; flex-wrap: wrap;
+}
+.nutr-meal-name  { flex: 1; color: var(--text); min-width: 100px; font-weight: 500; }
+.nutr-meal-macro { color: var(--text-2); white-space: nowrap; }
+
+/* ── Meal type badges ─────────────────────────────────────────────── */
+.nutr-meal-type-badge {
+  padding: 2px 7px; border-radius: 5px; font-size: .67rem;
+  font-weight: 700; white-space: nowrap;
+}
+.nmt-breakfast { background: rgba(234,179,8,.12);  color: #facc15; }
+.nmt-lunch     { background: rgba(249,115,22,.12); color: var(--orange); }
+.nmt-dinner    { background: rgba(74,158,255,.12); color: var(--blue); }
+.nmt-snack     { background: rgba(16,185,129,.12); color: var(--green); }
+
+/* ── Date bar ──────────────────────────────────────────────────────── */
+.nutr-date-bar { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+
+/* ── Form layout ──────────────────────────────────────────────────── */
+.nutr-form-body  { padding-top: .25rem; }
+.nutr-form-grid  { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: .75rem; }
+.nutr-fg-wide    { grid-column: 1 / -1; }
+.nutr-form-group { display: flex; flex-direction: column; gap: 4px; }
+.nutr-form-actions { display: flex; gap: .6rem; margin-top: .9rem; flex-wrap: wrap; }
+
+/* ── Food search inline (in meal form) ────────────────────────────── */
+.nutr-food-search-inline {
+  background: rgba(0,200,151,.05); border: 1px solid rgba(0,200,151,.15);
+  border-radius: var(--r-sm); padding: .9rem; margin-bottom: .9rem;
+  position: relative;
+}
+.nutr-search-row { margin-top: .5rem; }
+.nutr-search-dropdown {
+  position: absolute; left: 0; right: 0; top: 100%; z-index: 200;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); box-shadow: var(--shadow);
+  max-height: 240px; overflow-y: auto; margin-top: 4px;
+}
+.nutr-dd-item {
+  padding: .7rem 1rem; cursor: pointer;
+  border-bottom: 1px solid var(--border); transition: var(--t);
+}
+.nutr-dd-item:last-child { border-bottom: none; }
+.nutr-dd-item:hover { background: var(--teal-dim); }
+.nutr-dd-name { font-size: .875rem; color: var(--text); font-weight: 500; }
+.nutr-dd-meta { font-size: .72rem; color: var(--text-2); margin-top: 2px; }
+
+/* ── Meals by type table ──────────────────────────────────────────── */
+.nutr-meals-table-wrap { overflow-x: auto; }
+.nutr-meals-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.nutr-meals-table th {
+  text-align: left; color: var(--text-2); font-weight: 600;
+  padding: .6rem .75rem; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.nutr-meals-table td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.03); }
+.nutr-meals-table tr:last-child td { border-bottom: none; }
+.nutr-meal-row-tr:hover td { background: var(--glass); }
+.nutr-meal-name-td { color: var(--text); font-weight: 500; }
+.nutr-meal-count {
+  font-size: .73rem; color: var(--text-2); margin-left: auto;
+  background: var(--glass); padding: 2px 8px; border-radius: 6px;
+}
+
+.nutr-meal-section { border-left: 3px solid var(--border); }
+.nutr-empty-meal {
+  padding: 1rem; text-align: center; color: var(--text-3); font-size: .83rem;
+}
+
+/* ── Macro pills & chips ──────────────────────────────────────────── */
+.nutr-macro-pill {
+  display: inline-block; padding: 2px 7px; border-radius: 5px;
+  font-size: .7rem; font-weight: 700;
+}
+.mp-cal { background: rgba(0,200,151,.1);  color: var(--teal); }
+.mp-p   { background: rgba(74,158,255,.1); color: var(--blue); }
+.mp-c   { background: rgba(0,200,151,.08); color: #6ee7b7; }
+.mp-f   { background: rgba(249,115,22,.1); color: var(--orange); }
+
+.nutr-macro-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.nmc-cal { background: rgba(0,200,151,.1);  color: var(--teal);   padding: 2px 7px; border-radius: 5px; font-size: .72rem; font-weight: 700; }
+.nmc-p   { background: rgba(74,158,255,.1); color: var(--blue);   padding: 2px 7px; border-radius: 5px; font-size: .72rem; font-weight: 700; }
+.nmc-c   { background: rgba(16,185,129,.1); color: var(--green);  padding: 2px 7px; border-radius: 5px; font-size: .72rem; font-weight: 700; }
+.nmc-f   { background: rgba(249,115,22,.1); color: var(--orange); padding: 2px 7px; border-radius: 5px; font-size: .72rem; font-weight: 700; }
+
+/* ── Delete / link buttons ────────────────────────────────────────── */
+.nutr-del-btn {
+  background: none; border: none; color: var(--red);
+  cursor: pointer; padding: 4px; opacity: .55; transition: var(--t); display: flex;
+}
+.nutr-del-btn:hover { opacity: 1; }
+.nutr-del-btn svg, .nutr-del-btn i { width: 15px; height: 15px; }
+.nutr-link-btn {
+  background: none; border: none; color: var(--teal);
+  cursor: pointer; font-size: .82rem; text-decoration: underline; padding: 0;
+}
+
+/* ── Empty states ─────────────────────────────────────────────────── */
+.nutr-empty-state {
+  text-align: center; padding: 2.5rem 1rem; color: var(--text-3);
+  display: flex; flex-direction: column; align-items: center; gap: .6rem;
+}
+.nutr-empty-state svg, .nutr-empty-state i { width: 44px; height: 44px; opacity: .28; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FOOD DATABASE PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Search hero bar ──────────────────────────────────────────────── */
+.nutr-search-hero {
+  position: relative; display: flex; align-items: center;
+  background: var(--bg-3); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); padding: 4px 1rem; transition: var(--t);
+}
+.nutr-search-hero:focus-within {
+  border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-glow);
+}
+.nutr-search-icon { color: var(--teal); display: flex; margin-right: .65rem; }
+.nutr-search-icon svg, .nutr-search-icon i { width: 20px; height: 20px; }
+.nutr-search-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-size: 1rem; padding: .9rem 0;
+  font-family: var(--font-body);
+}
+.nutr-search-input::placeholder { color: var(--text-3); }
+.nutr-search-clear {
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  padding: 5px 8px; border-radius: 50%; transition: var(--t);
+}
+.nutr-search-clear:hover { color: var(--text); background: var(--glass); }
+
+/* ── Live results dropdown ────────────────────────────────────────── */
+.nutr-live-results {
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); box-shadow: var(--shadow); overflow: hidden;
+}
+.nutr-live-header {
+  padding: .6rem 1rem; font-size: .72rem; color: var(--text-2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .4rem;
+}
+.nutr-live-header svg, .nutr-live-header i { width: 13px; height: 13px; }
+.nutr-live-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .75rem 1rem; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,.03); transition: var(--t);
+}
+.nutr-live-item:hover { background: var(--teal-dim); }
+.nutr-live-item:last-child { border-bottom: none; }
+.nutr-live-name  { font-size: .875rem; color: var(--text); font-weight: 500; }
+.nutr-live-cat   {
+  font-size: .67rem; color: var(--text-3); margin-left: .5rem;
+  background: var(--glass); padding: 2px 6px; border-radius: 5px;
+}
+.nutr-live-macros { display: flex; gap: 5px; }
+.nutr-live-empty {
+  padding: 1.25rem; text-align: center; color: var(--text-3);
+  font-size: .875rem; display: flex; align-items: center;
+  justify-content: center; gap: .5rem;
+}
+.nutr-live-empty svg, .nutr-live-empty i { width: 20px; height: 20px; }
+
+/* ── Category filter tabs ─────────────────────────────────────────── */
+.nutr-cat-tabs { display: flex; gap: .45rem; flex-wrap: wrap; }
+.nutr-cat-tab {
+  padding: .4rem .85rem; border-radius: var(--r-sm); font-size: .78rem;
+  font-weight: 600; cursor: pointer; text-decoration: none;
+  color: var(--text-2); background: var(--glass); border: 1px solid var(--border);
+  transition: var(--t);
+}
+.nutr-cat-tab:hover  { color: var(--text); border-color: rgba(255,255,255,.15); }
+.nct-active { background: var(--teal-dim); color: var(--teal); border-color: rgba(0,200,151,.3); }
+
+/* ── Results meta ─────────────────────────────────────────────────── */
+.nutr-results-meta {
+  display: flex; align-items: center; gap: .5rem; font-size: .83rem;
+  color: var(--text-2); padding: .25rem 0;
+}
+.nutr-results-meta svg, .nutr-results-meta i { width: 14px; height: 14px; }
+.nutr-results-meta strong { color: var(--text); }
+
+/* ── Food cards grid ──────────────────────────────────────────────── */
+.nutr-foods-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .85rem;
+}
+.nutr-food-card {
+  background: var(--bg-3); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 1rem 1.1rem;
+  display: flex; flex-direction: column; transition: var(--t); position: relative;
+}
+.nutr-food-card:hover {
+  border-color: rgba(0,200,151,.3); transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+}
+.nutr-food-category-tag {
+  font-size: .62rem; color: var(--text-3); text-transform: uppercase;
+  letter-spacing: .08em; background: var(--glass); padding: 2px 7px;
+  border-radius: 5px; display: inline-block; margin-bottom: .5rem; width: fit-content;
+}
+.nutr-food-name { font-size: .88rem; font-weight: 700; color: var(--text); margin: 0 0 .75rem; line-height: 1.3; flex: 1; }
+.nutr-food-macros {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: .75rem;
+}
+.nfm-item  { text-align: center; padding: .4rem .2rem; border-radius: 6px; }
+.nfm-val   { font-size: .82rem; font-weight: 800; display: block; }
+.nfm-label { font-size: .6rem; color: var(--text-3); display: block; margin-top: 1px; }
+.nfm-cal  { background: rgba(0,200,151,.1);  }
+.nfm-cal  .nfm-val { color: var(--teal); }
+.nfm-prot { background: rgba(74,158,255,.1); }
+.nfm-prot .nfm-val { color: var(--blue); }
+.nfm-carb { background: rgba(16,185,129,.08); }
+.nfm-carb .nfm-val { color: var(--green); }
+.nfm-fat  { background: rgba(249,115,22,.1); }
+.nfm-fat  .nfm-val { color: var(--orange); }
+
+.nutr-food-actions { margin-top: auto; }
+.nutr-food-add-btn {
+  width: 100%; padding: .55rem; border-radius: var(--r-sm);
+  background: var(--teal-dim); border: 1px solid rgba(0,200,151,.2);
+  color: var(--teal); font-size: .8rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 4px; transition: var(--t);
+}
+.nutr-food-add-btn:hover { background: var(--teal); color: #000; }
+.nutr-food-add-btn svg, .nutr-food-add-btn i { width: 14px; height: 14px; }
+
+/* ── Modal ───────────────────────────────────────────────────────── */
+.nutr-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500;
+  display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+}
+.nutr-modal {
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--r-xl); width: 100%; max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.65);
+}
+.nutr-modal-head {
+  display: flex; align-items: center; gap: .6rem; padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.nutr-modal-head h3 {
+  font-size: .95rem; font-weight: 700; color: var(--text); margin: 0;
+  flex: 1; display: flex; align-items: center; gap: .5rem;
+}
+.nutr-modal-head h3 svg, .nutr-modal-head h3 i { width: 17px; height: 17px; color: var(--teal); }
+.nutr-modal-close {
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  font-size: 1.1rem; padding: 4px 8px; border-radius: 6px; transition: var(--t);
+}
+.nutr-modal-close:hover { background: var(--glass); color: var(--text); }
+.nutr-modal-body { padding: 1.25rem; }
+.nutr-modal-food-name {
+  font-size: 1rem; font-weight: 700; color: var(--text); margin: 0 0 .65rem;
+}
+
+/* ── Section divider ──────────────────────────────────────────────── */
+.nutr-section-divider {
+  display: flex; align-items: flex-start; gap: .75rem;
+  padding: 1.25rem 0 .5rem; border-top: 1px solid var(--border);
+}
+.nutr-section-divider svg, .nutr-section-divider i { width: 22px; height: 22px; color: var(--teal); margin-top: 2px; }
+.nutr-section-divider h2 { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0; }
+.nutr-section-divider p  { font-size: .8rem; color: var(--text-2); margin: 3px 0 0; }
+
+/* ── Custom food list ─────────────────────────────────────────────── */
+.nutr-custom-list { display: flex; flex-direction: column; gap: .6rem; }
+.nutr-custom-item {
+  display: flex; align-items: center; gap: .65rem;
+  padding: .8rem; background: var(--glass); border-radius: var(--r-sm);
+}
+.nutr-custom-info { flex: 1; }
+.nutr-custom-name { font-size: .88rem; color: var(--text); font-weight: 600; margin: 0 0 3px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .nutr-kpi-row   { grid-template-columns: repeat(2, 1fr); }
+  .nutr-grid-2    { grid-template-columns: 1fr; }
+  .nutr-title     { font-size: 1.2rem; }
+  .nutr-foods-grid { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); }
+}
+@media (max-width: 480px) {
+  .nutr-kpi-row   { grid-template-columns: 1fr; }
+  .nutr-stat-trio { grid-template-columns: repeat(3, 1fr); }
+  .nutr-form-grid { grid-template-columns: 1fr 1fr; }
+}

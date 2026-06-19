@@ -1,0 +1,56 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Edit User — VitaPulse Admin{% endblock %}
+{% block page_title %}Edit User{% endblock %}
+{% block content %}
+<div class="nutr-page" style="max-width:600px">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(74,158,255,.15);color:#4A9EFF"><i data-lucide="edit-2"></i></div>
+      <div><h1 class="nutr-title">Edit User</h1><p class="nutr-subtitle">{{ user.email }}</p></div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('admin.users_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="arrow-left"></i> Back</a>
+    </div>
+  </div>
+
+  <div class="nutr-card">
+    <form method="POST">
+      <div class="nutr-form-group" style="margin-bottom:1rem">
+        <label class="nutr-label">Full Name</label>
+        <input type="text" name="full_name" class="nutr-input" value="{{ user.full_name }}" required>
+      </div>
+      <div class="nutr-form-group" style="margin-bottom:1rem">
+        <label class="nutr-label">Email</label>
+        <input type="email" name="email" class="nutr-input" value="{{ user.email }}" required>
+      </div>
+      <div class="nutr-form-group" style="margin-bottom:1rem">
+        <label class="nutr-label">Role</label>
+        <select name="role" class="nutr-input">
+          <option value="user" {% if user.role=='user' %}selected{% endif %}>User</option>
+          <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin</option>
+        </select>
+      </div>
+      <div class="nutr-form-group" style="margin-bottom:1.25rem">
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem">
+          <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %} style="width:auto">
+          Account Active
+        </label>
+      </div>
+      <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%"><i data-lucide="save"></i> Save Changes</button>
+    </form>
+  </div>
+
+  <!-- Health profile (read-only) -->
+  <div class="nutr-card" style="margin-top:1rem">
+    <div class="nutr-card-head"><i data-lucide="heart-pulse"></i><h3>Health Profile (Read-only)</h3></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.85rem">
+      <div><span style="color:var(--muted)">Age:</span> {{ user.age or '—' }}</div>
+      <div><span style="color:var(--muted)">Gender:</span> {{ user.gender or '—' }}</div>
+      <div><span style="color:var(--muted)">Weight:</span> {{ user.weight_kg or '—' }} kg</div>
+      <div><span style="color:var(--muted)">Height:</span> {{ user.height_cm or '—' }} cm</div>
+      <div><span style="color:var(--muted)">Goal:</span> {{ user.goal or '—' }}</div>
+      <div><span style="color:var(--muted)">Phone:</span> {{ user.phone or '—' }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

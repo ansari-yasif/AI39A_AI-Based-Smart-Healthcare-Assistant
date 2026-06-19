@@ -1,0 +1,207 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Nearby Healthcare — VitaPulse{% endblock %}
+{% block page_title %}Nearby Healthcare Finder{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(34,197,94,.15);color:#22c55e"><i data-lucide="map-pin"></i></div>
+      <div><h1 class="nutr-title">Nearby Healthcare Finder</h1><p class="nutr-subtitle">Find hospitals, clinics &amp; pharmacies near you</p></div>
+    </div>
+  </div>
+
+  <div class="nutr-card" style="margin-bottom:1.25rem">
+    <div class="nutr-card-head"><i data-lucide="navigation"></i><h3>Your Location</h3></div>
+    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem">
+      <button id="locateBtn" class="nutr-btn nutr-btn-teal"><i data-lucide="crosshair"></i> Use My Location</button>
+      <span id="locStatus" style="font-size:.82rem;color:var(--muted)">Showing Kathmandu by default</span>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+      <input type="text" id="cityInput" class="nutr-input" placeholder="Search city, area (e.g. Thamel, Patan, Lalitpur)" style="flex:1">
+      <button id="cityBtn" class="nutr-btn nutr-btn-teal" style="white-space:nowrap"><i data-lucide="search"></i> Search</button>
+    </div>
+    <!-- Category quick buttons -->
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="qcat nutr-btn nutr-btn-outline" data-type="hospital" style="font-size:.8rem">🏥 Hospitals</button>
+      <button class="qcat nutr-btn nutr-btn-outline" data-type="clinic" style="font-size:.8rem">🩺 Clinics</button>
+      <button class="qcat nutr-btn nutr-btn-outline" data-type="pharmacy" style="font-size:.8rem">💊 Pharmacies</button>
+      <button class="qcat nutr-btn nutr-btn-outline" data-type="dentist" style="font-size:.8rem">🦷 Dentists</button>
+      <button class="qcat nutr-btn nutr-btn-outline" data-type="doctors" style="font-size:.8rem">👨‍⚕️ Doctors</button>
+    </div>
+  </div>
+
+  <!-- Results list -->
+  <div id="resultsList" style="margin-bottom:1.25rem"></div>
+
+  <!-- Map -->
+  <div class="nutr-card">
+    <div class="nutr-card-head"><i data-lucide="map"></i><h3 id="mapTitle">Healthcare Map — Kathmandu</h3>
+      <a id="osmExtLink" href="https://www.openstreetmap.org/#map=14/27.7172/85.3240" target="_blank"
+         class="nutr-btn nutr-btn-outline" style="font-size:.72rem;padding:.3rem .6rem;margin-left:auto">
+        <i data-lucide="external-link" style="width:12px;height:12px"></i> Open Map
+      </a>
+    </div>
+    <div id="mapWrap" style="border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);position:relative">
+      <div id="mapMsg" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(10,14,26,.85);
+           display:flex;align-items:center;justify-content:center;z-index:10;flex-direction:column;gap:.75rem">
+        <i data-lucide="map-pin" style="width:36px;height:36px;color:var(--teal);opacity:.6"></i>
+        <p style="color:var(--muted);font-size:.85rem">Loading map…</p>
+      </div>
+      <iframe id="mapFrame" width="100%" height="480" frameborder="0" scrolling="no"
+        style="display:block;filter:invert(0.9) hue-rotate(180deg)" allowfullscreen
+        onload="document.getElementById('mapMsg').style.display='none'"
+        src="https://www.openstreetmap.org/export/embed.html?bbox=85.27%2C27.65%2C85.42%2C27.75&layer=mapnik&marker=27.7172%2C85.3240">
+      </iframe>
+    </div>
+    <p style="font-size:.74rem;color:var(--muted);margin-top:.5rem">
+      Map data © <a href="https://www.openstreetmap.org" target="_blank" style="color:var(--teal)">OpenStreetMap</a> contributors.
+      Use "Open Map" for directions &amp; more details.
+    </p>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}{{ super() }}
+<script>
+let lat = 27.7172, lon = 85.3240, activeType = 'hospital';
+
+/* ── Update the OSM embed iframe ─────────────────────────────── */
+function updateMap(lt, ln, type) {
+  lat = lt; lon = ln; activeType = type;
+  const d = 0.06;
+  const bbox = (ln-d).toFixed(5)+'%2C'+(lt-d).toFixed(5)+'%2C'+(ln+d).toFixed(5)+'%2C'+(lt+d).toFixed(5);
+  const frame = document.getElementById('mapFrame');
+  frame.src = 'https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+lt.toFixed(5)+'%2C'+ln.toFixed(5);
+  document.getElementById('osmExtLink').href = 'https://www.openstreetmap.org/search?query='+encodeURIComponent(type)+'#map=14/'+lt.toFixed(5)+'/'+ln.toFixed(5);
+}
+
+/* ── Overpass API: find real places near coordinates ─────────── */
+async function fetchNearby(lt, ln, type) {
+  const typeMap = {
+    hospital: 'amenity=hospital',
+    clinic:   'amenity=clinic',
+    pharmacy: 'amenity=pharmacy',
+    dentist:  'amenity=dentist',
+    doctors:  'amenity=doctors',
+  };
+  const tag = typeMap[type] || 'amenity=hospital';
+  const radius = 3000; // 3km
+  const query = `[out:json][timeout:15];(node[${tag}](around:${radius},${lt},${ln});way[${tag}](around:${radius},${lt},${ln}););out center 15;`;
+  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
+
+  document.getElementById('resultsList').innerHTML =
+    '<div class="nutr-card" style="text-align:center;padding:1.5rem;color:var(--muted)"><i data-lucide="loader" style="width:20px;height:20px;display:inline;vertical-align:middle"></i> Searching nearby…</div>';
+  if (window.lucide) lucide.createIcons();
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    renderResults(data.elements || [], type);
+  } catch(e) {
+    document.getElementById('resultsList').innerHTML =
+      '<div class="nutr-card" style="text-align:center;color:var(--muted);padding:1rem">Could not load results. Try a different search or open the map directly.</div>';
+  }
+}
+
+/* ── Render result cards ─────────────────────────────────────── */
+function renderResults(elements, type) {
+  const box = document.getElementById('resultsList');
+  if (!elements.length) {
+    box.innerHTML = '<div class="nutr-card" style="text-align:center;color:var(--muted);padding:1rem">No ' + type + 's found within 3km. Try searching a different area.</div>';
+    return;
+  }
+  const icons = {hospital:'🏥', clinic:'🩺', pharmacy:'💊', dentist:'🦷', doctors:'👨‍⚕️'};
+  const ico = icons[type] || '🏥';
+  let html = '<div class="nutr-card"><div class="nutr-card-head"><i data-lucide="list"></i><h3>' + elements.length + ' ' + type + '(s) found nearby</h3></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.75rem;margin-top:.5rem">';
+
+  elements.forEach(function(el) {
+    const tags = el.tags || {};
+    const name = tags.name || tags['name:en'] || ('Unnamed ' + type);
+    const elLat = el.lat || (el.center && el.center.lat);
+    const elLon = el.lon || (el.center && el.center.lon);
+    const phone = tags.phone || tags['contact:phone'] || '';
+    const addr  = [tags['addr:street'], tags['addr:city']].filter(Boolean).join(', ');
+    const gmaps = elLat ? 'https://www.google.com/maps/search/?api=1&query='+elLat+','+elLon : '#';
+    html += '<div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-md);padding:.85rem">'
+      + '<div style="font-size:1.1rem;margin-bottom:.3rem">' + ico + ' <strong style="font-size:.9rem">' + name + '</strong></div>'
+      + (addr ? '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.2rem"><i data-lucide="map-pin" style="width:11px;height:11px;display:inline;vertical-align:middle"></i> ' + addr + '</div>' : '')
+      + (phone ? '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.4rem"><i data-lucide="phone" style="width:11px;height:11px;display:inline;vertical-align:middle"></i> ' + phone + '</div>' : '')
+      + (elLat ? '<a href="' + gmaps + '" target="_blank" style="font-size:.72rem;color:var(--teal)">Get Directions →</a>' : '')
+      + '</div>';
+  });
+  html += '</div></div>';
+  box.innerHTML = html;
+  if (window.lucide) lucide.createIcons();
+}
+
+/* ── Geocode city name using Nominatim ───────────────────────── */
+async function geocodeCity(q) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&q='
+    + encodeURIComponent(q) + '&limit=1&accept-language=en';
+  try {
+    const res = await fetch(url, {headers:{'Accept-Language':'en','User-Agent':'VitaPulse/1.0'}});
+    const data = await res.json();
+    if (data.length) {
+      return {lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), name: data[0].display_name};
+    }
+  } catch(e) {}
+  return null;
+}
+
+/* ── Search a city + type ────────────────────────────────────── */
+async function searchLocation(q, type) {
+  document.getElementById('locStatus').textContent = 'Searching for "' + q + '"…';
+  const result = await geocodeCity(q);
+  if (!result) {
+    document.getElementById('locStatus').textContent = 'Location not found. Try a different search.';
+    return;
+  }
+  document.getElementById('locStatus').textContent = 'Showing: ' + result.name.split(',').slice(0,3).join(',');
+  document.getElementById('mapTitle').textContent = 'Healthcare Map — ' + q;
+  updateMap(result.lat, result.lon, type);
+  await fetchNearby(result.lat, result.lon, type);
+}
+
+/* ── Category buttons ────────────────────────────────────────── */
+document.querySelectorAll('.qcat').forEach(function(btn) {
+  btn.addEventListener('click', async function() {
+    document.querySelectorAll('.qcat').forEach(function(b) { b.classList.remove('nutr-btn-teal'); b.classList.add('nutr-btn-outline'); });
+    this.classList.remove('nutr-btn-outline'); this.classList.add('nutr-btn-teal');
+    activeType = this.dataset.type;
+    document.getElementById('mapTitle').textContent = 'Healthcare Map — ' + activeType + 's near you';
+    updateMap(lat, lon, activeType);
+    await fetchNearby(lat, lon, activeType);
+  });
+});
+
+/* ── Locate me button ────────────────────────────────────────── */
+document.getElementById('locateBtn').addEventListener('click', function() {
+  if (!navigator.geolocation) { document.getElementById('locStatus').textContent = 'Geolocation not supported.'; return; }
+  document.getElementById('locStatus').textContent = 'Detecting location…';
+  navigator.geolocation.getCurrentPosition(async function(pos) {
+    lat = pos.coords.latitude; lon = pos.coords.longitude;
+    document.getElementById('locStatus').textContent = 'Located at ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
+    document.getElementById('mapTitle').textContent = 'Healthcare Map — Near You';
+    updateMap(lat, lon, activeType);
+    await fetchNearby(lat, lon, activeType);
+  }, function() {
+    document.getElementById('locStatus').textContent = 'Location denied. Search your area below.';
+  });
+});
+
+/* ── City search button ──────────────────────────────────────── */
+document.getElementById('cityBtn').addEventListener('click', function() {
+  const q = document.getElementById('cityInput').value.trim();
+  if (q) searchLocation(q, activeType);
+});
+document.getElementById('cityInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('cityBtn').click();
+});
+
+/* ── Initial load: hospitals in Kathmandu ────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  updateMap(lat, lon, 'hospital');
+  fetchNearby(lat, lon, 'hospital');
+});
+</script>
+{% endblock %}

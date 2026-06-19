@@ -1,0 +1,46 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Message — VitaPulse Admin{% endblock %}
+{% block page_title %}View Message{% endblock %}
+{% block content %}
+<div class="nutr-page" style="max-width:700px">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(99,102,241,.15);color:#818cf8"><i data-lucide="mail-open"></i></div>
+      <div><h1 class="nutr-title">{{ msg.subject }}</h1><p class="nutr-subtitle">From {{ msg.full_name }} ({{ msg.email }}) · {{ msg.created_at }}</p></div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('admin.messages_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="arrow-left"></i> Back</a>
+    </div>
+  </div>
+
+  <div class="nutr-card" style="margin-bottom:1rem">
+    <div class="nutr-card-head"><i data-lucide="message-square"></i><h3>Message</h3></div>
+    <p style="font-size:.9rem;line-height:1.6;color:#cbd5e1">{{ msg.message }}</p>
+  </div>
+
+  {% if msg.admin_reply %}
+  <div class="nutr-card" style="margin-bottom:1rem;border-color:rgba(0,200,151,.3)">
+    <div class="nutr-card-head"><i data-lucide="check-circle"></i><h3>Your Reply</h3></div>
+    <p style="font-size:.9rem;line-height:1.6;color:#cbd5e1">{{ msg.admin_reply }}</p>
+    <p style="font-size:.72rem;color:var(--muted);margin-top:.5rem">Replied: {{ msg.replied_at }}</p>
+  </div>
+  {% endif %}
+
+  {% if msg.status != 'closed' %}
+  <div class="nutr-card">
+    <div class="nutr-card-head"><i data-lucide="reply"></i><h3>Reply to User</h3></div>
+    <form method="POST">
+      <div class="nutr-form-group" style="margin-bottom:1.25rem">
+        <textarea name="reply" class="nutr-input" rows="5" placeholder="Type your reply...">{{ msg.admin_reply or '' }}</textarea>
+      </div>
+      <div style="display:flex;gap:.75rem">
+        <button type="submit" class="nutr-btn nutr-btn-teal"><i data-lucide="send"></i> Send Reply</button>
+        <button type="submit" formaction="{{ url_for('admin.message_close', mid=msg.id) }}" class="nutr-btn nutr-btn-outline">
+          <i data-lucide="x-circle"></i> Close Without Reply
+        </button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

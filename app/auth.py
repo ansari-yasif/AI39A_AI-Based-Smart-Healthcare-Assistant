@@ -31,11 +31,19 @@ def admin_required(fn):
 
 
 def guest_only(fn):
-    """Redirect already-logged-in users to dashboard."""
+    """Redirect already-logged-in users to dashboard; clear stale sessions."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         if 'user_id' in session:
-            return redirect(url_for('dashboard.index'))
+            try:
+                from app.models.user import UserModel
+                user = UserModel.find_by_id(session['user_id'])
+                if user and user.get('is_active', 1) != 0:
+                    return redirect(url_for('dashboard.index'))
+                else:
+                    session.clear()
+            except Exception:
+                session.clear()
         return fn(*args, **kwargs)
     return wrapper
 
@@ -47,7 +55,7 @@ def login_user(user: dict):
     session['user_id']   = user['id']
     session['full_name'] = user['full_name']
     session['email']     = user['email']
-    session['role']      = user.get('role', 'user')
+    session['role']      = str(user.get('role') or 'user').lower().strip()
     session['avatar']    = user.get('avatar_url', '')
 
 
@@ -62,7 +70,7 @@ def current_user() -> dict:
         'id':        session.get('user_id'),
         'full_name': session.get('full_name', ''),
         'email':     session.get('email', ''),
-        'role':      session.get('role', 'user'),
+        'role':      str(session.get('role') or 'user').lower().strip(),
         'avatar':    session.get('avatar', ''),
     }
 

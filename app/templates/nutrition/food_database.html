@@ -1,0 +1,368 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Food Database — VitaPulse{% endblock %}
+{% block page_title %}Food Database{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+
+  <!-- ── HEADER ──────────────────────────────────────────────────── -->
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(139,92,246,.15);color:var(--purple)">
+        <i data-lucide="database"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">Food Database</h1>
+        <p class="nutr-subtitle">Search · Browse · Add to Meal Log · Custom Foods</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('nutrition.meal_index') }}"   class="nutr-btn nutr-btn-teal"><i data-lucide="utensils"></i> Meal Log</a>
+      <a href="{{ url_for('nutrition.calorie_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="calculator"></i> Calculator</a>
+    </div>
+  </div>
+
+  {# Flash messages #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LIVE FOOD SEARCH BAR
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="nutr-search-hero">
+    <div class="nutr-search-icon"><i data-lucide="search"></i></div>
+    <input type="text" id="liveFoodSearch"
+           placeholder="Search 100+ foods — Dal Bhat, Momo, Chicken Breast, Almonds…"
+           class="nutr-search-input"
+           value="{{ query }}"
+           oninput="handleLiveSearch(this.value)"
+           autocomplete="off">
+    <button onclick="clearSearch()" class="nutr-search-clear"
+            id="clearBtn" {% if not query %}style="display:none"{% endif %}>✕</button>
+  </div>
+
+  <!-- Live results panel -->
+  <div id="liveResultsBox" class="nutr-live-results" style="display:none"></div>
+
+  <!-- ── CATEGORY TABS ──────────────────────────────────────────── -->
+  <div class="nutr-cat-tabs">
+    <a href="{{ url_for('nutrition.food_db_index') }}"
+       class="nutr-cat-tab {{ 'nct-active' if not query and not category }}">All</a>
+    {% for cat in categories %}
+    <a href="{{ url_for('nutrition.food_db_index', category=cat) }}"
+       class="nutr-cat-tab {{ 'nct-active' if category == cat }}">{{ cat }}</a>
+    {% endfor %}
+  </div>
+
+  <!-- ── RESULTS META ──────────────────────────────────────────── -->
+  {% if query %}
+  <div class="nutr-results-meta">
+    <i data-lucide="search"></i>
+    {{ results|length }} result{{ 's' if results|length != 1 else '' }} for "<strong>{{ query }}</strong>"
+    <a href="{{ url_for('nutrition.food_db_index') }}" class="nutr-link-btn" style="margin-left:.5rem">Clear</a>
+  </div>
+  {% elif category %}
+  <div class="nutr-results-meta">
+    <i data-lucide="filter"></i>
+    Category: <strong>{{ category }}</strong> &nbsp;({{ results|length }} items)
+  </div>
+  {% endif %}
+
+  <!-- ── FOOD CARDS GRID ────────────────────────────────────────── -->
+  {% if custom_normalized %}
+  <div class="nutr-results-meta" style="border-left:3px solid var(--teal);padding-left:.75rem">
+    <i data-lucide="plus-circle"></i> <strong>{{ custom_normalized|length }}</strong> custom food{{ 's' if custom_normalized|length != 1 }} in your database
+  </div>
+  <div class="nutr-foods-grid" style="margin-bottom:.5rem">
+    {% for food in custom_normalized %}
+    <div class="nutr-food-card" style="border-color:rgba(0,200,151,.3)">
+      <span class="nutr-food-category-tag" style="background:rgba(0,200,151,.15);color:var(--teal)">MY FOOD</span>
+      <h4 class="nutr-food-name">{{ food.name }}</h4>
+      <div class="nutr-food-macros">
+        <div class="nfm-item nfm-cal"><span class="nfm-val">{{ food.calories }}</span><span class="nfm-label">kcal</span></div>
+        <div class="nfm-item nfm-prot"><span class="nfm-val">{{ food.protein }}g</span><span class="nfm-label">Protein</span></div>
+        <div class="nfm-item nfm-carb"><span class="nfm-val">{{ food.carbs }}g</span><span class="nfm-label">Carbs</span></div>
+        <div class="nfm-item nfm-fat"><span class="nfm-val">{{ food.fat }}g</span><span class="nfm-label">Fat</span></div>
+      </div>
+      <div class="nutr-food-actions">
+        <button class="nutr-food-add-btn quick-add-trigger"
+          data-id="{{ food.id }}" data-name="{{ food.name }}" data-cal="{{ food.calories }}"
+          data-p="{{ food.protein }}" data-c="{{ food.carbs }}" data-f="{{ food.fat }}">
+          <i data-lucide="plus"></i> Add to Meal
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if results %}
+  <div class="nutr-foods-grid">
+    {% for food in results %}
+    <div class="nutr-food-card">
+      <span class="nutr-food-category-tag">{{ food.category }}</span>
+      <h4 class="nutr-food-name">{{ food.name }}</h4>
+      <div class="nutr-food-macros">
+        <div class="nfm-item nfm-cal">
+          <span class="nfm-val">{{ food.calories }}</span>
+          <span class="nfm-label">kcal</span>
+        </div>
+        <div class="nfm-item nfm-prot">
+          <span class="nfm-val">{{ food.protein }}g</span>
+          <span class="nfm-label">Protein</span>
+        </div>
+        <div class="nfm-item nfm-carb">
+          <span class="nfm-val">{{ food.carbs }}g</span>
+          <span class="nfm-label">Carbs</span>
+        </div>
+        <div class="nfm-item nfm-fat">
+          <span class="nfm-val">{{ food.fat }}g</span>
+          <span class="nfm-label">Fat</span>
+        </div>
+      </div>
+      <div class="nutr-food-actions">
+        <button class="nutr-food-add-btn quick-add-trigger"
+          data-id="{{ food.id }}" data-name="{{ food.name }}" data-cal="{{ food.calories }}"
+          data-p="{{ food.protein }}" data-c="{{ food.carbs }}" data-f="{{ food.fat }}">
+          <i data-lucide="plus"></i> Add to Meal
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="nutr-empty-state">
+    <i data-lucide="search-x"></i>
+    <p>No foods found{% if query %} for "{{ query }}"{% endif %}.<br>Try a different keyword or add a custom food below.</p>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       QUICK ADD MODAL
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="quickAddModal" class="nutr-modal-overlay" style="display:none">
+    <div class="nutr-modal">
+      <div class="nutr-modal-head">
+        <h3><i data-lucide="plus-circle"></i> Add to Meal Log</h3>
+        <button onclick="closeQuickAdd()" class="nutr-modal-close">✕</button>
+      </div>
+      <div class="nutr-modal-body">
+        <p id="qaMealFoodName" class="nutr-modal-food-name"></p>
+        <div class="nutr-macro-chips" id="qaMacroBadges" style="margin-bottom:1rem"></div>
+        <form method="POST" action="{{ url_for('nutrition.quick_add_to_meal') }}">
+          <input type="hidden" name="food_id" id="qaFoodId">
+          <div class="nutr-form-group" style="margin-bottom:.75rem">
+            <label class="nutr-label">Meal Type</label>
+            <select name="meal_type" class="nutr-input">
+              <option value="Breakfast">🌅 Breakfast</option>
+              <option value="Lunch">☀️ Lunch</option>
+              <option value="Dinner">🌙 Dinner</option>
+              <option value="Snack" selected>🍎 Snack</option>
+            </select>
+          </div>
+          <div class="nutr-form-group" style="margin-bottom:1rem">
+            <label class="nutr-label">Date</label>
+            <input type="date" name="log_date" class="nutr-input" value="{{ today }}" max="{{ today }}">
+          </div>
+          <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+            <i data-lucide="check"></i> Add to Meal Log
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CUSTOM FOOD SECTION
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="nutr-section-divider" id="custom">
+    <i data-lucide="plus-circle"></i>
+    <div>
+      <h2>Custom Food Entry</h2>
+      <p>Add homemade, local, or branded foods not in our database.</p>
+    </div>
+  </div>
+
+  <div class="nutr-grid-2">
+
+    <!-- Add form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="pencil"></i>
+        <h3>Add Custom Food</h3>
+      </div>
+      <form method="POST" action="{{ url_for('nutrition.add_custom_food') }}">
+        <div class="nutr-form-group" style="margin-bottom:.75rem">
+          <label class="nutr-label">Food Name *</label>
+          <input type="text" name="name" class="nutr-input" placeholder="e.g. Mom's Dal Soup" required>
+        </div>
+        <div class="nutr-form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:.75rem">
+          <div class="nutr-form-group">
+            <label class="nutr-label">Calories (kcal)</label>
+            <input type="number" name="calories" class="nutr-input" placeholder="0" min="0" step="1" value="0" required>
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Protein (g)</label>
+            <input type="number" name="protein" class="nutr-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Carbs (g)</label>
+            <input type="number" name="carbs" class="nutr-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Fat (g)</label>
+            <input type="number" name="fat" class="nutr-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="plus"></i> Save Custom Food
+        </button>
+      </form>
+    </div>
+
+    <!-- Saved custom foods -->
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="list"></i>
+        <h3>My Custom Foods</h3>
+        <span class="nutr-meal-count">{{ custom_foods|length }} saved</span>
+      </div>
+      {% if custom_foods %}
+      <div class="nutr-custom-list">
+        {% for cf in custom_foods %}
+        <div class="nutr-custom-item">
+          <div class="nutr-custom-info">
+            <p class="nutr-custom-name">{{ cf.name }}</p>
+            <div class="nutr-macro-chips" style="margin-top:4px">
+              <span class="nmc-cal">{{ cf.calories|int }} kcal</span>
+              <span class="nmc-p">P {{ cf.protein_g|int }}g</span>
+              <span class="nmc-c">C {{ cf.carbs_g|int }}g</span>
+              <span class="nmc-f">F {{ cf.fat_g|int }}g</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <button class="nutr-food-add-btn quick-add-trigger" style="font-size:.75rem;padding:.4rem .8rem"
+              data-id="{{ cf.id + 10000 }}" data-name="{{ cf.name }}" data-cal="{{ cf.calories }}"
+              data-p="{{ cf.protein_g }}" data-c="{{ cf.carbs_g }}" data-f="{{ cf.fat_g }}">
+              <i data-lucide="plus"></i>
+            </button>
+            <form method="POST" action="{{ url_for('nutrition.delete_custom_food', cid=cf.id) }}"
+                  onsubmit="return confirm('Delete {{ cf.name }}?')">
+              <button type="submit" class="nutr-del-btn" title="Delete">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="nutr-empty-state" style="padding:2rem 0">
+        <i data-lucide="inbox"></i>
+        <p>No custom foods yet.<br>Add your first one using the form.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>{# /.nutr-page #}
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+// ── Live search ──────────────────────────────────────────────────
+var _lTimer;
+function handleLiveSearch(q) {
+  var box     = document.getElementById('liveResultsBox');
+  var clrBtn  = document.getElementById('clearBtn');
+  clrBtn.style.display = q.length ? 'flex' : 'none';
+  clearTimeout(_lTimer);
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  _lTimer = setTimeout(function() {
+    fetch('/nutrition/foods/search?q=' + encodeURIComponent(q))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length) {
+          box.innerHTML = '<div class="nutr-live-empty"><i data-lucide="search-x"></i> No foods found for "' + q + '"</div>';
+          box.style.display = 'block';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+        box.innerHTML =
+          '<div class="nutr-live-header"><i data-lucide="zap"></i> ' + data.length + ' results</div>' +
+          data.map(function(f) {
+            return '<div class="nutr-live-item" onclick="openQuickAdd(' +
+              f.id + ',' + JSON.stringify(f.name) + ',' + f.calories + ',' + f.protein + ',' + f.carbs + ',' + f.fat + ')">' +
+              '<span class="nutr-live-name">' + f.name + '<span class="nutr-live-cat">' + f.category + '</span></span>' +
+              '<span class="nutr-live-macros">' +
+                '<span class="nmc-cal">' + f.calories + ' kcal</span>' +
+                '<span class="nmc-p">P ' + f.protein + 'g</span>' +
+                '<span class="nmc-c">C ' + f.carbs + 'g</span>' +
+                '<span class="nmc-f">F ' + f.fat + 'g</span>' +
+              '</span></div>';
+          }).join('');
+        box.style.display = 'block';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
+  }, 280);
+}
+
+function clearSearch() {
+  document.getElementById('liveFoodSearch').value = '';
+  document.getElementById('liveResultsBox').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  var box = document.getElementById('liveResultsBox');
+  if (box && e.target.id !== 'liveFoodSearch' && !box.contains(e.target)) {
+    box.style.display = 'none';
+  }
+});
+
+// ── Quick Add Modal ──────────────────────────────────────────────
+function openQuickAdd(id, name, cal, prot, carbs, fat) {
+  id = parseFloat(id);
+  cal = parseFloat(cal);
+  prot = parseFloat(prot);
+  carbs = parseFloat(carbs);
+  fat = parseFloat(fat);
+  document.getElementById('qaFoodId').value = id;
+  document.getElementById('qaMealFoodName').textContent = name;
+  document.getElementById('qaMacroBadges').innerHTML =
+    '<span class="nmc-cal">' + cal + ' kcal</span>' +
+    '<span class="nmc-p">P ' + prot + 'g</span>' +
+    '<span class="nmc-c">C ' + carbs + 'g</span>' +
+    '<span class="nmc-f">F ' + fat + 'g</span>';
+  document.getElementById('quickAddModal').style.display = 'flex';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeQuickAdd() {
+  document.getElementById('quickAddModal').style.display = 'none';
+}
+
+document.getElementById('quickAddModal').addEventListener('click', function(e) {
+  if (e.target === this) closeQuickAdd();
+});
+
+// Auto-trigger if URL has ?q=
+window.addEventListener('DOMContentLoaded', function() {
+  var q = document.getElementById('liveFoodSearch').value;
+  if (q && q.length >= 2) handleLiveSearch(q);
+
+  document.body.addEventListener('click', function(e) {
+    const btn = e.target.closest('.quick-add-trigger');
+    if (btn) {
+      const d = btn.dataset;
+      openQuickAdd(d.id, d.name, d.cal, d.p, d.c, d.f);
+    }
+  });
+});
+</script>
+{% endblock %}

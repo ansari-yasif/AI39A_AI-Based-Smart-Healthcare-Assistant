@@ -1,0 +1,204 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Health Expense Tracker — VitaPulse{% endblock %}
+{% block page_title %}Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(34,197,94,.15);color:#22c55e"><i data-lucide="wallet"></i></div>
+      <div>
+        <h1 class="nutr-title">Health Expense Tracker</h1>
+        <p class="nutr-subtitle">Track spending on medicine, doctor visits &amp; more</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('wellness.expense_pdf') }}" class="report-download-btn">
+        <i data-lucide="download" style="width:16px;height:16px"></i> PDF Report
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}
+      <div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Stats strip -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:var(--teal)">{{ month_total.total or 0 }}</div>
+      <div class="report-stat-label">This Month Total</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#3b82f6">{{ month_total.cnt or 0 }}</div>
+      <div class="report-stat-label">Transactions</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#f97316;font-size:1rem">{{ by_cat[0].category if by_cat else '—' }}</div>
+      <div class="report-stat-label">Top Category</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+    <!-- Log expense form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Log Expense</h3></div>
+      <form method="POST" action="{{ url_for('wellness.expense_add') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Category</label>
+          <select name="category" class="nutr-input" required>
+            {% for cat in categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Amount</label>
+          <input type="number" name="amount" class="nutr-input"
+                 step="0.01" min="0.01" placeholder="e.g. 500.00" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Date</label>
+          <input type="date" name="expense_date" class="nutr-input" value="{{ today }}">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Description (optional)</label>
+          <input type="text" name="description" class="nutr-input"
+                 placeholder="e.g. Blood test at Norvic Hospital">
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="save"></i> Save Expense
+        </button>
+      </form>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="pie-chart"></i><h3>This Month by Category</h3></div>
+      {% if by_cat %}
+        <div style="height:200px;position:relative;margin-bottom:1rem">
+          <canvas id="expenseChart"></canvas>
+        </div>
+        {% for row in by_cat %}
+        <div style="display:flex;justify-content:space-between;padding:.35rem 0;font-size:.82rem;border-bottom:1px solid var(--border)">
+          <span>{{ row.category }}</span>
+          <strong style="color:var(--teal)">{{ row.total }} ({{ row.cnt }})</strong>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:2rem;color:var(--muted)">
+          <i data-lucide="pie-chart" style="width:32px;height:32px;opacity:.3;margin-bottom:.5rem"></i>
+          <p>No expenses logged this month yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 6-month trend -->
+  {% if trend %}
+  <div class="nutr-card" style="margin-top:1.25rem">
+    <div class="nutr-card-head"><i data-lucide="trending-up"></i><h3>6-Month Spending Trend</h3></div>
+    <div style="height:200px;position:relative"><canvas id="trendChart"></canvas></div>
+  </div>
+  {% endif %}
+
+  <!-- Recent transactions -->
+  <div class="nutr-card" style="margin-top:1.25rem">
+    <div class="nutr-card-head"><i data-lucide="list"></i><h3>Recent Transactions</h3></div>
+    {% if recent %}
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;min-width:500px">
+        <thead>
+          <tr style="background:var(--bg)">
+            <th style="padding:.5rem;text-align:left;color:var(--muted)">Date</th>
+            <th style="padding:.5rem;text-align:left;color:var(--muted)">Category</th>
+            <th style="padding:.5rem;color:var(--teal)">Amount</th>
+            <th style="padding:.5rem;text-align:left;color:var(--muted)">Description</th>
+            <th style="padding:.5rem"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent %}
+          <tr style="border-bottom:1px solid var(--border){% if loop.index is even %};background:var(--bg-2){% endif %}">
+            <td style="padding:.5rem">{{ r.expense_date }}</td>
+            <td style="padding:.5rem">{{ r.category }}</td>
+            <td style="padding:.5rem;text-align:center;color:var(--teal);font-weight:700">{{ r.amount }}</td>
+            <td style="padding:.5rem;color:var(--muted)">{{ (r.description or '')[:40] }}</td>
+            <td style="padding:.5rem;text-align:center">
+              <form method="POST" action="{{ url_for('wellness.expense_delete', eid=r.id) }}"
+                    onsubmit="return confirm('Delete this expense?')">
+                <button type="submit" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem">✕</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p style="text-align:center;color:var(--muted);padding:1.5rem">No expenses logged yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  {% if by_cat %}
+  var expCtx = document.getElementById('expenseChart');
+  if (expCtx) {
+    new Chart(expCtx, {
+      type: 'doughnut',
+      data: {
+        labels: {{ by_cat | map(attribute='category') | list | tojson }},
+        datasets: [{
+          data: {{ by_cat | map(attribute='total') | list | tojson }},
+          backgroundColor: ['#00C897','#f97316','#4A9EFF','#a855f7','#22c55e','#f59e0b','#ec4899'],
+          borderWidth: 2,
+          borderColor: 'var(--bg)'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.parsed; } } }
+        }
+      }
+    });
+  }
+  {% endif %}
+
+  {% if trend %}
+  var trCtx = document.getElementById('trendChart');
+  if (trCtx) {
+    new Chart(trCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ trend | map(attribute='ym') | list | tojson }},
+        datasets: [{
+          label: 'Spending',
+          data: {{ trend | map(attribute='total') | list | tojson }},
+          backgroundColor: 'rgba(0,200,151,.4)',
+          borderColor: '#00C897', borderWidth: 2, borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.04)' }, border: { display: false } },
+          y: { grid: { color: 'rgba(255,255,255,.04)' }, border: { display: false }, beginAtZero: true }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+  {% endif %}
+});
+</script>
+{% endblock %}

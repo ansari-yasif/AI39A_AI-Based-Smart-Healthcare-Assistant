@@ -1,0 +1,75 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Health Risk Predictor — VitaPulse{% endblock %}
+{% block page_title %}Health Risk Predictor{% endblock %}
+{% block content %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  /* Overall Risk */
+  .overall-risk-level { font-size: 2.5rem; font-weight: 800; }
+  .overall-risk-low-risk { color: #22c55e; }
+  .overall-risk-moderate-risk { color: #f59e0b; }
+  .overall-risk-high-risk { color: #ef4444; }
+
+  /* Overall Progress Bar */
+  .overall-progress-bar-fill { height: 100%; border-radius: 999px; width: var(--vp-bar-width, 0%); transition: width 0.8s ease-out; }
+  .overall-progress-low-risk { background: #22c55e; }
+  .overall-progress-moderate-risk { background: #f59e0b; }
+  .overall-progress-high-risk { background: #ef4444; }
+
+  /* Individual Risk Badges */
+  .risk-badge { font-size: .75rem; font-weight: 700; padding: .2rem .6rem; border-radius: 999px; display: inline-block; }
+  .risk-badge-low { color: #22c55e; background: rgba(34,197,94,.1); }
+  .risk-badge-moderate { color: #f59e0b; background: rgba(245,158,11,.1); }
+  .risk-badge-high { color: #ef4444; background: rgba(239,68,68,.1); }
+  .risk-badge-unknown { color: #64748b; background: rgba(100,116,139,.1); }
+  .risk-badge-low-moderate { color: #f59e0b; background: rgba(245,158,11,.1); }
+  .macro-progress-bar { width: var(--vp-bar-width, 0%); transition: width 0.8s ease-out; }
+</style>
+{% endblock %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(245,158,11,.15);color:#f59e0b"><i data-lucide="activity"></i></div>
+      <div><h1 class="nutr-title">Health Risk Predictor</h1><p class="nutr-subtitle">Based on BMI, food habits &amp; activity · Not a medical diagnosis</p></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-md);padding:.85rem 1rem;margin-bottom:1.5rem;font-size:.82rem;color:#fbbf24">
+    <i data-lucide="alert-triangle" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:.4rem"></i>
+    This is a simple rule-based estimate from your logged data — not a medical diagnosis. Always consult a healthcare professional for medical advice.
+  </div>
+
+  <!-- Overall -->
+  <div class="nutr-card" style="margin-bottom:1.5rem;text-align:center">
+    <div style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Overall Risk Assessment</div>
+    <div class="overall-risk-level overall-risk-{{ risks.overall.level|lower|replace(' ', '-') }}" style="{{ 'color: ' ~ risks.overall.color ~ ';' }}">{{ risks.overall.level }}</div>
+    <div class="bmi-scale" style="margin-top:1rem">
+      <div class="overall-progress-bar-fill overall-progress-{{ risks.overall.level|lower|replace(' ', '-') }}" style="{{ '--vp-bar-width: ' ~ risks.overall.pct ~ '%;' }}"></div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:.4rem">{{ risks.overall.pct }}% composite risk score</div>
+  </div>
+
+  <!-- Individual risks -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    {% for r in risks.risk_list %}
+    <div class="nutr-card" style="{{ '--risk-color: ' ~ r.color ~ ';' }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <h3 style="font-size:.95rem;font-weight:700">{{ r.name }}</h3>
+        <span class="risk-badge risk-badge-{{ r.level|lower|replace(' ', '-') }}">{{ r.level }}</span>
+      </div>
+      <div class="macro-progress" style="margin-bottom:.6rem">
+        <div class="macro-progress-bar" style="{{ '--vp-bar-width: ' ~ r.pct ~ '%; background: var(--risk-color);' }}"></div>
+      </div>
+      <p style="font-size:.82rem;color:var(--muted);line-height:1.5">{{ r.desc }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap">
+    <a href="{{ url_for('nutrition.bmi_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="scale"></i> Update BMI</a>
+    <a href="{{ url_for('wellness.workout_plan') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="dumbbell"></i> View Workout Plan</a>
+    <a href="{{ url_for('wellness.specialist_navigator') }}" class="nutr-btn nutr-btn-teal"><i data-lucide="stethoscope"></i> Find a Specialist</a>
+  </div>
+</div>
+{% endblock %}

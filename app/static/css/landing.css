@@ -15,13 +15,19 @@
   max-width:1400px; margin:0 auto;
   display:flex; align-items:center; gap:1.5rem;
 }
-/* Logo */
-.lnav-brand { display:flex; align-items:center; gap:.6rem; flex-shrink:0; }
+/* Logo - pushed further right to move nav links right (increased to 16rem = +1cm) */
+.lnav-brand { 
+  display:flex; 
+  align-items:center; 
+  gap:.6rem; 
+  flex-shrink:0; 
+  margin-right: 16rem;   /* was 14rem – adds about 1cm more shift */
+}
 .lnav-logo  { width:36px; height:36px; object-fit:contain; border-radius:10px; }
 .lnav-title { font-family:var(--font-display); font-weight:800; font-size:1.1rem; letter-spacing:.08em; color:var(--teal); }
 
-/* Center links */
-.lnav-links { display:flex; gap:1.75rem; margin:0 auto; }
+/* Center links - moved further right by logo margin */
+.lnav-links { display:flex; gap:1.5rem; margin-left: auto; margin-right: 0.5rem; }
 .lnav-link  { font-size:.9rem; font-weight:500; color:var(--text-2); transition:var(--t); position:relative; }
 .lnav-link::after { content:''; position:absolute; bottom:-4px; left:0; right:0; height:2px; background:var(--grad-teal); transform:scaleX(0); transition:var(--t); }
 .lnav-link:hover { color:var(--text); }
@@ -30,14 +36,17 @@
 /* Right side */
 .lnav-right { display:flex; align-items:center; gap:.85rem; margin-left:auto; }
 
-/* Search box */
+/* Search box - right side reduced (shorter from the right) */
 .lnav-search {
-  display:flex; align-items:center; gap:.65rem;
-  padding:.35rem .95rem;
-  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:.2rem;
+  padding:.34rem .2rem .34rem .8rem;   /* right padding reduced from .5rem to .2rem */
+  min-height:40px;
   background:rgba(255,255,255,.12);
   border:1px solid rgba(255,255,255,.18);
-  border-radius:999px; transition:var(--t);
+  border-radius:999px;
+  transition:var(--t);
   box-shadow:0 4px 18px rgba(0,0,0,.08);
 }
 .lnav-search:focus-within {
@@ -49,22 +58,20 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:20px; height:20px;
+  width:18px;
+  height:18px;
   color:rgba(16,185,129,.9);
   flex-shrink:0;
-  background:none;
-  padding:0;
-  margin:0;
 }
 .search-input {
   flex:1;
-  min-width:140px;
+  min-width:45px;
   background:transparent !important;
   border:none !important;
   outline:none !important;
   box-shadow:none !important;
   color:var(--text);
-  font-size:.9rem;
+  font-size:.75rem;
   line-height:1.2;
   padding:0 !important;
   margin:0;
@@ -72,7 +79,11 @@
   border-radius:0 !important;
   appearance:none;
 }
-.search-input::placeholder { color:rgba(255,255,255,.45); }
+.search-input::placeholder {
+  color:rgba(255,255,255,.45);
+  font-size:.7rem;
+  white-space:nowrap;
+}
 
 /* Auth buttons */
 .btn-login {
@@ -587,7 +598,7 @@
 }
 
 
-/* ========== CENTERED CONTACT SECTION ========== */
+/* ========== CENTERED CONTACT SECTION (exact same background as Team) ========== */
 .contact-simple {
   position: relative;
   padding: 80px 5%;
@@ -595,27 +606,33 @@
   overflow: hidden;
 }
 
+/* Animated blurs – identical to team section */
 .contact-blur-1, .contact-blur-2 {
   position: absolute;
-  width: 400px;
-  height: 400px;
   border-radius: 50%;
   filter: blur(100px);
   opacity: 0.3;
-  z-index: 0;
   pointer-events: none;
+  z-index: 0;
 }
 .contact-blur-1 {
-  top: -100px;
-  left: -100px;
+  width: 600px;
+  height: 600px;
   background: radial-gradient(circle, #10b981, transparent);
+  top: -150px;
+  left: -100px;
+  animation: blobFloat 11s ease-in-out infinite;
 }
 .contact-blur-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #f97316, transparent);
   bottom: -100px;
   right: -100px;
-  background: radial-gradient(circle, #f97316, transparent);
+  animation: blobFloat 9s ease-in-out infinite reverse;
 }
 
+/* Grid overlay – identical to team */
 .contact-grid-overlay {
   position: absolute;
   inset: 0;
@@ -807,4 +824,3 @@
   width: 20px;
   height: 20px;
 }
-

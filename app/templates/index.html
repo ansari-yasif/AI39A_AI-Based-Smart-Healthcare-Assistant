@@ -32,14 +32,19 @@
         <input type="text" placeholder="Search..." class="search-input"/>
       </div>
 
-      {# Login — gradient outline button (commented out) #}
-      {# <a href="{{ url_for('auth.login') }}" class="btn-login">
-        <i data-lucide="user"></i>
-        <span>Login</span>
-      </a> #}
-
-      <!-- Register — gradient fill button -->
-      <a href="{{ url_for('auth.register') }}" class="btn-register">Register</a>
+      <!-- Auth buttons -->
+      {% if current_user.logged_in %}
+        <a href="{{ url_for('dashboard.index') }}" class="btn-register" style="background:var(--grad-teal);color:#000">
+          <i data-lucide="layout-dashboard" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:4px"></i>
+          Dashboard
+        </a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn-login">
+          <i data-lucide="user"></i>
+          <span>Login</span>
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="btn-register">Register</a>
+      {% endif %}
 
       <!-- Mobile hamburger -->
       <button class="hamburger" id="hamburger"><i data-lucide="menu"></i></button>
@@ -54,8 +59,12 @@
     <a href="#about"    class="mob-link">About</a>
     <a href="#contact-section" class="mob-link">Contact</a>
     <div class="mob-auth">
-      {# <a href="{{ url_for('auth.login') }}"    class="btn-login w-full">Login</a> #}
-      <a href="{{ url_for('auth.register') }}" class="btn-register w-full">Register</a>
+      {% if current_user.logged_in %}
+        <a href="{{ url_for('dashboard.index') }}" class="btn-register w-full">Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn-login w-full">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn-register w-full">Register</a>
+      {% endif %}
     </div>
   </div>
 </nav>
@@ -138,54 +147,214 @@
 </section>
 
 
-<!-- ═══════════════════ CATEGORY CARDS ════════════════════════ -->
+<!-- ═══════════════════ CATEGORY CARDS WITH EXPANDABLE FEATURES ═══════════════════ -->
 <section class="cats" id="wellness">
-  <div class="cats-grid">
+  <div style="max-width:1400px;margin:0 auto;padding:0 2rem">
+    <div class="cats-grid">
 
-    <!-- Fitness Card — exact Figma: aspect-square, scale on hover, neon gold glow -->
-    <a href="{{ url_for('auth.register') }}" class="cat-card cat-fitness">
-      <div class="cat-bg">
-        <img src="https://images.unsplash.com/photo-1750521279808-f66baaed923d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Fitness"/>
-        <div class="cat-ov cat-ov-yellow"></div>
-      </div>
-      <div class="cat-badge cat-badge-gold">Open Page →</div>
-      <div class="cat-neon cat-neon-gold"></div>
-      <div class="cat-body">
-        <i data-lucide="dumbbell" class="cat-icon"></i>
-        <h2 class="cat-title">Fitness</h2>
-        <p class="cat-desc">Build strength, endurance, and transform your body with expert guidance</p>
-        <div class="cat-cta">
-          <span>Explore Fitness</span>
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
+      <!-- ── FITNESS BOX ─────────────────────────────────────────────────────── -->
+      <div class="cat-expand-wrap">
+        <!-- Main card (click to expand) -->
+        <div class="cat-card cat-fitness cat-expandable" onclick="expandCat('fitness')" style="cursor:pointer">
+          <div class="cat-bg">
+            <img src="https://images.unsplash.com/photo-1750521279808-f66baaed923d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Fitness"/>
+            <div class="cat-ov cat-ov-yellow"></div>
+          </div>
+          <div class="cat-badge cat-badge-gold" id="fitnessBadge">
+            {% if current_user.logged_in %}Explore →{% else %}Login Required{% endif %}
+          </div>
+          <div class="cat-neon cat-neon-gold"></div>
+          <div class="cat-body">
+            <i data-lucide="dumbbell" class="cat-icon"></i>
+            <h2 class="cat-title">Fitness</h2>
+            <p class="cat-desc">Build strength, endurance, and transform your body with expert guidance</p>
+            <div class="cat-cta">
+              <span>Explore Fitness</span>
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <!-- Fitness features panel — hidden by default, shown on click -->
+        <div class="cat-features-panel" id="fitnessPanel">
+          <div class="cfp-header">
+            <i data-lucide="dumbbell" style="width:18px;height:18px;color:#eab308"></i>
+            <span>Fitness Features</span>
+            <span style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;background:rgba(234,179,8,.15);color:#eab308;font-weight:700;margin-left:.5rem">
+              {% if current_user.logged_in %}ACTIVE{% else %}LOGIN REQUIRED{% endif %}
+            </span>
+            <button onclick="collapseCat('fitness')" style="margin-left:auto;background:none;border:none;color:#64748b;cursor:pointer;font-size:1.2rem;line-height:1">&times;</button>
+          </div>
+          <div class="cfp-grid">
+            {% set ff = [
+              ('dumbbell','Workout Plan Generator','Calorie-burn plans per body part based on your BMI & goal','wellness.workout_plan','#eab308'),
+              ('heart-pulse','Workout Tracker','Log daily workouts, duration and calories burned','health.workout_index','#ef4444'),
+              ('trending-up','Weight Tracker','Track weight trends with 14-day charts','health.weight_index','#f97316'),
+              ('moon','Sleep Tracker','Log nightly sleep, quality and bedtime patterns','health.sleep_index','#a855f7'),
+              ('wallet','Expense Tracker','Track medical spending with charts & PDF reports','wellness.expense_index','#22c55e'),
+              ('bar-chart-2','Reports & PDF','Download full health reports with all data','nutrition.reports_index','#4A9EFF'),
+            ] %}
+            {% for ico,name,desc,route,col in ff %}
+            <a href="{% if current_user.logged_in %}{{ url_for(route) }}{% else %}{{ url_for('auth.login') }}?next={{ url_for(route) }}{% endif %}"
+               class="cfp-card">
+              <i data-lucide="{{ ico }}" style="color:{{ col }};width:20px;height:20px;flex-shrink:0"></i>
+              <div>
+                <div class="cfp-name">{{ name }}</div>
+                <div class="cfp-desc">{{ desc }}</div>
+                {% if not current_user.logged_in %}<div class="cfp-lock">🔒 Login to access</div>{% endif %}
+              </div>
+            </a>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </a>
 
-    <!-- Health Card — exact Figma: orange glow -->
-    <a href="{{ url_for('auth.register') }}" class="cat-card cat-health">
-      <div class="cat-bg">
-        <img src="https://images.unsplash.com/photo-1767611125032-20b291ec1c5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Health"/>
-        <div class="cat-ov cat-ov-orange"></div>
-      </div>
-      <div class="cat-badge cat-badge-orange">Open Dashboard →</div>
-      <div class="cat-neon cat-neon-orange"></div>
-      <div class="cat-body">
-        <i data-lucide="heart" class="cat-icon"></i>
-        <h2 class="cat-title">Health</h2>
-        <p class="cat-desc">Nurture your wellbeing through holistic health and mindful practices</p>
-        <div class="cat-cta">
-          <span>Explore Health</span>
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
+      <!-- ── HEALTH BOX ──────────────────────────────────────────────────────── -->
+      <div class="cat-expand-wrap">
+        <!-- Main card -->
+        <div class="cat-card cat-health cat-expandable" onclick="expandCat('health')" style="cursor:pointer">
+          <div class="cat-bg">
+            <img src="https://images.unsplash.com/photo-1767611125032-20b291ec1c5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Health"/>
+            <div class="cat-ov cat-ov-orange"></div>
+          </div>
+          <div class="cat-badge cat-badge-orange" id="healthBadge">
+            {% if current_user.logged_in %}Explore →{% else %}Login Required{% endif %}
+          </div>
+          <div class="cat-neon cat-neon-orange"></div>
+          <div class="cat-body">
+            <i data-lucide="heart" class="cat-icon"></i>
+            <h2 class="cat-title">Health</h2>
+            <p class="cat-desc">Nurture your wellbeing through holistic health and mindful practices</p>
+            <div class="cat-cta">
+              <span>Explore Health</span>
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <!-- Health features panel -->
+        <div class="cat-features-panel" id="healthPanel">
+          <div class="cfp-header">
+            <i data-lucide="heart" style="width:18px;height:18px;color:#f97316"></i>
+            <span>Health Features</span>
+            <span style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;background:rgba(249,115,22,.15);color:#f97316;font-weight:700;margin-left:.5rem">
+              {% if current_user.logged_in %}ACTIVE{% else %}LOGIN REQUIRED{% endif %}
+            </span>
+            <button onclick="collapseCat('health')" style="margin-left:auto;background:none;border:none;color:#64748b;cursor:pointer;font-size:1.2rem;line-height:1">&times;</button>
+          </div>
+          <div class="cfp-grid">
+            {% set hf = [
+              ('activity','Health Risk Predictor','AI risk scoring from BMI, food & activity level','wellness.health_risk','#ef4444'),
+              ('cross','First Aid Guide','20 step-by-step emergency guides','wellness.first_aid','#00C897'),
+              ('pill','Medicine Checker','Reminders with real-time notifications','wellness.medicine_index','#4A9EFF'),
+              ('map-pin','Healthcare Finder','Find hospitals, clinics & pharmacies near you','wellness.healthcare_finder','#22c55e'),
+              ('stethoscope','Specialist Navigator','Find the right doctor for your symptoms','wellness.specialist_navigator','#a855f7'),
+              ('smile','Mood Tracker','Log mood & energy daily with 30-day charts','health.mood_index','#f59e0b'),
+              ('scale','BMI Calculator','Calculate and track BMI history','nutrition.bmi_index','#3b82f6'),
+              ('mail','Contact Support','Send messages to admin team','wellness.support_index','#818cf8'),
+            ] %}
+            {% for ico,name,desc,route,col in hf %}
+            <a href="{% if current_user.logged_in %}{{ url_for(route) }}{% else %}{{ url_for('auth.login') }}?next={{ url_for(route) }}{% endif %}"
+               class="cfp-card">
+              <i data-lucide="{{ ico }}" style="color:{{ col }};width:20px;height:20px;flex-shrink:0"></i>
+              <div>
+                <div class="cfp-name">{{ name }}</div>
+                <div class="cfp-desc">{{ desc }}</div>
+                {% if not current_user.logged_in %}<div class="cfp-lock">🔒 Login to access</div>{% endif %}
+              </div>
+            </a>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </a>
 
-  </div>
+    </div><!-- /cats-grid -->
+  </div><!-- /max-width -->
 </section>
+
+<!-- Feature panel styles & JS -->
+<style>
+.cats { padding: 3rem 0; }
+.cat-expand-wrap { display: flex; flex-direction: column; gap: 0; }
+.cat-card.cat-expandable { border-radius: 20px 20px 0 0; margin-bottom: 0; }
+.cat-card:not(.cat-expandable) { border-radius: 20px; }
+.cat-features-panel {
+  background: linear-gradient(135deg, rgba(15,22,41,0.98), rgba(20,30,50,0.98));
+  border: 1px solid rgba(255,255,255,.1);
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  padding: 1.25rem;
+  display: none;
+}
+.cat-features-panel.open { display: block; }
+.cfp-header {
+  display: flex; align-items: center; gap: .6rem;
+  font-weight: 700; font-size: .95rem; color: #fff;
+  margin-bottom: 1rem; padding-bottom: .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.cfp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: .75rem;
+}
+.cfp-card {
+  display: flex; align-items: flex-start; gap: .65rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px; padding: .85rem;
+  text-decoration: none; color: inherit;
+  transition: background .2s, transform .15s;
+}
+.cfp-card:hover { background: rgba(255,255,255,.09); transform: translateY(-2px); }
+.cfp-name { font-weight: 700; font-size: .85rem; color: #fff; margin-bottom: .2rem; }
+.cfp-desc { font-size: .74rem; color: #64748b; line-height: 1.5; }
+.cfp-lock { font-size: .7rem; color: #f59e0b; margin-top: .3rem; }
+
+@media (max-width: 768px) {
+  .cats-grid { grid-template-columns: 1fr !important; }
+  .cfp-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .cfp-grid { grid-template-columns: 1fr; }
+  .cats { padding: 1.5rem 0; }
+}
+</style>
+
+<script>
+function expandCat(cat) {
+  var panel = document.getElementById(cat + 'Panel');
+  if (!panel) return;
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    return;
+  }
+  // Close other panels
+  document.querySelectorAll('.cat-features-panel').forEach(function(p) { p.classList.remove('open'); });
+  panel.classList.add('open');
+  // Scroll panel into view smoothly
+  setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80);
+  if (window.lucide) lucide.createIcons();
+}
+function collapseCat(cat) {
+  var panel = document.getElementById(cat + 'Panel');
+  if (panel) panel.classList.remove('open');
+}
+{% if current_user.logged_in %}
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-open both panels for logged-in users
+  ['fitnessPanel','healthPanel'].forEach(function(id) {
+    var p = document.getElementById(id);
+    if (p) p.classList.add('open');
+  });
+  if (window.lucide) lucide.createIcons();
+});
+{% endif %}
+</script>
+
+
 
 
 <!-- ═══════════════════ GET STARTED CTA ═══════════════════════ -->
@@ -296,8 +465,15 @@
     </div>
 
     <!-- Centered form card -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div style="background:{% if cat=='success' %}rgba(0,200,151,.15){% else %}rgba(239,68,68,.15){% endif %};border:1px solid {% if cat=='success' %}rgba(0,200,151,.3){% else %}rgba(239,68,68,.3){% endif %};border-radius:12px;padding:.85rem 1.1rem;margin-bottom:1rem;color:{% if cat=='success' %}#00C897{% else %}#ef4444{% endif %};font-size:.9rem;text-align:center">
+      {{ msg }}
+    </div>
+    {% endfor %}
+    {% endwith %}
     <div class="contact-card">
-      <form action="#" method="POST" class="contact-form-simple" id="contactFormSimple">
+      <form action="{{ url_for('auth.contact_form') }}" method="POST" class="contact-form-simple" id="contactFormSimple">
         <div class="form-group-simple">
           <label>Full Name</label>
           <div class="input-icon-group">

@@ -1,0 +1,195 @@
+{# dashboard_layout.html — authenticated shell with sidebar + topnav #}
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nutrition.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}"/>
+{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  <!-- Mobile sidebar backdrop -->
+  <div id="sidebarBackdrop"></div>
+  {% include 'partials/sidebar.html' %}
+
+  <div class="main-area" id="mainArea">
+    {% include 'partials/nav.html' %}
+
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% include 'partials/footer.html' %}
+  </div>
+</div>
+
+<!-- ========== AI HEALTH ASSISTANT CHATBOT WIDGET ========== -->
+<div class="chatbot-float" id="chatbotFloat">
+  <button class="chatbot-btn" id="chatbotToggle"><i data-lucide="message-circle"></i></button>
+  <div class="chatbot-win" id="chatbotWin">
+    <div class="cw-header">
+      <div class="cw-av"><i data-lucide="sparkles"></i></div>
+      <div><p class="cw-title">VitaPulse AI</p><p class="cw-sub">Your wellness assistant</p></div>
+      <div class="header-buttons">
+        <button id="expandChat"><i data-lucide="maximize-2"></i></button>
+        <button class="cw-close" id="cwClose"><i data-lucide="chevron-down"></i></button>
+      </div>
+    </div>
+    <div class="cw-body">
+      <div class="cw-msg cw-bot"><div class="cw-msg-av"><i data-lucide="sparkles"></i></div><div class="cw-bubble">Hi, I'm VitaPulse AI. How can I help you today?</div></div>
+      <div class="cw-quick"><p class="cw-quick-label">Quick questions:</p><div class="cw-quick-btns"><button class="cw-quick-btn">How many food items have I added?</button><button class="cw-quick-btn">Show my weekly stats</button><button class="cw-quick-btn">Give me a healthy recipe</button></div></div>
+    </div>
+    <div class="cw-input-wrap">
+      <textarea id="cwInput" placeholder="Type your message..." class="cw-input" rows="1"></textarea>
+      <button class="cw-send" id="cwSend"><i data-lucide="send" class="cw-send-icon"></i></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{# Base shell JS — chart.js + dashboard.js + dropdown.
+   Child templates that extend THIS layout should use {% block extra_js %}
+   and call {{ super() }} first to keep these scripts. #}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/motivation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+<script>
+  (function () {
+    function initDropdown() {
+      var btn = document.getElementById('userDropdownBtn');
+      var dd  = document.getElementById('userDropdown');
+      if (btn && dd) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+        document.body.addEventListener('click', function () {
+          dd.classList.remove('open');
+        });
+        dd.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDropdown);
+    } else {
+      initDropdown();
+    }
+  })();
+</script>
+
+<!-- ═══ MEDICINE REMINDER TOAST (runs on ALL dashboard pages) ═══ -->
+<div id="medToast" style="
+  position:fixed;bottom:90px;right:24px;z-index:9998;
+  background:linear-gradient(135deg,#0a0e1a,#141e32);
+  border:1px solid rgba(74,158,255,.35);
+  border-radius:14px;padding:1rem 1.2rem;
+  min-width:260px;max-width:310px;
+  box-shadow:0 8px 30px rgba(0,0,0,.6);
+  display:none;cursor:pointer
+"></div>
+<style>
+  #medToast { animation: none; }
+  #medToast.show { animation: medSlide .4s ease forwards; }
+  @keyframes medSlide {
+    from { opacity:0; transform:translateX(30px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+</style>
+<script>
+(function(){
+  // Request notification permission early
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  function showMedToast(meds) {
+    const toast = document.getElementById('medToast');
+    if (!toast || !meds.length) return;
+    toast.innerHTML =
+      '<div style="font-size:.7rem;color:#4A9EFF;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em">💊 Medicine Reminder</div>' +
+      meds.map(m =>
+        '<div style="display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.4rem">' +
+        '<div><div style="font-weight:600;font-size:.88rem;color:#fff">' + m.name + '</div>' +
+        '<div style="font-size:.72rem;color:#94a3b8">' + (m.dosage || '') + (m.dosage ? ' · ' : '') + 'Scheduled: ' + m.time + '</div></div>' +
+        '</div>'
+      ).join('') +
+      '<a href="/wellness/medicine" style="display:block;margin-top:.6rem;font-size:.75rem;color:#4A9EFF;text-align:right">Mark as taken →</a>' +
+      '<div style="font-size:.65rem;color:#475569;margin-top:.3rem;text-align:right">Click to dismiss</div>';
+    toast.style.display = 'block';
+    toast.classList.remove('show');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    clearTimeout(window._medTimer);
+    window._medTimer = setTimeout(() => { toast.style.display = 'none'; }, 15000);
+
+    // Browser notification
+    if (Notification && Notification.permission === 'granted') {
+      meds.forEach(function(m) {
+        new Notification('💊 Medicine Reminder — VitaPulse', {
+          body: 'Time to take ' + m.name + (m.dosage ? ' — ' + m.dosage : '') + ' (' + m.time + ')'
+        });
+      });
+    }
+  }
+
+  function checkMedsDue() {
+    fetch('/wellness/medicine/due-check')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.due && data.due.length) showMedToast(data.due);
+      })
+      .catch(function(){});
+  }
+
+  // Click to dismiss
+  document.addEventListener('DOMContentLoaded', function(){
+    var t = document.getElementById('medToast');
+    if (t) t.addEventListener('click', function(e){
+      if (!e.target.closest('a')) t.style.display = 'none';
+    });
+  });
+
+  // Check on load after 4s, then every 60s
+  setTimeout(checkMedsDue, 4000);
+  setInterval(checkMedsDue, 60000);
+})();
+</script>
+
+<!-- Mobile sidebar toggle JS -->
+<script>
+(function(){
+  var sbOpen  = document.getElementById('sbOpen');
+  var sbClose = document.getElementById('sbClose');
+  var sidebar = document.getElementById('sidebar');
+  var backdrop= document.getElementById('sidebarBackdrop');
+
+  function openSb() {
+    if (sidebar)  sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSb() {
+    if (sidebar)  sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  if (sbOpen)   sbOpen.addEventListener('click', openSb);
+  if (sbClose)  sbClose.addEventListener('click', closeSb);
+  if (backdrop) backdrop.addEventListener('click', closeSb);
+
+  // Close sidebar on nav link click (mobile)
+  if (sidebar) {
+    sidebar.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', function() {
+        if (window.innerWidth <= 768) closeSb();
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Specialist Navigator — VitaPulse{% endblock %}
+{% block page_title %}Specialist Navigator{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(74,158,255,.15);color:#4A9EFF"><i data-lucide="stethoscope"></i></div>
+      <div><h1 class="nutr-title">Specialist Navigator</h1><p class="nutr-subtitle">Find the right doctor for your symptoms</p></div>
+    </div>
+  </div>
+
+  <div class="nutr-form-group" style="margin-bottom:1.5rem">
+    <input type="text" id="spSearch" class="nutr-input" placeholder="Search by symptom or condition (e.g. headache, skin, diabetes)...">
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem" id="spGrid">
+    {% for s in specialists %}
+    <div class="nutr-card sp-card" data-title="{{ s.condition|lower }} {{ s.specialist|lower }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
+        <div>
+          <p style="font-size:.75rem;color:var(--muted);margin-bottom:.2rem">If you have:</p>
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:.6rem">{{ s.condition }}</h3>
+        </div>
+        <i data-lucide="arrow-right" style="color:var(--teal);flex-shrink:0;margin-top:1.5rem"></i>
+      </div>
+      <div style="background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:var(--r-md);padding:.75rem">
+        <p style="font-size:.7rem;color:#4A9EFF;font-weight:700;text-transform:uppercase;margin-bottom:.2rem">See a:</p>
+        <p style="font-size:.95rem;font-weight:800;color:#4A9EFF;margin-bottom:.4rem">{{ s.specialist }}</p>
+        <p style="font-size:.78rem;color:var(--muted);line-height:1.5">{{ s.desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p id="spNoResults" style="display:none;text-align:center;color:var(--muted);padding:2rem">No matches found — for unclear symptoms, a General Physician is always a safe first step.</p>
+
+  <div style="margin-top:1.5rem">
+    <a href="{{ url_for('wellness.healthcare_finder') }}" class="nutr-btn nutr-btn-teal"><i data-lucide="map-pin"></i> Find Nearby Clinics</a>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}{{ super() }}
+<script>
+document.getElementById('spSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.sp-card');
+  let visible = 0;
+  cards.forEach(c => {
+    const match = c.dataset.title.includes(q);
+    c.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  document.getElementById('spNoResults').style.display = visible === 0 ? 'block' : 'none';
+});
+</script>
+{% endblock %}

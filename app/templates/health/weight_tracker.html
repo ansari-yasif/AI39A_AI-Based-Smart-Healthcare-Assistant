@@ -1,0 +1,143 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Weight Tracker — VitaPulse{% endblock %}
+{% block page_title %}Weight Tracker{% endblock %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  .bg-even { background: var(--bg-2); }
+  .weight-row { border-bottom: 1px solid var(--border); }
+  .weight-cell { padding: .5rem; text-align: center; }
+  .weight-cell-left { padding: .5rem; text-align: left; }
+  .weight-diff { color: var(--diff-color); }
+  .weight-val { color: #f97316; font-weight: 700; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(249,115,22,.15);color:#f97316"><i data-lucide="scale"></i></div>
+      <div><h1 class="nutr-title">Weight Tracker</h1><p class="nutr-subtitle">Log weight · Track trends · 30-day chart</p></div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Form -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Log Weight</h3></div>
+      <form method="POST" action="{{ url_for('health.weight_log') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Weight (kg)</label>
+          <input type="number" name="weight_kg" class="nutr-input" step="0.1" min="20" max="300"
+            placeholder="e.g. 70.5" value="{{ entry.weight_kg if entry else '' }}" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Date</label>
+          <input type="date" name="log_date" class="nutr-input" value="{{ today }}">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Notes (optional)</label>
+          <textarea name="notes" class="nutr-input" rows="2" placeholder="e.g. after morning workout">{{ entry.notes if entry else '' }}</textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%">
+          <i data-lucide="save"></i> {{ 'Update' if entry else 'Log' }} Weight
+        </button>
+      </form>
+    </div>
+
+    <!-- Stats -->
+    <div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <div class="report-stat">
+          <div class="report-stat-val" style="color:#f97316">{{ current_weight }}</div>
+          <div class="report-stat-label">Current (kg)</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-val" style="color:#22c55e">{{ min_w }}</div>
+          <div class="report-stat-label">Min (30d)</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-val" style="color:#ef4444">{{ max_w }}</div>
+          <div class="report-stat-label">Max (30d)</div>
+        </div>
+      </div>
+      {% if weight_data %}
+      <div class="nutr-card">
+        <div class="nutr-card-head"><i data-lucide="trending-up"></i><h3>Weight Trend</h3></div>
+        <div style="height:200px;position:relative"><canvas id="weightChart"></canvas></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Log -->
+  {% if recent %}
+  <div class="nutr-card" style="margin-top:1rem">
+    <div class="nutr-card-head"><i data-lucide="list"></i><h3>Weight Log</h3></div>
+    <table style="width:100%;border-collapse:collapse;font-size:.83rem">
+      <thead><tr style="background:var(--bg)">
+        <th class="weight-cell-left" style="color:var(--muted)">Date</th>
+        <th class="weight-cell" style="color:#f97316">Weight (kg)</th>
+        <th class="weight-cell" style="color:var(--muted)">Change</th>
+        <th class="weight-cell-left" style="color:var(--muted)">Notes</th>
+      </tr></thead>
+      <tbody>
+      {% for r in recent %}
+      {% set loop_idx = loop.index0 %}
+      {% set prev_w = recent[loop_idx+1].weight_kg if loop_idx+1 < recent|length else r.weight_kg %}
+      {% set diff = (r.weight_kg - prev_w)|round(1) %}
+      <tr class="weight-row {% if loop.index is even %}bg-even{% endif %}">
+        <td class="weight-cell-left">{{ r.log_date }}</td>
+        <td class="weight-cell weight-val">{{ r.weight_kg }}</td>
+        <td class="weight-cell weight-diff" style="--diff-color: {% if diff > 0 %}#ef4444{% elif diff < 0 %}#22c55e{% else %}var(--muted){% endif %};">
+          {% if diff != 0 %}{{ '+' if diff > 0 else '' }}{{ diff }}{% else %}—{% endif %}
+        </td>
+        <td class="weight-cell-left" style="color:var(--muted);font-size:.78rem">{{ (r.notes or '')[:40] }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{{ super() }}
+<script id="weight-data" type="application/json">
+  { "labels": {{ labels|tojson }}, "data": {{ weight_data|tojson }} }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('weightChart');
+  if (!ctx) return;
+  const config = JSON.parse(document.getElementById('weight-data').textContent);
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: config.labels,
+      datasets: [{
+        data: config.data,
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249,115,22,.07)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#f97316',
+        pointRadius: 4,
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid:{color:'rgba(255,255,255,.04)'}, border:{display:false}, ticks:{color:'#94a3b8'} },
+        y: { grid:{color:'rgba(255,255,255,.04)'}, border:{display:false},
+             ticks:{color:'#94a3b8'}, title:{display:true,text:'kg',color:'#475569'} }
+      },
+      plugins:{ legend:{display:false} }
+    }
+  });
+});
+</script>
+{% endblock %}

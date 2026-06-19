@@ -11,7 +11,7 @@ class Config:
     DB_HOST     = os.environ.get('DB_HOST', 'localhost')
     DB_PORT     = int(os.environ.get('DB_PORT', 3306))
     DB_USER     = os.environ.get('DB_USER', 'root')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'maharjanSM2064')
     DB_NAME     = os.environ.get('DB_NAME', 'vitapulse_db')
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'app', 'static', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024

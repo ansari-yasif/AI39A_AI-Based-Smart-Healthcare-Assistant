@@ -60,7 +60,7 @@
 /* ── Reset ──────────────────────────────────────────────────── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html { scroll-behavior:smooth; }
-body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; transition: background 0.2s ease, color 0.2s ease; }
 img  { max-width:100%; display:block; }
 a    { color:inherit; text-decoration:none; }
 ul   { list-style:none; }
@@ -310,3 +310,129 @@ input:focus, .vp-input:focus, .vp-select:focus, .vp-textarea:focus {
 .err-code { font-family:var(--font-display); font-size:7rem; font-weight:800; color:var(--teal); line-height:1; }
 .err-inner h2 { font-size:2rem; font-weight:700; margin:.5rem 0; }
 .err-inner p  { color:var(--text-2); margin-bottom:2rem; }
+
+
+/* ────────────────────────────────────────────────────────────── */
+/* ========== LIGHT THEME OVERRIDES (for dark/light toggle) ========== */
+/* ────────────────────────────────────────────────────────────── */
+
+body.light-theme {
+  /* Light mode design tokens */
+  --bg:          #f8fafc;
+  --bg-2:        #ffffff;
+  --bg-3:        #f1f5f9;
+  --glass:       rgba(0,0,0,0.02);
+  --glass-hover: rgba(0,0,0,0.04);
+  --border:      #e2e8f0;
+  --border-act:  rgba(15,118,110,0.3);
+  --text:        #1e293b;
+  --text-2:      #475569;
+  --text-3:      #64748b;
+  --muted:       #94a3b8;
+  --shadow:      0 8px 32px rgba(0,0,0,0.08);
+  --teal:        #0f766e;
+  --teal-dim:    rgba(15,118,110,0.08);
+  --teal-glow:   rgba(15,118,110,0.15);
+  --orange:      #c2410c;
+  --orange-dim:  rgba(194,65,12,0.08);
+  --blue:        #2563eb;
+  --purple:      #7c3aed;
+  --green:       #059669;
+  --grad-teal:   linear-gradient(135deg,#0f766e,#0d9488);
+  --grad-orange: linear-gradient(135deg,#c2410c,#ea580c);
+  --grad-purple: linear-gradient(135deg,#7c3aed,#6d28d9);
+  --shadow-teal: 0 0 30px rgba(15,118,110,0.15);
+}
+
+/* Light mode specific overrides for components that use hardcoded dark colours */
+body.light-theme .lnav,
+body.light-theme .sidebar,
+body.light-theme .topnav,
+body.light-theme .auth-card,
+body.light-theme .metric-card,
+body.light-theme .chart-card,
+body.light-theme .contact-card,
+body.light-theme .premium {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  border-color: rgba(0,0,0,0.1);
+}
+body.light-theme .lnav-link,
+body.light-theme .sb-link,
+body.light-theme .dropdown-item,
+body.light-theme .info-value,
+body.light-theme .profile-name,
+body.light-theme .dashboard-greeting,
+body.light-theme .metric-card .mc-big,
+body.light-theme .ss-val,
+body.light-theme .cc-header h3 {
+  color: #1e293b;
+}
+body.light-theme .lnav-link:hover,
+body.light-theme .sb-link:hover {
+  color: #0f766e;
+}
+body.light-theme .btn-login {
+  border-color: #0f766e;
+  color: #0f766e;
+}
+body.light-theme .btn-register {
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+  color: white;
+}
+body.light-theme .metric-card .mc-badge,
+body.light-theme .stats-strip .ss-label,
+body.light-theme .mc-sub,
+body.light-theme .hero-sub,
+body.light-theme .team-sub,
+body.light-theme .contact-sub {
+  color: #475569;
+}
+body.light-theme .hero-grid,
+body.light-theme .team-grid-bg,
+body.light-theme .contact-grid-overlay {
+  background-image: linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px);
+}
+body.light-theme .blob-1,
+body.light-theme .blob-2,
+body.light-theme .blob-3 {
+  opacity: 0.4;
+}
+body.light-theme .team-icon-wrap,
+body.light-theme .contact-icon-wrap {
+  background: linear-gradient(135deg, rgba(15,118,110,0.1), rgba(74,158,255,0.1));
+  border-color: rgba(15,118,110,0.2);
+}
+body.light-theme .grad-text-green {
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+}
+body.light-theme .grad-text {
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+}
+body.light-theme .contact-card,
+body.light-theme .chart-card,
+body.light-theme .qa-section {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.08);
+}
+body.light-theme .info-field,
+body.light-theme .dropdown-header,
+body.light-theme .dropdown-item {
+  background: rgba(0,0,0,0.02);
+}
+body.light-theme .dropdown-avatar,
+body.light-theme .user-avatar {
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+}
+body.light-theme .flash {
+  background: white;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+body.light-theme .flash-success {
+  border-color: #059669;
+}
+body.light-theme .flash-error {
+  border-color: #dc2626;
+}

@@ -1,0 +1,172 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Medicine Checker — VitaPulse{% endblock %}
+{% block page_title %}Medicine Checker{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(74,158,255,.15);color:#4A9EFF"><i data-lucide="pill"></i></div>
+      <div><h1 class="nutr-title">Medicine Checker</h1><p class="nutr-subtitle">Set reminders · Get notified at the right time</p></div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <!-- Add medicine -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="plus-circle"></i><h3>Add Medicine Reminder</h3></div>
+      <form method="POST" action="{{ url_for('wellness.medicine_add') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Medicine Name</label>
+          <input type="text" name="name" class="nutr-input" placeholder="e.g. Paracetamol" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Dosage</label>
+          <input type="text" name="dosage" class="nutr-input" placeholder="e.g. 500mg, 1 tablet">
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Times (when to take) — add multiple</label>
+          <div id="timesContainer">
+            <input type="time" name="times[]" class="nutr-input" style="margin-bottom:.5rem" value="08:00">
+          </div>
+          <button type="button" id="addTimeBtn" class="nutr-btn nutr-btn-outline" style="font-size:.78rem;padding:.4rem .8rem">
+            <i data-lucide="plus"></i> Add another time
+          </button>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Frequency</label>
+          <select name="frequency" class="nutr-input">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="as-needed">As Needed</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="nutr-form-group">
+            <label class="nutr-label">Start Date</label>
+            <input type="date" name="start_date" class="nutr-input" value="{{ today }}">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">End Date (optional)</label>
+            <input type="date" name="end_date" class="nutr-input">
+          </div>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Notes (optional)</label>
+          <textarea name="notes" class="nutr-input" rows="2" placeholder="e.g. take after food"></textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%"><i data-lucide="bell"></i> Set Reminder</button>
+      </form>
+    </div>
+
+    <!-- Active medicines / due now -->
+    <div>
+      <div class="nutr-card" style="margin-bottom:1rem;border-color:rgba(74,158,255,.3)">
+        <div class="nutr-card-head"><i data-lucide="bell-ring"></i><h3>Today's Schedule</h3></div>
+        <div id="dueNowBox" style="margin-bottom:1rem"></div>
+        {% if meds %}
+        {% for m in meds %}
+        {% for t in m.times.split(',') %}
+        {% set t = t.strip() %}
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
+          <div style="width:36px;height:36px;border-radius:var(--r-sm);background:rgba(74,158,255,.12);display:flex;align-items:center;justify-content:center;font-size:1.1rem">💊</div>
+          <div style="flex:1">
+            <div style="font-size:.85rem;font-weight:600">{{ m.name }} {% if m.dosage %}<span style="color:var(--muted);font-weight:400">— {{ m.dosage }}</span>{% endif %}</div>
+            <div style="font-size:.75rem;color:var(--muted)">{{ t }} · {{ m.frequency|capitalize }}</div>
+          </div>
+          {% if (m.id, t) in taken_ids or (m.id|int, t) in taken_ids %}
+          <span style="font-size:.72rem;color:#22c55e;font-weight:700"><i data-lucide="check" style="width:14px;height:14px;display:inline;vertical-align:middle"></i> Taken</span>
+          {% else %}
+          <form method="POST" action="{{ url_for('wellness.medicine_mark_taken') }}">
+            <input type="hidden" name="medicine_id" value="{{ m.id }}">
+            <input type="hidden" name="time" value="{{ t }}">
+            <button type="submit" class="nutr-btn nutr-btn-outline" style="font-size:.7rem;padding:.3rem .6rem">Mark Taken</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--muted);text-align:center;padding:1.5rem">No medicines added yet.</p>
+        {% endif %}
+      </div>
+
+      <!-- Manage list -->
+      {% if meds %}
+      <div class="nutr-card">
+        <div class="nutr-card-head"><i data-lucide="list"></i><h3>Manage Medicines</h3></div>
+        {% for m in meds %}
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.82rem">
+          <div style="flex:1">
+            <strong>{{ m.name }}</strong> <span style="color:var(--muted)">— {{ m.times }}</span>
+            {% if m.notes %}<div style="font-size:.72rem;color:var(--muted)">{{ m.notes }}</div>{% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('wellness.medicine_delete', mid=m.id) }}" onsubmit="return confirm('Remove this reminder?')">
+            <button type="submit" style="background:none;border:none;color:#ef4444;cursor:pointer">✕</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}{{ super() }}
+<script>
+document.getElementById('addTimeBtn').addEventListener('click', function() {
+  const container = document.getElementById('timesContainer');
+  const input = document.createElement('input');
+  input.type = 'time';
+  input.name = 'times[]';
+  input.className = 'nutr-input';
+  input.style.marginBottom = '.5rem';
+  input.value = '14:00';
+  container.appendChild(input);
+});
+
+function checkDueMeds() {
+  fetch('{{ url_for("wellness.medicine_due_check") }}')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var box = document.getElementById('dueNowBox');
+      if (!box) return;
+      if (data.due && data.due.length > 0) {
+        box.innerHTML = data.due.map(function(m) {
+          return '<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);border-radius:var(--r-md);padding:.75rem;margin-bottom:.5rem">' +
+            '<div style="font-weight:700;font-size:.9rem;color:#22c55e;margin-bottom:.2rem">⏰ Time to take ' + m.name + '</div>' +
+            (m.dosage ? '<div style="font-size:.78rem;color:#94a3b8">' + m.dosage + '</div>' : '') +
+            '<div style="font-size:.72rem;color:#64748b;margin-top:.2rem">Scheduled: ' + m.time + '</div>' +
+            '</div>';
+        }).join('');
+        // Browser notification
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          data.due.forEach(function(m) {
+            try {
+              new Notification('💊 Medicine Reminder — VitaPulse', {
+                body: 'Time to take ' + m.name + (m.dosage ? ' — ' + m.dosage : '') + ' (' + m.time + ')'
+              });
+            } catch(e) {}
+          });
+        }
+      } else {
+        box.innerHTML = '<p style="font-size:.8rem;color:var(--muted)">No medicines due right now.</p>';
+      }
+    })
+    .catch(function() {
+      console.log('Medicine check failed - normal if not on dashboard');
+    });
+}
+
+if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+  Notification.requestPermission().then(function(p) {
+    if (p === 'granted') checkDueMeds();
+  });
+}
+// Check immediately and every 60s
+checkDueMeds();
+setInterval(checkDueMeds, 60000);
+</script>
+{% endblock %}

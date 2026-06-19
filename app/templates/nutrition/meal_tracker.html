@@ -1,0 +1,335 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Meal Tracker — VitaPulse{% endblock %}
+{% block page_title %}Meal Tracker{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .nutr-kpi-fill { width: var(--kpi-width, 0%); transition: width 1s; }
+  .meal-card-border { border-left: 3px solid var(--meal-clr); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+
+  <!-- ── HEADER ──────────────────────────────────────────────────── -->
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(74,158,255,.15);color:var(--blue)">
+        <i data-lucide="utensils"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">Meal Tracker</h1>
+        <p class="nutr-subtitle">Log meals · Track macros · Stay on goal</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('nutrition.calorie_index') }}"  class="nutr-btn nutr-btn-outline"><i data-lucide="calculator"></i> Calculator</a>
+      <a href="{{ url_for('nutrition.food_db_index') }}"  class="nutr-btn nutr-btn-teal"><i data-lucide="search"></i> Food DB</a>
+    </div>
+  </div>
+
+  {# Flash messages #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- ── DATE PICKER ──────────────────────────────────────────────── -->
+  <div class="nutr-date-bar">
+    <form method="GET" action="{{ url_for('nutrition.meal_index') }}" class="nutr-inline-form">
+      <label for="dateInput" class="nutr-label" style="white-space:nowrap">View date:</label>
+      <input type="date" id="dateInput" name="date" value="{{ selected_date }}"
+             class="nutr-input" style="max-width:170px" max="{{ today }}"
+             onchange="this.form.submit()">
+    </form>
+    {% if selected_date != today %}
+    <a href="{{ url_for('nutrition.meal_index') }}" class="nutr-btn nutr-btn-outline" style="font-size:.78rem">← Today</a>
+    {% endif %}
+  </div>
+
+  <!-- ── MACRO KPI ROW ─────────────────────────────────────────────── -->
+  <div class="nutr-kpi-row">
+    {% set consumed = totals.cal|default(0)|int %}
+    {% set pct = ([consumed / calorie_goal * 100, 100]|min) if calorie_goal else 0 %}
+
+    <div class="nutr-kpi nutr-kpi-teal">
+      <div class="nutr-kpi-icon"><i data-lucide="flame"></i></div>
+      <div style="flex:1">
+        <p class="nutr-kpi-label">Calories</p>
+        <p class="nutr-kpi-value">{{ consumed }} <span>/ {{ calorie_goal }} kcal</span></p>
+        <div class="nutr-kpi-bar">
+          <div class="nutr-kpi-fill" style="--kpi-width: {{ pct }}%; background:var(--teal);height:100%;border-radius:4px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nutr-kpi nutr-kpi-blue">
+      <div class="nutr-kpi-icon"><i data-lucide="beef"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Protein</p>
+        <p class="nutr-kpi-value">{{ totals.prot|default(0)|int }}g</p>
+      </div>
+    </div>
+
+    <div class="nutr-kpi nutr-kpi-green">
+      <div class="nutr-kpi-icon"><i data-lucide="wheat"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Carbohydrates</p>
+        <p class="nutr-kpi-value">{{ totals.carbs|default(0)|int }}g</p>
+      </div>
+    </div>
+
+    <div class="nutr-kpi nutr-kpi-orange">
+      <div class="nutr-kpi-icon"><i data-lucide="droplets"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Fat</p>
+        <p class="nutr-kpi-value">{{ totals.fat|default(0)|int }}g</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADD MEAL CARD ─────────────────────────────────────────────── -->
+  <div class="nutr-card">
+    <div class="nutr-card-head">
+      <i data-lucide="plus-circle"></i>
+      <h3>Log a Meal</h3>
+      <button class="nutr-card-toggle" id="mealFormToggle" onclick="toggleMealForm()">Expand ▸</button>
+    </div>
+
+    <div id="mealFormBody" style="display:none">
+      <!-- Quick search -->
+      <div class="nutr-food-search-inline">
+        <label class="nutr-label"><i data-lucide="search" style="width:13px;height:13px;vertical-align:middle"></i> Quick Search Food DB</label>
+        <div class="nutr-search-row">
+          <input type="text" id="quickSearchInput" placeholder="Search — Dal Bhat, Chicken, Momo…"
+                 class="nutr-input" oninput="handleQuickSearch(this.value)" autocomplete="off">
+        </div>
+        <div id="quickSearchResults" class="nutr-search-dropdown" style="display:none"></div>
+      </div>
+
+      <form method="POST" action="{{ url_for('nutrition.add_meal') }}">
+        <input type="hidden" name="log_date" value="{{ selected_date }}">
+        <div class="nutr-form-grid">
+          <div class="nutr-form-group nutr-fg-wide">
+            <label class="nutr-label">Food Name *</label>
+            <input type="text" name="food_name" id="mealFoodName" class="nutr-input" placeholder="e.g. Dal Bhat" required>
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Meal Type</label>
+            <select name="meal_type" id="mealTypeSelect" class="nutr-input">
+              <option value="Breakfast">🌅 Breakfast</option>
+              <option value="Lunch">☀️  Lunch</option>
+              <option value="Dinner">🌙 Dinner</option>
+              <option value="Snack" selected>🍎 Snack</option>
+            </select>
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Calories (kcal)</label>
+            <input type="number" name="calories" id="mealCalories" class="nutr-input" placeholder="0" min="0" step="1" value="0">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Protein (g)</label>
+            <input type="number" name="protein" id="mealProtein" class="nutr-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Carbs (g)</label>
+            <input type="number" name="carbs" id="mealCarbs" class="nutr-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="nutr-form-group">
+            <label class="nutr-label">Fat (g)</label>
+            <input type="number" name="fat" id="mealFat" class="nutr-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+        </div>
+        <div class="nutr-form-actions">
+          <button type="submit" class="nutr-btn nutr-btn-teal"><i data-lucide="plus"></i> Add Meal</button>
+          <a href="{{ url_for('nutrition.food_db_index') }}" class="nutr-btn nutr-btn-outline">Browse Food DB</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MEALS BY TYPE ─────────────────────────────────────────────── -->
+  {% set meal_types = [
+    ('Breakfast', '🌅', 'rgba(234,179,8,.15)',  '#facc15'),
+    ('Lunch',     '☀️',  'rgba(249,115,22,.15)', 'var(--orange)'),
+    ('Dinner',    '🌙', 'rgba(74,158,255,.15)',  'var(--blue)'),
+    ('Snack',     '🍎', 'rgba(16,185,129,.15)',  'var(--green)')
+  ] %}
+
+  {% for mtype, emoji, bg, clr in meal_types %}
+  {% set type_meals = grouped.get(mtype, []) %}
+  <div class="nutr-card meal-card-border" style="--meal-clr: {{ clr }}">
+    <div class="nutr-card-head">
+      <span style="font-size:1.15rem;line-height:1">{{ emoji }}</span>
+      <h3>{{ mtype }}</h3>
+      {% if type_meals %}
+      <span class="nutr-meal-count">
+        {{ type_meals|length }} item{{ 's' if type_meals|length > 1 else '' }}
+        &nbsp;·&nbsp; {{ type_meals|sum(attribute='calories')|int }} kcal
+      </span>
+      {% else %}
+      <span class="nutr-meal-count" style="color:var(--text-3)">Nothing logged</span>
+      {% endif %}
+    </div>
+
+    {% if type_meals %}
+    <div class="nutr-meals-table-wrap">
+      <table class="nutr-meals-table">
+        <thead>
+          <tr>
+            <th>Food</th>
+            <th>Calories</th>
+            <th>Protein</th>
+            <th>Carbs</th>
+            <th>Fat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for meal in type_meals %}
+          <tr class="nutr-meal-row-tr">
+            <td class="nutr-meal-name-td">{{ meal.food_name }}</td>
+            <td><span class="nutr-macro-pill mp-cal">{{ meal.calories|int }} kcal</span></td>
+            <td><span class="nutr-macro-pill mp-p">{{ meal.protein_g|int }}g</span></td>
+            <td><span class="nutr-macro-pill mp-c">{{ meal.carbs_g|int }}g</span></td>
+            <td><span class="nutr-macro-pill mp-f">{{ meal.fat_g|int }}g</span></td>
+            <td>
+              <form method="POST" action="{{ url_for('nutrition.delete_meal', meal_id=meal.id) }}"
+                    onsubmit="return confirm('Remove {{ meal.food_name }}?')">
+                <button type="submit" class="nutr-del-btn" title="Remove">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="nutr-empty-meal">
+      No {{ mtype|lower }} logged.
+      <button class="nutr-link-btn" onclick="openMealForm('{{ mtype }}')">+ Add {{ mtype }}</button>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <!-- ── MACRO PIE (only if data) ──────────────────────────────────── -->
+  {% if totals.cal and totals.cal|int > 0 %}
+  <div class="nutr-card" style="max-width:380px">
+    <div class="nutr-card-head">
+      <i data-lucide="pie-chart"></i>
+      <h3>Today's Macro Split</h3>
+    </div>
+    <canvas id="mealMacroChart" height="200"></canvas>
+  </div>
+  {% endif %}
+
+</div>{# /.nutr-page #}
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+// ── Toggle add-meal form ──────────────────────────────────────────
+function toggleMealForm() {
+  var body = document.getElementById('mealFormBody');
+  var btn  = document.getElementById('mealFormToggle');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? 'Expand ▸' : 'Collapse ▾';
+}
+
+function openMealForm(type) {
+  var body = document.getElementById('mealFormBody');
+  var btn  = document.getElementById('mealFormToggle');
+  body.style.display = 'block';
+  btn.textContent = 'Collapse ▾';
+  var sel = document.getElementById('mealTypeSelect');
+  if (sel) sel.value = type;
+  document.getElementById('mealFoodName').focus();
+  document.getElementById('mealFormBody').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── Quick food search autocomplete ───────────────────────────────
+var _qTimer;
+function handleQuickSearch(q) {
+  clearTimeout(_qTimer);
+  var box = document.getElementById('quickSearchResults');
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  _qTimer = setTimeout(function() {
+    fetch('/nutrition/foods/search?q=' + encodeURIComponent(q))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length) { box.style.display = 'none'; return; }
+        box.innerHTML = data.map(function(f) {
+          return '<div class="nutr-dd-item" onclick="fillMealForm(' + JSON.stringify(f).replace(/"/g, '&quot;') + ')">' +
+            '<div class="nutr-dd-name">' + f.name + '</div>' +
+            '<div class="nutr-dd-meta">' + f.calories + ' kcal &nbsp;·&nbsp; P:' + f.protein + 'g &nbsp; C:' + f.carbs + 'g &nbsp; F:' + f.fat + 'g</div>' +
+            '</div>';
+        }).join('');
+        box.style.display = 'block';
+      });
+  }, 280);
+}
+
+function fillMealForm(food) {
+  document.getElementById('mealFoodName').value     = food.name;
+  document.getElementById('mealCalories').value     = food.calories;
+  document.getElementById('mealProtein').value      = food.protein;
+  document.getElementById('mealCarbs').value        = food.carbs;
+  document.getElementById('mealFat').value          = food.fat;
+  document.getElementById('quickSearchInput').value = food.name;
+  document.getElementById('quickSearchResults').style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  var box = document.getElementById('quickSearchResults');
+  if (box && e.target.id !== 'quickSearchInput' && !box.contains(e.target)) {
+    box.style.display = 'none';
+  }
+});
+</script>
+<script id="meal-chart-data" type="application/json">
+  {
+    "totals": { 
+      "p": {{ totals.prot|default(0)|float }}, 
+      "c": {{ totals.carbs|default(0)|float }}, 
+      "f": {{ totals.fat|default(0)|float }}, 
+      "cal": {{ totals.cal|default(0)|float }} 
+    }
+  }
+</script>
+<script>
+// ── Macro pie chart ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const config = JSON.parse(document.getElementById('meal-chart-data').textContent);
+  const mCtx = document.getElementById('mealMacroChart');
+  if (mCtx && config.totals.cal > 0) {
+    new Chart(mCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Protein', 'Carbs', 'Fat'],
+        datasets: [{
+          data: [
+            Math.round(config.totals.p * 4),
+            Math.round(config.totals.c * 4),
+            Math.round(config.totals.f * 9)
+          ],
+          backgroundColor: ['#4A9EFF', '#00C897', '#f97316'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position:'bottom', labels:{ color:'#94a3b8', font:{size:11} } } }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

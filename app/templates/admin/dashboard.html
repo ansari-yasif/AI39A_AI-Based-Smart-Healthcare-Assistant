@@ -1,0 +1,82 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Admin Dashboard — VitaPulse{% endblock %}
+{% block page_title %}Admin Control Panel{% endblock %}
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(239,68,68,.15);color:#ef4444"><i data-lucide="shield"></i></div>
+      <div><h1 class="nutr-title">Admin Control Panel</h1><p class="nutr-subtitle">Manage users, support messages &amp; outbreak alerts</p></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:var(--teal)">{{ stats.total_users }}</div>
+      <div class="report-stat-label">Total Users</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#3b82f6">{{ stats.active_today }}</div>
+      <div class="report-stat-label">Active Today</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#22c55e">{{ stats.new_this_week }}</div>
+      <div class="report-stat-label">New This Week</div>
+    </div>
+    <div class="report-stat">
+      <div class="report-stat-val" style="color:#f59e0b">{{ stats.open_messages }}</div>
+      <div class="report-stat-label">Open Support Msgs</div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+    <a href="{{ url_for('admin.users_index') }}" class="nutr-btn nutr-btn-teal"><i data-lucide="users"></i> Manage Users</a>
+    <a href="{{ url_for('admin.messages_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="mail"></i> Support Messages</a>
+    <a href="{{ url_for('admin.outbreaks_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="alert-triangle"></i> Outbreak Alerts</a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    <!-- Recent users -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="user-plus"></i><h3>Recent Users</h3></div>
+      {% for u in recent_users %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.83rem">
+        <div>
+          <strong>{{ u.full_name }}</strong>
+          <div style="color:var(--muted);font-size:.75rem">{{ u.email }}</div>
+        </div>
+        <span style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;background:rgba(0,200,151,.1);color:var(--teal)">{{ u.role }}</span>
+      </div>
+      {% else %}
+      <p style="color:var(--muted);text-align:center;padding:1rem">No users yet.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Recent support messages -->
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="message-square"></i><h3>Recent Support Messages</h3>
+        <a href="{{ url_for('admin.messages_index') }}" style="margin-left:auto;font-size:.72rem;color:var(--teal)">View All →</a>
+      </div>
+      {% for m in recent_messages %}
+      <a href="{{ url_for('admin.message_view', mid=m.id) }}" style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.83rem;color:inherit;text-decoration:none">
+        <div>
+          <strong>{{ m.subject[:50] }}{% if m.subject|length > 50 %}...{% endif %}</strong>
+          <div style="color:var(--muted);font-size:.75rem">{{ m.full_name }} · {{ m.created_at }}</div>
+        </div>
+        <span style="font-size:.7rem;padding:.15rem .45rem;border-radius:999px;flex-shrink:0;
+          background:{% if m.status=='open' %}rgba(245,158,11,.15);color:#f59e0b{% elif m.status=='replied' %}rgba(34,197,94,.15);color:#22c55e{% else %}rgba(100,116,139,.15);color:#94a3b8{% endif %}">
+          {{ m.status }}
+        </span>
+      </a>
+      {% else %}
+      <div style="text-align:center;padding:2rem;color:var(--muted)">
+        <i data-lucide="inbox" style="width:32px;height:32px;opacity:.3;margin-bottom:.5rem"></i>
+        <p>No messages yet. Messages from users and the homepage contact form appear here.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

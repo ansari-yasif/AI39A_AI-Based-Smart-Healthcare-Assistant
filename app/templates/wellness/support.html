@@ -1,0 +1,70 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Contact Support — VitaPulse{% endblock %}
+{% block page_title %}Support{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .s-badge { font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; display: inline-block; }
+  .badge-open { background: rgba(245, 158, 11, .15); color: #f59e0b; }
+  .badge-replied { background: rgba(34, 197, 94, .15); color: #22c55e; }
+  .badge-closed { background: rgba(100, 116, 139, .15); color: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap" style="background:rgba(99,102,241,.15);color:#818cf8"><i data-lucide="mail"></i></div>
+      <div><h1 class="nutr-title">Contact Support</h1><p class="nutr-subtitle">Send a message to the admin team</p></div>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="send"></i><h3>New Message</h3></div>
+      <form method="POST" action="{{ url_for('wellness.support_send') }}">
+        <div class="nutr-form-group" style="margin-bottom:1rem">
+          <label class="nutr-label">Subject</label>
+          <input type="text" name="subject" class="nutr-input" placeholder="e.g. Issue with BMI calculator" required>
+        </div>
+        <div class="nutr-form-group" style="margin-bottom:1.25rem">
+          <label class="nutr-label">Message</label>
+          <textarea name="message" class="nutr-input" rows="6" placeholder="Describe your issue or question..." required></textarea>
+        </div>
+        <button type="submit" class="nutr-btn nutr-btn-teal" style="width:100%"><i data-lucide="send"></i> Send to Admin</button>
+      </form>
+    </div>
+
+    <div class="nutr-card">
+      <div class="nutr-card-head"><i data-lucide="inbox"></i><h3>Your Messages</h3></div>
+      {% if support_messages %}
+      {% for m in support_messages %}
+      <div style="padding:.75rem 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong style="font-size:.88rem">{{ m.subject }}</strong> 
+          <span class="s-badge {{ 'badge-open' if m.status == 'open' else ('badge-replied' if m.status == 'replied' else 'badge-closed') }}">
+            {{ m.status|capitalize }}
+          </span>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:.3rem">{{ m.message[:120] }}{% if m.message|length > 120 %}...{% endif %}</p>
+        {% if m.admin_reply %}
+        <div style="background:rgba(0,200,151,.06);border-left:3px solid var(--teal);padding:.5rem .75rem;margin-top:.5rem;border-radius:0 var(--r-sm) var(--r-sm) 0">
+          <p style="font-size:.7rem;color:var(--teal);font-weight:700;margin-bottom:.2rem">Admin Reply:</p>
+          <p style="font-size:.8rem;color:#cbd5e1">{{ m.admin_reply }}</p>
+        </div>
+        {% endif %}
+        <p style="font-size:.68rem;color:#475569;margin-top:.3rem">{{ m.created_at }}</p>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p style="color:var(--muted);text-align:center;padding:1.5rem">No messages sent yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
