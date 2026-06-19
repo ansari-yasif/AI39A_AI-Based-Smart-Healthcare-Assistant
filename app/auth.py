@@ -52,11 +52,11 @@ def guest_only(fn):
 
 def login_user(user: dict):
     session.permanent = True
-    session['user_id']   = user['id']
+    session['user_id'] = user['id']
     session['full_name'] = user['full_name']
-    session['email']     = user['email']
-    session['role']      = str(user.get('role') or 'user').lower().strip()
-    session['avatar']    = user.get('avatar_url', '')
+    session['email'] = user['email']
+    session['role'] = str(user.get('role') or 'user').lower().strip()
+    session['avatar'] = user.get('avatar_url', '')
 
 
 def logout_user():
@@ -67,11 +67,11 @@ def current_user() -> dict:
     if 'user_id' not in session:
         return {}
     return {
-        'id':        session.get('user_id'),
+        'id': session.get('user_id'),
         'full_name': session.get('full_name', ''),
-        'email':     session.get('email', ''),
-        'role':      str(session.get('role') or 'user').lower().strip(),
-        'avatar':    session.get('avatar', ''),
+        'email': session.get('email', ''),
+        'role': str(session.get('role') or 'user').lower().strip(),
+        'avatar': session.get('avatar', ''),
     }
 
 
@@ -79,10 +79,23 @@ def is_authenticated() -> bool:
     return 'user_id' in session
 
 
+# NEW FEATURE
+def is_admin() -> bool:
+    """Return True if current user has admin role."""
+    return (
+        'user_id' in session and
+        str(session.get('role') or '').lower().strip() == 'admin'
+    )
+
+
 # ── Password helpers ──────────────────────────────────────────
 
 def hash_password(plain: str) -> str:
-    return generate_password_hash(plain, method='pbkdf2:sha256', salt_length=16)
+    return generate_password_hash(
+        plain,
+        method='pbkdf2:sha256',
+        salt_length=16
+    )
 
 
 def verify_password(plain: str, hashed: str) -> bool:
