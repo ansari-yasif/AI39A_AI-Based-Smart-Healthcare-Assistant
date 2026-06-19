@@ -34,17 +34,6 @@ def create_app(env: str = None) -> Flask:
     return app
 
 def _register_blueprints(app):
-<<<<<<< HEAD
-    from app.routes.auth_routes      import auth_bp
-    from app.routes.dashboard_routes import dashboard_bp
-    from app.routes.profile_routes   import profile_bp
-    from app.routes.chat_routes import chat_bp
-
-    app.register_blueprint(chat_bp, url_prefix='/chat')
-    app.register_blueprint(auth_bp,      url_prefix='/auth')
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    app.register_blueprint(profile_bp,   url_prefix='')
-=======
     from app.routes.auth_routes       import auth_bp
     from app.routes.dashboard_routes  import dashboard_bp
     from app.routes.profile_routes    import profile_bp
@@ -62,7 +51,6 @@ def _register_blueprints(app):
     app.register_blueprint(wellness_bp,   url_prefix='/wellness')
     app.register_blueprint(admin_bp,      url_prefix='/admin')
     app.register_blueprint(chat_bp)
->>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
 
     @app.route('/')
     def index():
