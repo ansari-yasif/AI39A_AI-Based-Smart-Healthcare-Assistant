@@ -1,147 +1,77 @@
 # 🩺 VitaPulse – AI-Based Smart Healthcare Assistant
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Flask-Python-blue?style=for-the-badge">
-  <img src="https://img.shields.io/badge/MySQL-Database-orange?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Groq-AI-green?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Google-OAuth-red?style=for-the-badge">
-</p>
+VitaPulse is an AI-powered healthcare and wellness platform designed to help users monitor and improve their overall well-being. The system combines health tracking, nutrition monitoring, sleep analysis, mood tracking, expense management, medication management, and AI-powered health assistance into a single platform.
 
-## 🌟 Overview
-
-**VitaPulse** is an AI-powered Smart Healthcare Assistant designed to help users maintain a healthier lifestyle through intelligent health tracking and personalized insights.
-
-The platform combines nutrition monitoring, fitness tracking, sleep analysis, mood tracking, expense management, medication reminders, and AI-powered health assistance into a single integrated wellness ecosystem.
-
-Users can interact with an intelligent chatbot powered by Groq AI to receive personalized recommendations and wellness guidance.
+The application is built using Flask, MySQL, HTML/CSS/JavaScript, Google OAuth, and Groq AI.
 
 ---
 
-## ✨ Key Features
+# ✨ Features
 
-### 👤 User Management
+## 👤 User Management
 
-* Secure Registration & Login
-* Google OAuth Authentication
+* User Registration
+* User Login
+* Google OAuth Login
 * Profile Management
-* Session-Based Authentication
+* Session Authentication
 
-### 🍎 Nutrition Tracking
+## 🍎 Nutrition Tracking
 
-* Daily Calorie Tracking
+* Calorie Tracking
 * Meal Logging
-* Nutritional Analysis
-* Calorie History
+* Nutrition Monitoring
 
-### 🏃 Fitness Monitoring
+## 🏃 Fitness Tracking
 
 * Workout Tracking
-* Activity Management
-* Progress Monitoring
-* Health Metrics Calculation
+* Activity Monitoring
+* Progress Tracking
 
-### 😴 Sleep Monitoring
+## 😴 Sleep Tracking
 
-* Sleep Duration Tracking
-* Sleep Quality Analysis
-* Historical Sleep Reports
+* Sleep Duration Logging
+* Sleep Quality Monitoring
+* Sleep Reports
 
-### 😊 Mood Tracking
+## 😊 Mood Tracking
 
 * Daily Mood Logging
 * Mood Analytics
-* Wellness Monitoring
 
-### 💊 Medicine Management
+## 💊 Medicine Management
 
-* Medication Tracking
-* Reminder Support
-* Medical History Storage
+* Medicine Tracking
+* Reminder Management
 
-### 👨‍👩‍👧 Family Health
+## 👨‍👩‍👧 Family Health Management
 
-* Family Member Management
-* Shared Health Records
-* Family Wellness Monitoring
+* Family Member Records
+* Shared Health Monitoring
 
-### 📊 Health Analytics
+## 📊 Health Analytics
 
 * BMI Calculation
 * BMR Calculation
 * Health Risk Assessment
-* Personalized Insights
+* Personalized Recommendations
 
-### 🤖 AI Health Assistant
+## 🤖 AI Health Assistant
 
 * Groq AI Integration
-* Natural Language Conversations
-* Personalized Recommendations
-* Health Guidance
+* Health Chatbot
+* Personalized Guidance
 
-### 📄 Reporting System
+## 📄 Reports
 
 * PDF Report Generation
 * Health Summary Reports
-* Progress Analytics
 
-### 👨‍💼 Admin Dashboard
+## 👨‍💼 Admin Dashboard
 
 * User Management
 * System Monitoring
-* Data Analytics
-* Administrative Controls
-
----
-
-# 🏗️ System Architecture
-
-```text
-Frontend (HTML/CSS/JS)
-         │
-         ▼
-Flask Routes
-         │
-         ▼
-Controllers (Business Logic)
-         │
-         ▼
-Models (Database Layer)
-         │
-         ▼
-MySQL Database
-```
-
----
-
-# 📁 Project Structure
-
-```text
-vitapulse/
-│
-├── run.py
-├── config.py
-├── requirements.txt
-├── README.md
-│
-├── app/
-│   ├── __init__.py
-│   ├── database.py
-│   ├── auth.py
-│   ├── helpers.py
-│   ├── constants.py
-│   │
-│   ├── models/
-│   ├── controllers/
-│   ├── routes/
-│   ├── templates/
-│   └── static/
-│
-├── database/
-│   ├── schema.sql
-│   └── seed.sql
-│
-└── tests/
-```
+* Analytics Dashboard
 
 ---
 
@@ -182,9 +112,58 @@ vitapulse/
 
 ---
 
-# 🚀 Installation Guide
+# 📁 Project Structure
 
-## 1. Clone Repository
+```text
+vitapulse/
+├── run.py
+├── config.py
+├── requirements.txt
+├── README.md
+│
+├── app/
+│   ├── __init__.py
+│   ├── database.py
+│   ├── auth.py
+│   ├── helpers.py
+│   ├── constants.py
+│   │
+│   ├── models/
+│   ├── controllers/
+│   ├── routes/
+│   ├── templates/
+│   └── static/
+│
+├── database/
+│   ├── schema.sql
+│   └── seed.sql
+│
+└── tests/
+```
+
+---
+
+# ✅ Prerequisites
+
+Before running the project, install the following software:
+
+* Python 3.9 or higher
+* MySQL 8.0 or higher
+* Git
+
+Verify installation:
+
+```bash
+python --version
+mysql --version
+git --version
+```
+
+---
+
+# 🚀 Installation
+
+## Step 1: Clone Repository
 
 ```bash
 git clone https://github.com/your-username/vitapulse.git
@@ -193,12 +172,17 @@ cd vitapulse
 
 ---
 
-## 2. Create Virtual Environment
+## Step 2: Create Virtual Environment
 
 ### Windows
 
 ```bash
 python -m venv venv
+```
+
+Activate:
+
+```bash
 venv\Scripts\activate
 ```
 
@@ -211,7 +195,7 @@ source venv/bin/activate
 
 ---
 
-## 3. Install Dependencies
+## Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -219,15 +203,15 @@ pip install -r requirements.txt
 
 ---
 
-## 4. Configure Environment Variables
+# ⚙️ Environment Configuration
 
 Rename:
 
-```bash
+```text
 .env.example → .env
 ```
 
-Update:
+Open `.env` and update:
 
 ```env
 # Flask
@@ -238,7 +222,7 @@ SECRET_KEY=your-secret-key
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=
+DB_PASSWORD=your_mysql_password
 DB_NAME=vitapulse_db
 
 # Google OAuth
@@ -250,9 +234,30 @@ GOOGLE_REDIRECT_URI=http://localhost:5000/auth/google/callback
 GROQ_API_KEY=
 ```
 
+## Environment Variables
+
+| Variable             | Description                |
+| -------------------- | -------------------------- |
+| FLASK_ENV            | Flask environment          |
+| SECRET_KEY           | Application secret key     |
+| DB_HOST              | MySQL host                 |
+| DB_PORT              | MySQL port                 |
+| DB_USER              | MySQL username             |
+| DB_PASSWORD          | MySQL password             |
+| DB_NAME              | Database name              |
+| GOOGLE_CLIENT_ID     | Google OAuth Client ID     |
+| GOOGLE_CLIENT_SECRET | Google OAuth Client Secret |
+| GROQ_API_KEY         | Groq AI API Key            |
+
 ---
 
 # 🗄️ Database Setup
+
+## Start MySQL
+
+Ensure MySQL service is running.
+
+---
 
 ## Login to MySQL
 
@@ -260,11 +265,24 @@ GROQ_API_KEY=
 mysql -u root -p
 ```
 
+Enter your MySQL password.
+
+---
+
 ## Create Database
 
 ```sql
 CREATE DATABASE vitapulse_db;
+SHOW DATABASES;
 ```
+
+Exit MySQL:
+
+```sql
+EXIT;
+```
+
+---
 
 ## Import Schema
 
@@ -274,11 +292,13 @@ CREATE DATABASE vitapulse_db;
 Get-Content .\database\schema.sql | mysql -u root -p vitapulse_db
 ```
 
-### CMD / Linux / macOS
+### Windows CMD / Linux / macOS
 
 ```bash
 mysql -u root -p vitapulse_db < database/schema.sql
 ```
+
+---
 
 ## Import Sample Data (Optional)
 
@@ -288,44 +308,65 @@ mysql -u root -p vitapulse_db < database/seed.sql
 
 ---
 
-# ▶️ Run Application
+## Verify Database
+
+Login again:
 
 ```bash
-python run.py
+mysql -u root -p
 ```
 
-Server starts at:
+Select database:
 
-```text
-http://localhost:5000
+```sql
+USE vitapulse_db;
+```
+
+View tables:
+
+```sql
+SHOW TABLES;
 ```
 
 ---
 
-# 🔑 API Configuration
+# 🔑 Google OAuth Setup
 
-## Google OAuth Setup
-
-1. Open Google Cloud Console
-2. Create Project
-3. Go to APIs & Services → Credentials
-4. Create OAuth Client ID
-5. Select Web Application
-6. Add Redirect URI:
+1. Open Google Cloud Console.
+2. Create a new project.
+3. Go to APIs & Services → Credentials.
+4. Click Create Credentials.
+5. Select OAuth Client ID.
+6. Choose Web Application.
+7. Add the following Redirect URI:
 
 ```text
 http://localhost:5000/auth/google/callback
 ```
 
-7. Copy credentials into `.env`
+8. Click Create.
+9. Copy Client ID.
+10. Copy Client Secret.
+11. Paste both into `.env`.
+
+Example:
+
+```env
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+```
 
 ---
 
-## Groq API Setup
+# 🤖 Groq API Setup
 
-1. Create a Groq account
-2. Generate an API Key
-3. Add it to `.env`
+1. Create a Groq account.
+2. Navigate to API Keys.
+3. Generate a new API key.
+4. Copy the key.
+5. Paste into `.env`.
+
+Example:
 
 ```env
 GROQ_API_KEY=your_api_key_here
@@ -333,56 +374,77 @@ GROQ_API_KEY=your_api_key_here
 
 ---
 
-# 📊 Core Modules
+# ▶️ Running the Application
 
-| Module         | Description             |
-| -------------- | ----------------------- |
-| Authentication | Login, Register, OAuth  |
-| Dashboard      | User Overview           |
-| Calories       | Nutrition Tracking      |
-| Meals          | Food Logging            |
-| Sleep          | Sleep Monitoring        |
-| Mood           | Mood Tracking           |
-| Workout        | Exercise Tracking       |
-| Expense        | Health Expense Tracking |
-| Medicine       | Medication Management   |
-| AI Assistant   | Health Chatbot          |
-| Reports        | PDF Generation          |
-| Admin          | System Administration   |
+Activate virtual environment first:
+
+```bash
+venv\Scripts\activate
+```
+
+Run the application:
+
+```bash
+python run.py
+```
+
+Expected output:
+
+```text
+* Running on http://127.0.0.1:5000
+```
+
+Open:
+
+```text
+http://localhost:5000
+```
+
+in your browser.
 
 ---
 
-# 🧪 Testing
+# 🧪 Running Tests
+
+Install pytest if needed:
+
+```bash
+python -m pip install pytest
+```
+
+Verify installation:
+
+```bash
+python -m pytest --version
+```
 
 Run all tests:
 
 ```bash
-pytest
+python -m pytest -v
 ```
 
-Run a specific test:
+Run a specific test file:
 
 ```bash
-pytest tests/test_auth_controller.py
+python -m pytest tests/test_auth.py -v
 ```
 
----
+Example successful output:
 
-
-# 🔒 Security Features
-
-* Password Hashing
-* Environment Variables
-* Session Protection
-* OAuth Authentication
-* Secure Database Access
-* Input Validation
+```text
+=====================
+3 passed
+=====================
+```
 
 ---
 
 # 🐞 Troubleshooting
 
-### Database Not Found
+## Database Not Found
+
+Error:
 
 ```text
 ERROR 1049 (42000):
@@ -397,19 +459,35 @@ CREATE DATABASE vitapulse_db;
 
 ---
 
-### MySQL Connection Failed
+## Pytest Not Found
 
-Verify:
+Error:
 
-* MySQL service is running
-* Credentials in `.env` are correct
-* Database exists
+```text
+No module named pytest
+```
+
+Solution:
+
+```bash
+python -m pip install pytest
+```
 
 ---
 
-### OAuth Error
+## MySQL Connection Failed
 
-Ensure the callback URL exactly matches:
+Check:
+
+* MySQL service is running
+* Database exists
+* Credentials in `.env` are correct
+
+---
+
+## Google OAuth Error
+
+Verify callback URL exactly matches:
 
 ```text
 http://localhost:5000/auth/google/callback
@@ -417,9 +495,9 @@ http://localhost:5000/auth/google/callback
 
 ---
 
-### Port Already In Use
+## Port Already In Use
 
-Change port in:
+Change port in `run.py`:
 
 ```python
 app.run(port=5001)
@@ -427,21 +505,29 @@ app.run(port=5001)
 
 ---
 
-# 🎯 Future Enhancements
+# 🔒 Security Notes
+
+* Never commit `.env` to GitHub.
+* Keep API keys private.
+* Store secrets only in environment variables.
+* Use strong passwords for MySQL and OAuth accounts.
+
+---
+
+# 🚀 Future Enhancements
 
 * Mobile Application
 * Wearable Device Integration
 * AI Health Prediction
 * Voice Assistant Support
 * Doctor Consultation Module
-* Health Goal Recommendations
 * Multi-language Support
 
 ---
 
 # 👨‍💻 Development Team
 
-**AI39A – AI Based Smart Healthcare Assistant**
+AI39A – AI-Based Smart Healthcare Assistant
 
 VitaPulse Development Team
 
@@ -457,6 +543,6 @@ This project is developed for educational and academic purposes.
 
 ---
 
-# ❤️ Empowering Better Health Through AI
+# ❤️ VitaPulse
 
-"Track Smarter. Live Healthier. Stay Connected."
+Track Smarter. Live Healthier. Stay Connected.
