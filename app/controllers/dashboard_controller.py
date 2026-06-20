@@ -158,3 +158,54 @@ class DashboardController(BaseController):
         elif goal == 'gain':
             return 200
         return 300
+
+
+    @classmethod
+    def notifications_json(cls):
+        """JSON API for real-time notification bell."""
+        from flask import jsonify
+        from datetime import datetime
+        uid = cls.uid()
+        try:
+            from app.models.notification import NotificationModel
+            notifs = NotificationModel.get_for_user(uid, 20)
+            count = NotificationModel.unread_count(uid)
+            def time_ago(dt):
+                if not dt: return ''
+                now = datetime.now()
+                diff = now - dt
+                s = diff.total_seconds()
+                if s < 60: return 'just now'
+                if s < 3600: return f"{int(s//60)}m ago"
+                if s < 86400: return f"{int(s//3600)}h ago"
+                return f"{int(s//86400)}d ago"
+            items = [{
+                'id': n['id'],
+                'title': n['title'],
+                'body': n.get('body',''),
+                'type': n.get('type','info'),
+                'read': bool(n.get('is_read',0)),
+                'link': n.get('link',''),
+                'time_ago': time_ago(n['created_at']) if n.get('created_at') else '',
+            } for n in (notifs or [])]
+            return jsonify({'notifications': items, 'unread': count})
+        except Exception as e:
+            return jsonify({'notifications': [], 'unread': 0})
+
+    @classmethod
+    def notifications_mark_read(cls):
+        from flask import request, jsonify
+        from app.models.notification import NotificationModel
+        uid = cls.uid()
+        nid = request.json.get('id') if request.json else None
+        if nid:
+            NotificationModel.mark_read(nid, uid)
+        return jsonify({'ok': True})
+
+    @classmethod
+    def notifications_mark_all_read(cls):
+        from flask import jsonify
+        from app.models.notification import NotificationModel
+        uid = cls.uid()
+        NotificationModel.mark_all_read(uid)
+        return jsonify({'ok': True})

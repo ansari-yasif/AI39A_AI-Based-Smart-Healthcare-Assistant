@@ -1,9 +1,11 @@
 <aside class="sidebar" id="sidebar">
-  <div class="sb-logo">
-    <a href="{{ url_for('index') }}" class="sb-logo-link">
-      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="VitaPulse" class="sb-logo-img" onerror="this.style.display='none'">
-      <span class="sb-logo-text">VITAPULSE</span>
+  <div class="sb-brand">
+    <a href="{{ url_for('index') }}" style="display:flex;align-items:center;gap:.6rem;text-decoration:none;flex:1">
+      <img src="{{ url_for('static', filename='images/Vita_pulse.png') }}" alt="VitaPulse" class="sb-logo"
+           onerror="this.src='';this.style.display='none'" style="width:32px;height:32px;border-radius:10px;object-fit:contain;flex-shrink:0">
+      <span class="sb-title">VITAPULSE</span>
     </a>
+    <button class="sb-close" id="sbClose"><i data-lucide="x"></i></button>
   </div>
 
   <nav class="sb-nav">

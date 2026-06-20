@@ -1,6 +1,6 @@
 {% extends 'dashboard_layout.html' %}
 {% block title %}Contact Support — VitaPulse{% endblock %}
-{% block page_title %}Contact Support{% endblock %}
+{% block page_title %}Support{% endblock %}
 
 {% block extra_css %}
 {{ super() }}
@@ -42,8 +42,8 @@
 
     <div class="nutr-card">
       <div class="nutr-card-head"><i data-lucide="inbox"></i><h3>Your Messages</h3></div>
-      {% if messages %}
-      {% for m in messages %}
+      {% if support_messages %}
+      {% for m in support_messages %}
       <div style="padding:.75rem 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <strong style="font-size:.88rem">{{ m.subject }}</strong> 

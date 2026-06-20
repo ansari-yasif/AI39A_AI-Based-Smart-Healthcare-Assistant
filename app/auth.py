@@ -31,18 +31,18 @@ def admin_required(fn):
 
 
 def guest_only(fn):
-    """Redirect already-logged-in users to home page, but first validate the session."""
+    """Redirect already-logged-in users to dashboard; clear stale sessions."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         if 'user_id' in session:
-            # Verify that the user still exists in the database
-            from app.models.user import UserModel
-            user = UserModel.find_by_id(session['user_id'])
-            if user:
-                # Valid session → redirect to home (or dashboard)
-                return redirect(url_for('index'))
-            else:
-                # Stale session – clear it and let the guest proceed
+            try:
+                from app.models.user import UserModel
+                user = UserModel.find_by_id(session['user_id'])
+                if user and user.get('is_active', 1) != 0:
+                    return redirect(url_for('dashboard.index'))
+                else:
+                    session.clear()
+            except Exception:
                 session.clear()
         return fn(*args, **kwargs)
     return wrapper

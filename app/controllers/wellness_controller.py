@@ -640,28 +640,42 @@ class WellnessController(BaseController):
 
     @classmethod
     def medicine_due_check(cls):
-        """JSON endpoint — returns medicines due now (for in-browser notification)."""
-        uid = cls.uid()
+        """JSON endpoint — returns medicines due now (±5 min window)."""
+        from flask import session
         from datetime import datetime
-        now = datetime.now().strftime('%H:%M')
-        meds = MedicineModel.get_for_user(uid)
+        uid = session.get('user_id')
+        if not uid:
+            return jsonify({'due': [], 'now': ''})
+        now_str = datetime.now().strftime('%H:%M')
+        try:
+            meds = MedicineModel.get_for_user(uid) or []
+        except Exception:
+            return jsonify({'due': [], 'now': now_str})
         due = []
         for m in meds:
-            times = (m['times'] or '').split(',')
-            for t in times:
+            for t in (m['times'] or '').split(','):
                 t = t.strip()
-                if t and abs(cls._time_diff_minutes(now, t)) <= 1:
-                    due.append({'id': m['id'], 'name': m['name'], 'dosage': m['dosage'], 'time': t})
-        return jsonify({'due': due, 'now': now})
+                if t:
+                    diff = cls._time_diff_minutes(now_str, t)
+                    if 0 <= diff <= 5:  # due in next 5 min or just past
+                        due.append({
+                            'id': m['id'],
+                            'name': m['name'],
+                            'dosage': m.get('dosage') or '',
+                            'time': t,
+                            'notes': m.get('notes') or ''
+                        })
+        return jsonify({'due': due, 'now': now_str})
 
     @staticmethod
-    def _time_diff_minutes(t1, t2):
+    def _time_diff_minutes(now_str, scheduled_str):
+        """Returns minutes since scheduled time (positive = overdue)."""
         try:
-            h1, m1 = map(int, t1.split(':'))
-            h2, m2 = map(int, t2.split(':'))
+            h1, m1 = map(int, now_str.split(':'))
+            h2, m2 = map(int, scheduled_str.split(':'))
             return (h1*60+m1) - (h2*60+m2)
         except Exception:
-            return 999
+            return 9999
 
     # ════════════════════════════════════════════════════════════════════
     # HEALTH EXPENSE TRACKER
@@ -670,11 +684,15 @@ class WellnessController(BaseController):
     def expense_index(cls):
         uid = cls.uid()
         from app.helpers import month_range
-        ms, me = month_range()
-        month_total = ExpenseModel.total_for_period(uid, ms, me)
-        by_cat = ExpenseModel.by_category(uid, ms, me)
-        trend = ExpenseModel.monthly_trend(uid, 6)
-        recent = ExpenseModel.get_for_user(uid, 50)
+        try:
+            ms, me = month_range()
+            month_total = ExpenseModel.total_for_period(uid, ms, me) or {'total': 0, 'cnt': 0}
+            by_cat      = ExpenseModel.by_category(uid, ms, me) or []
+            trend       = ExpenseModel.monthly_trend(uid, 6) or []
+            recent      = ExpenseModel.get_for_user(uid, 50) or []
+        except Exception as e:
+            month_total = {'total': 0, 'cnt': 0}
+            by_cat = trend = recent = []
         CATEGORIES = ['Medicine', 'Doctor Visit', 'Lab Test', 'Hospital', 'Insurance', 'Supplements', 'Other']
         return cls.render('wellness/expense_tracker.html',
             month_total=month_total, by_cat=by_cat, trend=trend,
@@ -795,8 +813,11 @@ class WellnessController(BaseController):
     @classmethod
     def support_index(cls):
         uid = cls.uid()
-        messages = SupportModel.get_for_user(uid)
-        return cls.render('wellness/support.html', messages=messages)
+        try:
+            msgs = SupportModel.get_for_user(uid) or []
+        except Exception:
+            msgs = []
+        return cls.render('wellness/support.html', support_messages=msgs)
 
     @classmethod
     def support_send(cls):
@@ -806,8 +827,24 @@ class WellnessController(BaseController):
         if not subject or not message:
             flash('Subject and message are required.', 'danger')
             return redirect(url_for('wellness.support_index'))
-        SupportModel.create(uid, subject, message)
-        flash('Message sent to admin! We will get back to you soon.', 'success')
+        try:
+            result = SupportModel.create(uid, subject, message)
+            if result is None:
+                flash('Could not send message — database table may need migration. Run migration_full.sql.', 'danger')
+            else:
+                # Create notification for admin users
+                try:
+                    from app.models.user import UserModel
+                    from app.models.notification import NotificationModel
+                    admins = UserModel.get_admins()
+                    for admin in (admins or []):
+                        NotificationModel.create(admin['id'], f'New support message from user #{uid}',
+                            subject[:100], 'info', '/admin/messages')
+                except Exception:
+                    pass  # notifications optional
+                flash('Message sent to admin! We will reply soon.', 'success')
+        except Exception as e:
+            flash(f'Error sending message: {str(e)[:80]}', 'danger')
         return redirect(url_for('wellness.support_index'))
 
     # ════════════════════════════════════════════════════════════════════

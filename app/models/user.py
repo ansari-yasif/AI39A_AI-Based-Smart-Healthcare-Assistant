@@ -126,3 +126,7 @@ class UserModel(BaseModel):
             except Exception:
                 pass
         return cls.execute('DELETE FROM users WHERE id=%s', (uid,))
+
+    @classmethod
+    def get_admins(cls):
+        return cls.fetch_all("SELECT id, email, full_name FROM users WHERE role='admin' AND is_active=1")

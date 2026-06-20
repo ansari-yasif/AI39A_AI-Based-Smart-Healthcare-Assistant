@@ -1,5 +1,19 @@
 {% extends 'dashboard_layout.html' %}
 {% block title %}Manage Users — VitaPulse Admin{% endblock %}
+{% block extra_js %}{{ super() }}
+<form id="deleteUserForm" method="POST" style="display:none">
+  <input type="hidden" name="_method" value="POST">
+</form>
+<script>
+function confirmDelete(uid, name) {
+  if (!confirm('Delete user "' + name + '" and ALL their data?\n\nThis action cannot be undone.')) return;
+  var form = document.getElementById('deleteUserForm');
+  if (!form) { alert('Form not found'); return; }
+  form.action = '/admin/users/' + uid + '/delete';
+  form.submit();
+}
+</script>
+{% endblock %}
 {% block page_title %}User Management{% endblock %}
 
 {% block extra_css %}
@@ -35,7 +49,8 @@
   </form>
 
   <div class="nutr-card">
-    <table style="width:100%;border-collapse:collapse;font-size:.83rem">
+    <div class="admin-table-wrap" style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.83rem;min-width:700px">
       <thead><tr style="background:var(--bg)">
         <th style="padding:.6rem;text-align:left;color:var(--muted)">Name</th>
         <th style="padding:.6rem;text-align:left;color:var(--muted)">Email</th>
@@ -68,11 +83,10 @@
                 {{ 'Deactivate' if u.is_active else 'Activate' }}
               </button>
             </form>
-            <form method="POST" action="{{ url_for('admin.user_delete', uid=u.id) }}" onsubmit="return confirm('Delete {{ u.full_name }} and ALL their data permanently?')">
-              <button type="submit" class="nutr-btn" style="font-size:.7rem;padding:.3rem .6rem;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3)">
-                <i data-lucide="trash-2" style="width:12px;height:12px"></i>
-              </button>
-            </form>
+            <button onclick="confirmDelete({{ u.id }}, '{{ u.full_name | e }}')" 
+              class="nutr-btn" style="font-size:.7rem;padding:.3rem .6rem;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3)">
+              <i data-lucide="trash-2" style="width:12px;height:12px"></i> Delete
+            </button>
           </div>
         </td>
       </tr>
@@ -81,6 +95,7 @@
       {% endfor %}
       </tbody>
     </table>
+    </div><!-- /admin-table-wrap -->
   </div>
 </div>
 {% endblock %}

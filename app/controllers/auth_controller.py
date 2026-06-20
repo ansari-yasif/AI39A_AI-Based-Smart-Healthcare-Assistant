@@ -217,3 +217,21 @@ class AuthController(BaseController):
             UserModel.update_password(user['id'], new_pwd)
             cls.flash_ok('Password reset successfully! Please sign in.')
         return cls.redirect_to('auth.login')
+    @classmethod
+    def contact_form(cls):
+        """Public contact form from homepage — saves to support_messages with user_id=0."""
+        from flask import request, redirect, url_for, flash, jsonify
+        from app.models.support import SupportModel
+        full_name = request.form.get('full_name', '').strip()
+        email = request.form.get('email', '').strip()
+        message = request.form.get('message', '').strip()
+
+        if not full_name or not email or not message:
+            flash('All fields are required.', 'danger')
+            return redirect(url_for('index') + '#contact-section')
+
+        # Save as guest message (user_id=0) with name/email in subject
+        subject = f"[Website] Message from {full_name} <{email}>"
+        SupportModel.create_guest(full_name, email, subject, message)
+        flash('Thank you! Your message has been sent. We will get back to you soon.', 'success')
+        return redirect(url_for('index') + '#contact-section')

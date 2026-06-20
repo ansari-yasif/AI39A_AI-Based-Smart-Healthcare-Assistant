@@ -15,14 +15,25 @@ class AdminController(BaseController):
     # ════════════════════════════════════════════════════════════════════
     @classmethod
     def dashboard(cls):
+        try: total_users = UserModel.count_all()
+        except: total_users = 0
+        try: active_today = UserModel.count_active_today()
+        except: active_today = 0
+        try: new_this_week = UserModel.count_new_this_week()
+        except: new_this_week = 0
+        try: open_messages = SupportModel.unread_count()
+        except: open_messages = 0
+        try: recent_users = (UserModel.get_all_detailed() or [])[:5]
+        except: recent_users = []
+        try: recent_messages = (SupportModel.all_messages() or [])[:5]
+        except: recent_messages = []
+
         stats = {
-            'total_users': UserModel.count_all(),
-            'active_today': UserModel.count_active_today(),
-            'new_this_week': UserModel.count_new_this_week(),
-            'open_messages': SupportModel.unread_count(),
+            'total_users': total_users,
+            'active_today': active_today,
+            'new_this_week': new_this_week,
+            'open_messages': open_messages,
         }
-        recent_users = UserModel.get_all_detailed()[:5]
-        recent_messages = SupportModel.all_messages('open')[:5]
         return cls.render('admin/dashboard.html',
             stats=stats, recent_users=recent_users, recent_messages=recent_messages)
 
@@ -66,15 +77,20 @@ class AdminController(BaseController):
     @classmethod
     def user_delete(cls, uid):
         from flask import session
-        if session.get('user_id') == uid:
-            flash('You cannot delete your own admin account.', 'danger')
+        my_id = session.get('user_id')
+        if str(my_id) == str(uid):
+            flash('You cannot delete your own account.', 'danger')
             return redirect(url_for('admin.users_index'))
-        user = UserModel.find_by_id(uid)
-        if not user:
-            flash('User not found.', 'danger')
-            return redirect(url_for('admin.users_index'))
-        UserModel.admin_delete(uid)
-        flash(f'User {user["full_name"]} and all related data deleted.', 'success')
+        try:
+            user = UserModel.find_by_id(uid)
+            if not user:
+                flash('User not found.', 'danger')
+                return redirect(url_for('admin.users_index'))
+            name = user.get('full_name', f'User #{uid}')
+            UserModel.admin_delete(uid)
+            flash(f'User "{name}" and all their data have been deleted.', 'success')
+        except Exception as e:
+            flash(f'Delete failed: {str(e)[:100]}', 'danger')
         return redirect(url_for('admin.users_index'))
 
     @classmethod
@@ -109,9 +125,13 @@ class AdminController(BaseController):
     # ════════════════════════════════════════════════════════════════════
     @classmethod
     def messages_index(cls):
-        status = request.args.get('status', '')
-        messages = SupportModel.all_messages(status if status else None)
-        return cls.render('admin/messages.html', messages=messages, status=status)
+        status = request.args.get('status', '').strip()
+        try:
+            msgs = SupportModel.all_messages(status if status else None) or []
+        except Exception as e:
+            msgs = []
+            flash(f'Could not load messages: {e}', 'warning')
+        return cls.render('admin/messages.html', messages=msgs, status=status)
 
     @classmethod
     def message_view(cls, mid):

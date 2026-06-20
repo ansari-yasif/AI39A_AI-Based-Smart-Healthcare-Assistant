@@ -47,3 +47,8 @@ def google_login(): return AuthController.google_login()
 
 @auth_bp.route('/google/callback')
 def google_callback(): return AuthController.google_callback()
+# ---- PUBLIC CONTACT FORM (from homepage "Get in Touch") ----
+@auth_bp.route('/contact', methods=['POST'])
+def contact_form():
+    from app.controllers.auth_controller import AuthController
+    return AuthController.contact_form()

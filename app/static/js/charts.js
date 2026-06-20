@@ -1,27 +1,14 @@
 /* charts.js — Chart.js initializers | Feature: Dashboard charts */
 
-<<<<<<< HEAD
-// Figma exact chart colours
-if (!Chart.defaults.color) {
-  Chart.defaults.color           = '#94a3b8';
-  Chart.defaults.font.family     = "'Inter', sans-serif";
-  Chart.defaults.font.size       = 12;
-  Chart.defaults.plugins.legend.display = false;
-}
-=======
 Chart.defaults.color           = '#94a3b8';
 Chart.defaults.font.family     = "'Inter', sans-serif";
 Chart.defaults.font.size       = 12;
 Chart.defaults.plugins.legend.display = false;
->>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
 
-// Define chart constants (use let to avoid const redeclaration errors on hot reload)
-if (typeof TEAL === 'undefined') {
-  window.TEAL   = '#00C897';
-  window.ORANGE = '#f97316';
-  window.BLUE   = '#4A9EFF';
-  window.GRID   = 'rgba(255,255,255,0.05)';
-}
+const TEAL   = '#00C897';
+const ORANGE = '#f97316';
+const BLUE   = '#4A9EFF';
+const GRID   = 'rgba(255,255,255,0.05)';
 
 // Registry to avoid duplicate chart instances
 const _chartRegistry = {};
@@ -50,7 +37,7 @@ function initSleepChart(id, labels, data) {
           h >= 5 ? 'rgba(245,158,11,.75)' : 'rgba(239,68,68,.75)'
         ),
         borderColor: data.map(h =>
-          h >= 7 ? window.TEAL : h >= 5 ? '#F59E0B' : '#EF4444'
+          h >= 7 ? TEAL : h >= 5 ? '#F59E0B' : '#EF4444'
         ),
         borderWidth:  1.5,
         borderRadius: 6,
@@ -61,8 +48,8 @@ function initSleepChart(id, labels, data) {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        x: { grid:{ color:window.GRID }, border:{ display:false } },
-        y: { grid:{ color:window.GRID }, border:{ display:false },
+        x: { grid:{ color:GRID }, border:{ display:false } },
+        y: { grid:{ color:GRID }, border:{ display:false },
              min:0, max:12,
              ticks: { stepSize:2 },
              title:{ display:true, text:'Hours', color:'#475569' },
@@ -92,10 +79,10 @@ function initCalChart(id, labels, data) {
       labels,
       datasets: [{
         data,
-        borderColor:          window.TEAL,
+        borderColor:          TEAL,
         backgroundColor:      'rgba(0,200,151,.08)',
         borderWidth:          2.5,
-        pointBackgroundColor: window.TEAL,
+        pointBackgroundColor: TEAL,
         pointBorderColor:     '#0a0e1a',
         pointBorderWidth:     2,
         pointRadius:          5,
@@ -107,14 +94,9 @@ function initCalChart(id, labels, data) {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-<<<<<<< HEAD
-        x: { grid:{ color:window.GRID }, border:{ display:false } },
-        y: { grid:{ color:window.GRID }, border:{ display:false },
-=======
         x: { grid:{ color:GRID }, border:{ display:false } },
         y: { grid:{ color:GRID }, border:{ display:false },
              beginAtZero: true,
->>>>>>> 81bc593f977b6d351097a86ace2710ed19f359e1
              title:{ display:true, text:'kcal', color:'#475569' },
         },
       },
@@ -194,7 +176,7 @@ function initExpenseChart(id, labels, data) {
   if (!ctx || !data.length) return;
   _destroyChart(id);
 
-  const COLORS = [window.TEAL, window.ORANGE, window.BLUE, '#8B5CF6', '#10b981', '#F59E0B', '#EC4899'];
+  const COLORS = [TEAL, ORANGE, BLUE, '#8B5CF6', '#10b981', '#F59E0B', '#EC4899'];
 
   _chartRegistry[id] = new Chart(ctx, {
     type: 'doughnut',
