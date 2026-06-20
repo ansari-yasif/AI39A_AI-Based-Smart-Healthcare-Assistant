@@ -564,7 +564,7 @@ class WellnessController(BaseController):
         else:
             overall = {'level': 'Low Risk', 'color': '#22c55e'}
         overall['pct'] = overall_pct
-        return {'risk_list': risks, 'overall': overall}
+        return {'risk_list': risks, 'items': risks, 'overall': overall}
 
     # ════════════════════════════════════════════════════════════════════
     # FIRST AID GUIDE

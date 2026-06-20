@@ -706,7 +706,7 @@ class NutritionController(BaseController):
                 f"Overall Risk Level: <b>{health_risks['overall']['level']}</b> "
                 f"({health_risks['overall']['pct']}% composite score)", body_s))
             risk_rows = [['Risk Factor', 'Level', 'Details']]
-            for r in health_risks['items']:
+            for r in health_risks.get('items', health_risks.get('risk_list', [])):
                 risk_rows.append([r['name'], r['level'], r['desc'][:90]])
             story.append(tbl(risk_rows, [3.5*cm, 2.5*cm, 8*cm]))
             story.append(Paragraph(

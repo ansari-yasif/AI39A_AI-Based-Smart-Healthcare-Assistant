@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}VitaPulse — Your Journey to Wellness{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}"/>
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
 {% endblock %}
 
 {% block body %}
@@ -18,7 +20,7 @@
     <!-- Center links -->
     <ul class="lnav-links" id="lnavLinks">
       <li><a href="#home"     class="lnav-link">Home</a></li>
-      <li><a href="#bmi"      class="lnav-link">BMI Calculator</a></li>
+      <!-- <li><a href="#bmi"      class="lnav-link">BMI Calculator</a></li> -->
       <li><a href="#wellness" class="lnav-link">Wellness</a></li>
       <li><a href="#about"    class="lnav-link">About</a></li>
       <li><a href="#contact-section" class="lnav-link">Contact</a></li>
@@ -54,7 +56,7 @@
   <!-- Mobile menu -->
   <div class="mobile-menu" id="mobileMenu">
     <a href="#home"     class="mob-link">Home</a>
-    <a href="#bmi"      class="mob-link">BMI Calculator</a>
+    <!-- <a href="#bmi"      class="mob-link">BMI Calculator</a> -->
     <a href="#wellness" class="mob-link">Wellness</a>
     <a href="#about"    class="mob-link">About</a>
     <a href="#contact-section" class="mob-link">Contact</a>
@@ -533,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <a href="#home">Home</a>
       <a href="#about">About Us</a>
       <a href="#wellness">Wellness</a>
-      <a href="#bmi">BMI Calculator</a>
+      <!-- <a href="#bmi">BMI Calculator</a> -->
     </div>
     <!-- Services -->
     <div class="lf-col">
@@ -566,42 +568,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- ═══════════════════ CHATBOT FLOAT BUTTON ══════════════════ -->
 <div class="chatbot-float" id="chatbotFloat">
-  <button class="chatbot-btn" id="chatbotToggle">
-    <i data-lucide="message-circle" id="chatIcon"></i>
-  </button>
-  <!-- Chat window -->
+  <button class="chatbot-btn" id="chatbotToggle"><i data-lucide="message-circle"></i></button>
   <div class="chatbot-win" id="chatbotWin">
     <div class="cw-header">
       <div class="cw-av"><i data-lucide="sparkles"></i></div>
-      <div>
-        <p class="cw-title">AI Wellness Assistant</p>
-        <p class="cw-sub">Your health companion</p>
+      <div><p class="cw-title">VitaPulse AI</p><p class="cw-sub">Your wellness assistant</p></div>
+      <div class="header-buttons">
+        <button id="expandChat"><i data-lucide="maximize-2"></i></button>
+        <button class="cw-close" id="cwClose"><i data-lucide="chevron-down"></i></button>
       </div>
-      <button class="cw-close" id="cwClose" type="button" aria-label="Close chat">
-        <i data-lucide="chevron-down"></i>
-      </button>
     </div>
     <div class="cw-body">
-      <div class="cw-msg cw-bot">
-        <div class="cw-msg-av"><i data-lucide="sparkles"></i></div>
-        <div class="cw-bubble">
-          How can I assist your wellness journey today?
-        </div>
-      </div>
-      <div class="cw-quick">
-        <p class="cw-quick-label">Quick tips:</p>
-        <div class="cw-quick-btns">
-          <button class="cw-quick-btn">Fitness tips</button>
-          <button class="cw-quick-btn">Nutrition advice</button>
-          <button class="cw-quick-btn">Health tips</button>
-        </div>
-      </div>
+      <div class="cw-msg cw-bot"><div class="cw-msg-av"><i data-lucide="sparkles"></i></div><div class="cw-bubble">Hi, I'm VitaPulse AI. How can I help you today?</div></div>
+      <div class="cw-quick"><p class="cw-quick-label">Quick questions:</p><div class="cw-quick-btns"><button class="cw-quick-btn">How many food items have I added?</button><button class="cw-quick-btn">Show my weekly stats</button><button class="cw-quick-btn">Give me a healthy recipe</button></div></div>
     </div>
     <div class="cw-input-wrap">
-      <input type="text" id="cwInput" placeholder="Type your message..." class="cw-input"/>
-      <button class="cw-send" id="cwSend">
-        <i data-lucide="send" class="cw-send-icon"></i>
-      </button>
+      <textarea id="cwInput" placeholder="Type your message..." class="cw-input" rows="1"></textarea>
+      <button class="cw-send" id="cwSend"><i data-lucide="send" class="cw-send-icon"></i></button>
     </div>
   </div>
 </div>
@@ -609,5 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endblock %}
 
 {% block extra_js %}
+{{ super() }}
 <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
 {% endblock %}
