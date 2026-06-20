@@ -1,0 +1,355 @@
+{% extends 'dashboard_layout.html' %}
+{% block title %}Calorie Calculator — VitaPulse{% endblock %}
+{% block page_title %}Calorie Calculator{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .nutr-kpi-fill { width: var(--kpi-width, 0%); transition: width 1s; }
+  .bmi-val { color: var(--bmi-color, inherit); }
+  .remaining-val { color: var(--rem-color, inherit); }
+  .macro-fill-bar { width: var(--macro-width, 0%); }
+  .ring-path { transition: stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutr-page">
+
+  <!-- ── HEADER ──────────────────────────────────────────────────── -->
+  <div class="nutr-header">
+    <div class="nutr-title-group">
+      <div class="nutr-icon-wrap">
+        <i data-lucide="calculator"></i>
+      </div>
+      <div>
+        <h1 class="nutr-title">Calorie Calculator</h1>
+        <p class="nutr-subtitle">BMR · TDEE · Daily Goal · Macro Targets</p>
+      </div>
+    </div>
+    <div class="nutr-header-actions">
+      <a href="{{ url_for('nutrition.meal_index') }}"   class="nutr-btn nutr-btn-teal"><i data-lucide="utensils"></i> Log Meals</a>
+      <a href="{{ url_for('nutrition.food_db_index') }}" class="nutr-btn nutr-btn-outline"><i data-lucide="search"></i> Food DB</a>
+    </div>
+  </div>
+
+  {# Flash messages #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="nutr-alert nutr-alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if not bmr %}
+  <div class="nutr-notice">
+    <i data-lucide="info"></i>
+    <span>Complete your <a href="{{ url_for('profile.edit_profile') }}">health profile</a>
+    (age, gender, weight, height, activity level) to auto-calculate your BMR &amp; TDEE.</span>
+  </div>
+  {% endif %}
+
+  <!-- ── KPI CARDS ────────────────────────────────────────────────── -->
+  <div class="nutr-kpi-row">
+
+    <div class="nutr-kpi nutr-kpi-teal">
+      <div class="nutr-kpi-icon"><i data-lucide="zap"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Basal Metabolic Rate</p>
+        <p class="nutr-kpi-value">{{ bmr|int if bmr else '—' }} <span>kcal/day</span></p>
+        <p class="nutr-kpi-hint">Calories at complete rest</p>
+      </div>
+    </div>
+
+    <div class="nutr-kpi nutr-kpi-orange">
+      <div class="nutr-kpi-icon"><i data-lucide="activity"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Total Daily Energy (TDEE)</p>
+        <p class="nutr-kpi-value">{{ tdee|int if tdee else '—' }} <span>kcal/day</span></p>
+        <p class="nutr-kpi-hint">With your activity level</p>
+      </div>
+    </div>
+
+    <div class="nutr-kpi nutr-kpi-bmi">
+      <div class="nutr-kpi-icon"><i data-lucide="scale"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Body Mass Index</p>
+        <p class="nutr-kpi-value bmi-val" style="--bmi-color: {{ bmi_color if bmi_color else 'inherit' }}">
+          {{ bmi if bmi else '—' }} <span>— {{ bmi_label }}</span>
+        </p>
+        <p class="nutr-kpi-hint">Weight ÷ height²</p>
+      </div>
+    </div>
+
+    <div class="nutr-kpi nutr-kpi-goal">
+      <div class="nutr-kpi-icon"><i data-lucide="target"></i></div>
+      <div>
+        <p class="nutr-kpi-label">Today's Calorie Goal</p>
+        <p class="nutr-kpi-value">{{ calorie_goal }} <span>kcal</span></p>
+        <p class="nutr-kpi-hint">Consumed: <strong>{{ calorie_log.calories_consumed|int if calorie_log else totals.cal|default(0)|int }}</strong> kcal</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── MAIN GRID ────────────────────────────────────────────────── -->
+  <div class="nutr-grid-2">
+
+    <!-- LEFT: Progress + Goal Setter -->
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="flame"></i>
+        <h3>Today's Progress</h3>
+        <span class="nutr-date-badge">{{ today }}</span>
+      </div>
+
+      {% set consumed = (calorie_log.calories_consumed|int) if calorie_log else (totals.cal|default(0)|int) %}
+      {% set pct = ([consumed / calorie_goal * 100, 100]|min) if calorie_goal else 0 %}
+      {% set remaining = calorie_goal - consumed %}
+
+      <!-- Ring -->
+      <div class="nutr-ring-wrap">
+        <svg class="nutr-ring" viewBox="0 0 160 160" width="160" height="160">
+          <circle cx="80" cy="80" r="68" stroke="rgba(255,255,255,0.06)" stroke-width="14" fill="none"/>
+          <circle cx="80" cy="80" r="68" stroke="url(#calGrad)" stroke-width="14" fill="none"
+            stroke-linecap="round"
+            stroke-dasharray="{{ (2*3.14159*68)|round(1) }}"
+            stroke-dashoffset="{{ ((1 - pct/100) * 2 * 3.14159 * 68)|round(1) }}"
+            transform="rotate(-90 80 80)" class="nutr-ring-path ring-path" />
+          <defs>
+            <linearGradient id="calGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00C897"/>
+              <stop offset="100%" stop-color="#f97316"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="nutr-ring-center">
+          <p class="nutr-ring-val">{{ consumed }}</p>
+          <p class="nutr-ring-sub">/ {{ calorie_goal }} kcal</p>
+          <p class="nutr-ring-pct">{{ pct|round(0)|int }}%</p>
+        </div>
+      </div>
+
+      <!-- Trio stats -->
+      <div class="nutr-stat-trio">
+        <div class="nutr-stat-item">
+          <p class="nsi-label">Consumed</p>
+          <p class="nsi-val teal">{{ consumed }}</p>
+        </div>
+        <div class="nutr-stat-item">
+          <p class="nsi-label">Goal</p>
+          <p class="nsi-val orange">{{ calorie_goal }}</p>
+        </div>
+        <div class="nutr-stat-item">
+          <p class="nsi-label">{% if remaining >= 0 %}Remaining{% else %}Over{% endif %}</p>
+          <p class="nsi-val remaining-val" style="--rem-color: {{ '#10b981' if remaining >= 0 else '#ef4444' }}">{{ remaining|abs }}</p>
+        </div>
+      </div>
+
+      <!-- Adjust goal -->
+      <div class="nutr-goal-form">
+        <h4><i data-lucide="sliders-horizontal"></i> Adjust Daily Goal</h4>
+        <form method="POST" action="{{ url_for('nutrition.update_goal') }}" class="nutr-inline-form">
+          <input type="number" name="calorie_goal" value="{{ calorie_goal }}"
+                 min="800" max="8000" step="50" class="nutr-input" placeholder="kcal/day" required>
+          <button type="submit" class="nutr-btn nutr-btn-teal">Set Goal</button>
+        </form>
+        {% if tdee %}
+        <p class="nutr-hint-text">💡 TDEE is {{ tdee|int }} kcal — eat below to lose, above to gain weight.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- RIGHT: Macro breakdown -->
+    <div class="nutr-card">
+      <div class="nutr-card-head">
+        <i data-lucide="pie-chart"></i>
+        <h3>Macro Targets</h3>
+      </div>
+
+      {% if macros %}
+      <div class="nutr-macro-grid">
+        <div class="nutr-macro-item nm-protein">
+          <div class="nm-icon"><i data-lucide="beef"></i></div>
+          <div style="flex:1">
+            <p class="nm-label">Protein</p>
+            <p class="nm-val">{{ macros.protein }}g</p>
+            <p class="nm-kcal">{{ (macros.protein * 4)|int }} kcal</p>
+            <div class="nm-bar"><div class="nm-fill macro-fill-bar" style="--macro-width: {{ (macros.protein * 4 / calorie_goal * 100)|round(0)|int }}%"></div></div>
+          </div>
+        </div>
+        <div class="nutr-macro-item nm-carbs">
+          <div class="nm-icon"><i data-lucide="wheat"></i></div>
+          <div style="flex:1">
+            <p class="nm-label">Carbohydrates</p>
+            <p class="nm-val">{{ macros.carbs }}g</p>
+            <p class="nm-kcal">{{ (macros.carbs * 4)|int }} kcal</p>
+            <div class="nm-bar"><div class="nm-fill macro-fill-bar" style="--macro-width: {{ (macros.carbs * 4 / calorie_goal * 100)|round(0)|int }}%"></div></div>
+          </div>
+        </div>
+        <div class="nutr-macro-item nm-fat">
+          <div class="nm-icon"><i data-lucide="droplets"></i></div>
+          <div style="flex:1">
+            <p class="nm-label">Fat</p>
+            <p class="nm-val">{{ macros.fat }}g</p>
+            <p class="nm-kcal">{{ (macros.fat * 9)|int }} kcal</p>
+            <div class="nm-bar"><div class="nm-fill macro-fill-bar" style="--macro-width: {{ (macros.fat * 9 / calorie_goal * 100)|round(0)|int }}%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="nutr-macro-chart-wrap">
+        <canvas id="macroDonut" height="180"></canvas>
+      </div>
+      {% else %}
+      <div class="nutr-empty-state">
+        <i data-lucide="user-check"></i>
+        <p>Complete your health profile to see personalised macro targets.</p>
+        <a href="{{ url_for('profile.edit_profile') }}" class="nutr-btn nutr-btn-teal" style="margin-top:8px">Update Profile</a>
+      </div>
+      {% endif %}
+
+      <!-- Actual macros today -->
+      <div class="nutr-actual-macros">
+        <p class="nutr-label" style="margin-bottom:.5rem">Today's Actual Macros (from meals)</p>
+        <div class="nutr-stat-trio">
+          <div class="nutr-stat-item">
+            <p class="nsi-label">Protein</p>
+            <p class="nsi-val" style="color:var(--blue)">{{ totals.prot|default(0)|int }}g</p>
+          </div>
+          <div class="nutr-stat-item">
+            <p class="nsi-label">Carbs</p>
+            <p class="nsi-val teal">{{ totals.carbs|default(0)|int }}g</p>
+          </div>
+          <div class="nutr-stat-item">
+            <p class="nsi-label">Fat</p>
+            <p class="nsi-val orange">{{ totals.fat|default(0)|int }}g</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 7-DAY CHART ──────────────────────────────────────────────── -->
+  <div class="nutr-card">
+    <div class="nutr-card-head">
+      <i data-lucide="bar-chart-2"></i>
+      <h3>7-Day Calorie History</h3>
+    </div>
+    <div class="nutr-chart-wrap">
+      <canvas id="calHistoryChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- ── INFO EXPLAINERS ─────────────────────────────────────────── -->
+  <div class="nutr-info-strip">
+    <div class="nutr-info-item">
+      <strong><i data-lucide="zap"></i> What is BMR?</strong>
+      <p>Basal Metabolic Rate — calories your body needs at complete rest for vital functions like breathing and circulation.</p>
+    </div>
+    <div class="nutr-info-item">
+      <strong><i data-lucide="activity"></i> What is TDEE?</strong>
+      <p>Total Daily Energy Expenditure — your BMR multiplied by activity level. This is the total calories you burn each day.</p>
+    </div>
+    <div class="nutr-info-item">
+      <strong><i data-lucide="target"></i> Setting Your Goal</strong>
+      <p>Eat 300–500 kcal below TDEE to lose weight, at TDEE to maintain, or above to gain muscle mass.</p>
+    </div>
+  </div>
+
+  <!-- ── TODAY'S MEALS QUICK-VIEW ────────────────────────────────── -->
+  {% if meals_today %}
+  <div class="nutr-card">
+    <div class="nutr-card-head">
+      <i data-lucide="utensils"></i>
+      <h3>Today's Meals</h3>
+      <a href="{{ url_for('nutrition.meal_index') }}" class="nutr-card-link">Full Meal Log →</a>
+    </div>
+    <div class="nutr-meals-list">
+      {% for meal in meals_today %}
+      <div class="nutr-meal-row">
+        <span class="nutr-meal-type-badge nmt-{{ meal.meal_type|lower }}">{{ meal.meal_type }}</span>
+        <span class="nutr-meal-name">{{ meal.food_name }}</span>
+        <span class="nutr-meal-macro">{{ meal.calories|int }} kcal</span>
+        <span class="nutr-meal-macro">P: {{ meal.protein_g|int }}g</span>
+        <span class="nutr-meal-macro">C: {{ meal.carbs_g|int }}g</span>
+        <span class="nutr-meal-macro">F: {{ meal.fat_g|int }}g</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>{# /.nutr-page #}
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script id="chart-data" type="application/json">
+  {
+    "labels": {{ cal_labels|tojson }},
+    "consumed": {{ cal_chart|tojson }},
+    "goals": {{ cal_goal_line|tojson }},
+    "macros": {% if macros %}{ "p": {{ macros.protein }}, "c": {{ macros.carbs }}, "f": {{ macros.fat }} }{% else %}null{% endif %}
+  }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const config = JSON.parse(document.getElementById('chart-data').textContent);
+  if (config.macros) {
+  var mCtx = document.getElementById('macroDonut');
+  if (mCtx) {
+    new Chart(mCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Protein', 'Carbs', 'Fat'],
+        datasets: [{
+          data: [config.macros.p * 4, config.macros.c * 4, config.macros.f * 9],
+          backgroundColor: ['#4A9EFF', '#00C897', '#f97316'],
+          borderWidth: 0, hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } }
+        }
+      }
+    });
+  }
+  }
+
+  var hCtx = document.getElementById('calHistoryChart');
+  if (hCtx) {
+    new Chart(hCtx, {
+      type: 'bar',
+      data: {
+        labels: config.labels,
+        datasets: [
+          {
+            label: 'Calories Consumed',
+            data: config.consumed,
+            backgroundColor: 'rgba(0,200,151,0.65)',
+            borderRadius: 6, order: 2
+          },
+          {
+            label: 'Daily Goal',
+            data: config.goals,
+            type: 'line', borderColor: '#f97316', borderWidth: 2,
+            borderDash: [6,3], pointRadius: 0, fill: false, order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#475569' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: '#475569' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+});
+</script>
+{% endblock %}
