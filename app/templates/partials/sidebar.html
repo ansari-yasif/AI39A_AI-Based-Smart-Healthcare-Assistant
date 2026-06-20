@@ -10,3 +10,7 @@
    class="sb-link {% if request.endpoint == 'nutrition.macro_targets_index' %}active{% endif %}">
   <i data-lucide="pie-chart"></i><span>Macro Targets</span>
 </a>
+<a href="{{ url_for('nutrition.calorie_index') }}"
+   class="sb-link {% if request.endpoint == 'nutrition.calorie_index' %}active{% endif %}">
+  <i data-lucide="calculator"></i><span>Calorie Calculator</span>
+</a>
