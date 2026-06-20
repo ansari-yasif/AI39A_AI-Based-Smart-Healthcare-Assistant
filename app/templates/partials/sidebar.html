@@ -14,3 +14,12 @@
    class="sb-link {% if request.endpoint == 'nutrition.calorie_index' %}active{% endif %}">
   <i data-lucide="calculator"></i><span>Calorie Calculator</span>
 </a>
+<a href="{{ url_for('profile.profile') }}"
+   class="sb-link {% if request.endpoint == 'profile.profile' %}active{% endif %}">
+  <i data-lucide="user"></i><span>Profile</span>
+</a>
+
+<a href="{{ url_for('profile.settings') }}"
+   class="sb-link {% if request.endpoint == 'profile.settings' %}active{% endif %}">
+  <i data-lucide="settings"></i><span>Health Settings</span>
+</a>
