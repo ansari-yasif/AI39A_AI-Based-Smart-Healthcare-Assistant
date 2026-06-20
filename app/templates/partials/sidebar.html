@@ -6,3 +6,7 @@
    class="sb-link {% if request.endpoint == 'wellness.workout_plan' %}active{% endif %}">
   <i data-lucide="dumbbell"></i><span>Workout Plan</span>
 </a>
+<a href="{{ url_for('nutrition.macro_targets_index') }}"
+   class="sb-link {% if request.endpoint == 'nutrition.macro_targets_index' %}active{% endif %}">
+  <i data-lucide="pie-chart"></i><span>Macro Targets</span>
+</a>
